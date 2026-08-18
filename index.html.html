@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>新NISA 資産形成・取り崩しシミュレーター</title>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg-primary: #12161f;
+      --bg-card: #1c222e;
+      --bg-input: #273142;
+      --bg-input-focus: #323e54;
+      --accent-blue: #3b82f6;
+      --accent-green: #10b981;
+      --accent-orange: #f59e0b;
+      --accent-pink: #f472b6;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --border-color: #374151;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 24px 16px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      max-width: 1100px;
+      width: 100%;
+    }
+
+    header {
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    header h1 {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #60a5fa, #34d399);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    header p {
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    .tab-container {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      background: var(--bg-card);
+      padding: 6px;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      width: fit-content;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 14px;
+      font-weight: 600;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .tab-btn.active {
+      background: var(--accent-blue);
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 960px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 24px;
+    }
+
+    .panel-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .panel-title::before {
+      content: "";
+      display: inline-block;
+      width: 4px;
+      height: 16px;
+      background: var(--accent-blue);
+      border-radius: 2px;
+    }
+
+    .control-group {
+      margin-bottom: 20px;
+    }
+
+    .control-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    /* Direct Input Box Styling */
+    .input-box-wrapper {
+      display: flex;
+      align-items: center;
+      background: var(--bg-input);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 2px 8px;
+      transition: border-color 0.2s, background-color 0.2s;
+    }
+
+    .input-box-wrapper:focus-within {
+      border-color: var(--accent-blue);
+      background-color: var(--bg-input-focus);
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+    }
+
+    .input-unit-prefix, .input-unit-suffix {
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .num-input {
+      background: transparent;
+      border: none;
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 14px;
+      text-align: right;
+      width: 100px;
+      outline: none;
+      padding: 4px 2px;
+      font-family: inherit;
+    }
+
+    /* Hide number input spinners for clean look */
+    .num-input::-webkit-outer-spin-button,
+    .num-input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    .num-input[type=number] {
+      -moz-appearance: textfield;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      height: 6px;
+      background: var(--bg-input);
+      border-radius: 3px;
+      outline: none;
+      -webkit-appearance: none;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent-blue);
+      cursor: pointer;
+      border: 2px solid #ffffff;
+      box-shadow: 0 0 8px rgba(0,0,0,0.5);
+    }
+
+    .toggle-group {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+      background: var(--bg-input);
+      border-radius: 10px;
+      margin-top: 10px;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #4b5563;
+      transition: .3s;
+      border-radius: 24px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .3s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: var(--accent-blue);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(20px);
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .metric-card {
+      background: var(--bg-input);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .metric-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .metric-value {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .metric-value.total { color: #60a5fa; }
+    .metric-value.principal { color: #93c5fd; }
+    .metric-value.gains { color: #34d399; }
+    .metric-value.tax { color: #fbbf24; }
+    .metric-value.year-cap { color: #f472b6; }
+
+    .chart-container {
+      position: relative;
+      height: 380px;
+      width: 100%;
+      margin-top: 12px;
+    }
+
+    .details-section {
+      margin-top: 24px;
+    }
+
+    .collapse-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      justify-content: center;
+    }
+
+    .table-wrapper {
+      max-height: 280px;
+      overflow-y: auto;
+      margin-top: 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      display: none;
+    }
+
+    .table-wrapper.open {
+      display: block;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      text-align: right;
+    }
+
+    th, td {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    th {
+      background: #19202c;
+      color: var(--text-muted);
+      position: sticky;
+      top: 0;
+    }
+
+    td:first-child, th:first-child {
+      text-align: center;
+    }
+
+    tr:nth-child(even) {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .info-banner {
+      background: rgba(59, 130, 246, 0.08);
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 12px;
+      color: #93c5fd;
+      line-height: 1.5;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>新NISA 資産形成・取り崩しシミュレーター</h1>
+    <p>非課税保有限度額1,800万円自動ストップ ＆ 税金節約・出口戦略シミュレーション</p>
+  </header>
+
+  <div class="tab-container">
+    <button class="tab-btn active" id="tabGrowth" onclick="switchTab('growth')">資産形成シミュレーション</button>
+    <button class="tab-btn" id="tabDrawdown" onclick="switchTab('drawdown')">出口・取り崩しシミュレーション</button>
+  </div>
+
+  <div class="main-grid">
+    <div class="panel">
+      <div class="panel-title" id="ctrlTitle">シミュレーション条件設定</div>
+
+      <!-- Growth Controls -->
+      <div id="growthControls">
+        <div class="control-group">
+          <div class="control-label">
+            <span>毎月の積立額</span>
+            <div class="input-box-wrapper">
+              <span class="input-unit-prefix">¥</span>
+              <input type="number" class="num-input" id="numMonthly" value="50000" min="0" max="3000000" step="1000" oninput="syncInputs('monthly', 'num')">
+            </div>
+          </div>
+          <!-- min=0, step=5000でスライダーを動かした際に1000円端数が出ないよう設定 (5000, 10000, 15000...) -->
+          <input type="range" id="rangeMonthly" min="0" max="300000" step="5000" value="50000" oninput="syncInputs('monthly', 'range')">
+        </div>
+
+        <div class="control-group">
+          <div class="control-label">
+            <span>初期投資額（一括）</span>
+            <div class="input-box-wrapper">
+              <span class="input-unit-prefix">¥</span>
+              <input type="number" class="num-input" id="numInitial" value="0" min="0" max="18000000" step="10000" oninput="syncInputs('initial', 'num')">
+            </div>
+          </div>
+          <input type="range" id="rangeInitial" min="0" max="18000000" step="100000" value="0" oninput="syncInputs('initial', 'range')">
+        </div>
+
+        <div class="control-group">
+          <div class="control-label">
+            <span>想定年利回り</span>
+            <div class="input-box-wrapper">
+              <input type="number" class="num-input" id="numReturn" value="5.0" min="0" max="30.0" step="0.1" style="width: 60px;" oninput="syncInputs('return', 'num')">
+              <span class="input-unit-suffix">%</span>
+            </div>
+          </div>
+          <input type="range" id="rangeReturn" min="0.1" max="15.0" step="0.1" value="5.0" oninput="syncInputs('return', 'range')">
+        </div>
+
+        <div class="control-group">
+          <div class="control-label">
+            <span>運用年数</span>
+            <div class="input-box-wrapper">
+              <input type="number" class="num-input" id="numHorizon" value="30" min="1" max="60" step="1" style="width: 50px;" oninput="syncInputs('horizon', 'num')">
+              <span class="input-unit-suffix">年</span>
+            </div>
+          </div>
+          <input type="range" id="rangeHorizon" min="1" max="50" step="1" value="30" oninput="syncInputs('horizon', 'range')">
+        </div>
+
+        <div class="toggle-group">
+          <span style="font-size:13px; font-weight:500;">1,800万円上限で積立ストップ</span>
+          <label class="switch">
+            <input type="checkbox" id="inputCapToggle" checked onchange="updateAll()">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Drawdown Controls -->
+      <div id="drawdownControls" style="display: none;">
+        <div class="control-group">
+          <div class="control-label">
+            <span>取り崩し開始時 資産総額</span>
+            <div class="input-box-wrapper">
+              <span class="input-unit-prefix">¥</span>
+              <input type="number" class="num-input" id="numDrawStart" value="40000000" min="0" max="500000000" step="100000" oninput="syncInputs('drawStart', 'num')">
+            </div>
+          </div>
+          <input type="range" id="rangeDrawStart" min="1000000" max="150000000" step="1000000" value="40000000" oninput="syncInputs('drawStart', 'range')">
+        </div>
+
+        <div class="control-group">
+          <div class="control-label">
+            <span>毎月の取り崩し額</span>
+            <div class="input-box-wrapper">
+              <span class="input-unit-prefix">¥</span>
+              <input type="number" class="num-input" id="numDrawMonthly" value="150000" min="0" max="3000000" step="1000" oninput="syncInputs('drawMonthly', 'num')">
+            </div>
+          </div>
+          <input type="range" id="rangeDrawMonthly" min="0" max="1000000" step="10000" value="150000" oninput="syncInputs('drawMonthly', 'range')">
+        </div>
+
+        <div class="control-group">
+          <div class="control-label">
+            <span>取り崩し期間中の想定利回り</span>
+            <div class="input-box-wrapper">
+              <input type="number" class="num-input" id="numDrawReturn" value="3.0" min="0" max="20.0" step="0.1" style="width: 60px;" oninput="syncInputs('drawReturn', 'num')">
+              <span class="input-unit-suffix">%</span>
+            </div>
+          </div>
+          <input type="range" id="rangeDrawReturn" min="0.0" max="10.0" step="0.1" value="3.0" oninput="syncInputs('drawReturn', 'range')">
+        </div>
+      </div>
+
+      <div class="info-banner" id="infoBannerText">
+        💡 <b>ポイント:</b> 数値ボックスに直接金額を入力するか、下のスライダーを直感的に動かしてシミュレーションできます。
+      </div>
+    </div>
+
+    <!-- Results Panel -->
+    <div class="panel">
+      <div class="metrics-grid" id="metricsGrowth">
+        <div class="metric-card">
+          <div class="metric-label">最終資産総額</div>
+          <div class="metric-value total" id="metricTotal">¥0</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">投資元本累計</div>
+          <div class="metric-value principal" id="metricPrincipal">¥0</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">運用益（利益）</div>
+          <div class="metric-value gains" id="metricGains">¥0</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">非課税メリット（節税）</div>
+          <div class="metric-value tax" id="metricTax">¥0</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">1800万上限到達</div>
+          <div class="metric-value year-cap" id="metricCapYear">--</div>
+        </div>
+      </div>
+
+      <div class="metrics-grid" id="metricsDrawdown" style="display: none;">
+        <div class="metric-card">
+          <div class="metric-label">資産寿命</div>
+          <div class="metric-value total" id="metricDrawLifespan">--</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">年間取り崩し総額</div>
+          <div class="metric-value principal" id="metricDrawAnnual">¥0</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">4%ルール月受取目安</div>
+          <div class="metric-value gains" id="metricDrawSafe">¥0</div>
+        </div>
+      </div>
+
+      <div class="chart-container">
+        <canvas id="simChart"></canvas>
+      </div>
+
+      <div class="details-section" id="tableSection">
+        <button class="collapse-btn" onclick="toggleTable()">
+          <span id="collapseIcon">▼</span> 年次推移の詳細データを見る
+        </button>
+        <div class="table-wrapper" id="tableWrapper">
+          <table id="dataTable">
+            <thead>
+              <tr>
+                <th>年数</th>
+                <th>投資元本</th>
+                <th>運用益</th>
+                <th>総資産額</th>
+                <th>課税口座手取り</th>
+                <th>節税効果</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let currentTab = 'growth';
+  let chartInstance = null;
+
+  function fmtYen(num) {
+    return '¥' + Math.round(num).toLocaleString('ja-JP');
+  }
+
+  // 双方向同期ハンドラ (手入力 ↔ スライダー)
+  function syncInputs(field, source) {
+    const numEl = document.getElementById(
+      field === 'monthly' ? 'numMonthly' :
+      field === 'initial' ? 'numInitial' :
+      field === 'return' ? 'numReturn' :
+      field === 'horizon' ? 'numHorizon' :
+      field === 'drawStart' ? 'numDrawStart' :
+      field === 'drawMonthly' ? 'numDrawMonthly' : 'numDrawReturn'
+    );
+    const rangeEl = document.getElementById(
+      field === 'monthly' ? 'rangeMonthly' :
+      field === 'initial' ? 'rangeInitial' :
+      field === 'return' ? 'rangeReturn' :
+      field === 'horizon' ? 'rangeHorizon' :
+      field === 'drawStart' ? 'rangeDrawStart' :
+      field === 'drawMonthly' ? 'rangeDrawMonthly' : 'rangeDrawReturn'
+    );
+
+    if (source === 'range') {
+      numEl.value = rangeEl.value;
+    } else if (source === 'num') {
+      let val = parseFloat(numEl.value);
+      if (!isNaN(val)) {
+        rangeEl.value = val;
+      }
+    }
+    updateAll();
+  }
+
+  function switchTab(tab) {
+    currentTab = tab;
+    document.getElementById('tabGrowth').classList.toggle('active', tab === 'growth');
+    document.getElementById('tabDrawdown').classList.toggle('active', tab === 'drawdown');
+
+    document.getElementById('growthControls').style.display = tab === 'growth' ? 'block' : 'none';
+    document.getElementById('drawdownControls').style.display = tab === 'drawdown' ? 'block' : 'none';
+    document.getElementById('metricsGrowth').style.display = tab === 'growth' ? 'grid' : 'none';
+    document.getElementById('metricsDrawdown').style.display = tab === 'drawdown' ? 'grid' : 'none';
+    document.getElementById('tableSection').style.display = tab === 'growth' ? 'block' : 'none';
+
+    if (tab === 'drawdown') {
+      document.getElementById('ctrlTitle').innerText = '取り崩し条件設定';
+      document.getElementById('infoBannerText').innerHTML = '💡 <b>出口戦略:</b> 運用を継続しながら毎月一定額を取り崩した場合、資産が何年持つか（資産寿命）を試算します。';
+    } else {
+      document.getElementById('ctrlTitle').innerText = 'シミュレーション条件設定';
+      document.getElementById('infoBannerText').innerHTML = '💡 <b>ポイント:</b> 数値ボックスに直接金額を入力するか、下のスライダーを直感的に動かしてシミュレーションできます。';
+    }
+    updateAll();
+  }
+
+  function toggleTable() {
+    const wrapper = document.getElementById('tableWrapper');
+    const icon = document.getElementById('collapseIcon');
+    wrapper.classList.toggle('open');
+    icon.innerText = wrapper.classList.contains('open') ? '▲' : '▼';
+  }
+
+  function updateAll() {
+    if (currentTab === 'growth') {
+      runGrowthSim();
+    } else {
+      runDrawdownSim();
+    }
+  }
+
+  function runGrowthSim() {
+    const monthly = Math.max(0, parseInt(document.getElementById('numMonthly').value) || 0);
+    const initial = Math.max(0, parseInt(document.getElementById('numInitial').value) || 0);
+    const annualReturn = Math.max(0, parseFloat(document.getElementById('numReturn').value) || 0);
+    const horizon = Math.max(1, parseInt(document.getElementById('numHorizon').value) || 1);
+    const capEnabled = document.getElementById('inputCapToggle').checked;
+
+    const monthlyRate = (annualReturn / 100) / 12;
+    const totalMonths = horizon * 12;
+    const CAP_LIMIT = 18000000;
+
+    let principal = initial;
+    let balance = initial;
+    let capMonth = null;
+
+    const labels = [];
+    const dataPrincipal = [];
+    const dataTotal = [];
+    const dataGains = [];
+    const dataTaxable = [];
+    const tableRows = [];
+
+    // Year 0
+    labels.push('0年');
+    dataPrincipal.push(initial);
+    dataTotal.push(initial);
+    dataGains.push(0);
+    dataTaxable.push(initial);
+
+    for (let m = 1; m <= totalMonths; m++) {
+      let add = 0;
+      if (!capEnabled || principal < CAP_LIMIT) {
+        if (capEnabled && (principal + monthly > CAP_LIMIT)) {
+          add = CAP_LIMIT - principal;
+        } else {
+          add = monthly;
+        }
+      }
+      principal += add;
+      balance = balance * (1 + monthlyRate) + add;
+
+      if (capEnabled && principal >= CAP_LIMIT && capMonth === null) {
+        capMonth = m;
+      }
+
+      if (m % 12 === 0) {
+        const year = m / 12;
+        const gains = Math.max(0, balance - principal);
+        const taxableNet = principal + gains * (1 - 0.20315);
+        const taxSaved = gains * 0.20315;
+
+        labels.push(year + '年');
+        dataPrincipal.push(Math.round(principal));
+        dataTotal.push(Math.round(balance));
+        dataGains.push(Math.round(gains));
+        dataTaxable.push(Math.round(taxableNet));
+
+        tableRows.push(`
+          <tr>
+            <td>${year}年目</td>
+            <td>${fmtYen(principal)}</td>
+            <td style="color: #34d399;">+${fmtYen(gains)}</td>
+            <td style="font-weight: 700; color: #60a5fa;">${fmtYen(balance)}</td>
+            <td style="color: #fbbf24;">${fmtYen(taxableNet)}</td>
+            <td style="color: #f472b6;">+${fmtYen(taxSaved)}</td>
+          </tr>
+        `);
+      }
+    }
+
+    const finalTotal = balance;
+    const finalPrincipal = principal;
+    const finalGains = Math.max(0, finalTotal - finalPrincipal);
+    const finalTaxSaved = finalGains * 0.20315;
+
+    document.getElementById('metricTotal').innerText = fmtYen(finalTotal);
+    document.getElementById('metricPrincipal').innerText = fmtYen(finalPrincipal);
+    document.getElementById('metricGains').innerText = fmtYen(finalGains);
+    document.getElementById('metricTax').innerText = fmtYen(finalTaxSaved);
+    document.getElementById('metricCapYear').innerText = capMonth ? `${Math.ceil(capMonth / 12)}年目` : (capEnabled ? '期間内未達' : '上限無効');
+
+    document.getElementById('tableBody').innerHTML = tableRows.join('');
+
+    renderGrowthChart(labels, dataPrincipal, dataTotal, dataGains, dataTaxable);
+  }
+
+  function renderGrowthChart(labels, dataPrincipal, dataTotal, dataGains, dataTaxable) {
+    const ctx = document.getElementById('simChart').getContext('2d');
+    if (chartInstance) chartInstance.destroy();
+
+    chartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: '総資産額（NISA）',
+            data: dataTotal,
+            backgroundColor: 'rgba(16, 185, 129, 0.65)',
+            borderColor: '#10b981',
+            borderWidth: 1.5,
+            fill: 1,
+            pointRadius: 0,
+            pointHoverRadius: 4,
+          },
+          {
+            label: '投資元本',
+            data: dataPrincipal,
+            backgroundColor: 'rgba(59, 130, 246, 0.85)',
+            borderColor: '#3b82f6',
+            borderWidth: 1.5,
+            fill: 'origin',
+            pointRadius: 0,
+            pointHoverRadius: 4,
+          },
+          {
+            label: '課税口座手取り比較',
+            data: dataTaxable,
+            borderColor: '#f59e0b',
+            borderWidth: 2.5,
+            borderDash: [5, 5],
+            fill: false,
+            pointRadius: 0,
+            pointHoverRadius: 4,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+          mode: 'index',
+          intersect: false
+        },
+        plugins: {
+          legend: {
+            position: 'top',
+            labels: {
+              color: '#d1d5db',
+              font: { size: 12 },
+              usePointStyle: true,
+              pointStyle: 'circle'
+            }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(17, 24, 39, 0.95)',
+            titleColor: '#f9fafb',
+            bodyColor: '#e5e7eb',
+            borderColor: '#4b5563',
+            borderWidth: 1,
+            padding: 12,
+            titleFont: { size: 13, weight: 'bold' },
+            bodyFont: { size: 12 },
+            callbacks: {
+              title: function(items) {
+                return `運用年数: ${items[0].label}`;
+              },
+              beforeBody: function(items) {
+                const idx = items[0].dataIndex;
+                const total = dataTotal[idx];
+                const principal = dataPrincipal[idx];
+                const gains = dataGains[idx];
+                const taxable = dataTaxable[idx];
+                return [
+                  `投資元本: ${fmtYen(principal)}`,
+                  `運用益: +${fmtYen(gains)}`,
+                  `課税口座手取り比較: ${fmtYen(taxable)}`,
+                  `-------------------`,
+                  `総資産額: ${fmtYen(total)}`
+                ];
+              },
+              label: function() {
+                return null;
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: 'rgba(255, 255, 255, 0.06)' },
+            ticks: { color: '#9ca3af', font: { size: 11 } }
+          },
+          y: {
+            grid: { color: 'rgba(255, 255, 255, 0.06)' },
+            ticks: {
+              color: '#9ca3af',
+              font: { size: 11 },
+              callback: function(val) {
+                if (val >= 100000000) return (val / 100000000).toFixed(1) + '億円';
+                if (val >= 10000) return (val / 10000).toLocaleString() + '万円';
+                return val;
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  function runDrawdownSim() {
+    const startAsset = Math.max(0, parseInt(document.getElementById('numDrawStart').value) || 0);
+    const monthlyDraw = Math.max(0, parseInt(document.getElementById('numDrawMonthly').value) || 0);
+    const drawReturn = Math.max(0, parseFloat(document.getElementById('numDrawReturn').value) || 0);
+
+    const monthlyRate = (drawReturn / 100) / 12;
+    let balanceInvest = startAsset;
+    let balanceCash = startAsset;
+    let depletedYear = null;
+
+    const maxYears = 45;
+    const labels = [];
+    const dataInvest = [];
+    const dataCash = [];
+
+    labels.push('0年');
+    dataInvest.push(startAsset);
+    dataCash.push(startAsset);
+
+    for (let y = 1; y <= maxYears; y++) {
+      for (let m = 1; m <= 12; m++) {
+        balanceInvest = balanceInvest * (1 + monthlyRate) - monthlyDraw;
+        balanceCash = balanceCash - monthlyDraw;
+        if (balanceInvest <= 0 && depletedYear === null) {
+          depletedYear = (y - 1) + (m / 12);
+        }
+      }
+      labels.push(y + '年後');
+      dataInvest.push(Math.max(0, Math.round(balanceInvest)));
+      dataCash.push(Math.max(0, Math.round(balanceCash)));
+    }
+
+    const safeWithdrawMonthly = (startAsset * 0.04) / 12;
+    document.getElementById('metricDrawLifespan').innerText = depletedYear ? `${depletedYear.toFixed(1)} 年` : '45年以上（永続可能）';
+    document.getElementById('metricDrawAnnual').innerText = fmtYen(monthlyDraw * 12);
+    document.getElementById('metricDrawSafe').innerText = fmtYen(safeWithdrawMonthly) + '/月';
+
+    renderDrawdownChart(labels, dataInvest, dataCash);
+  }
+
+  function renderDrawdownChart(labels, dataInvest, dataCash) {
+    const ctx = document.getElementById('simChart').getContext('2d');
+    if (chartInstance) chartInstance.destroy();
+
+    chartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: '資産残高（運用しながら取り崩し）',
+            data: dataInvest,
+            borderColor: '#34d399',
+            backgroundColor: 'rgba(16, 185, 129, 0.2)',
+            borderWidth: 2.5,
+            fill: true,
+            pointRadius: 0,
+            pointHoverRadius: 4,
+          },
+          {
+            label: '現金のみ（運用せず取り崩し）',
+            data: dataCash,
+            borderColor: '#ef4444',
+            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+            borderWidth: 2,
+            borderDash: [4, 4],
+            fill: true,
+            pointRadius: 0,
+            pointHoverRadius: 4,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+          mode: 'index',
+          intersect: false
+        },
+        plugins: {
+          legend: {
+            position: 'top',
+            labels: {
+              color: '#d1d5db',
+              font: { size: 12 },
+              usePointStyle: true,
+              pointStyle: 'circle'
+            }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(17, 24, 39, 0.95)',
+            titleColor: '#f9fafb',
+            bodyColor: '#e5e7eb',
+            borderColor: '#4b5563',
+            borderWidth: 1,
+            padding: 12,
+            callbacks: {
+              title: function(items) {
+                return `経過年数: ${items[0].label}`;
+              },
+              label: function(context) {
+                return `${context.dataset.label}: ${fmtYen(context.raw)}`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: 'rgba(255, 255, 255, 0.06)' },
+            ticks: { color: '#9ca3af', font: { size: 11 } }
+          },
+          y: {
+            grid: { color: 'rgba(255, 255, 255, 0.06)' },
+            ticks: {
+              color: '#9ca3af',
+              font: { size: 11 },
+              callback: function(val) {
+                if (val >= 100000000) return (val / 100000000).toFixed(1) + '億円';
+                if (val >= 10000) return (val / 10000).toLocaleString() + '万円';
+                return val;
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  window.onload = () => {
+    updateAll();
+  };
+</script>
+
+</body>
+</html>
