@@ -446,6 +446,51 @@
       border: 1px solid rgba(59, 130, 246, 0.4);
     }
 
+    /* Annual Cap Alert Box */
+    .annual-alert-box {
+      border-radius: 6px;
+      padding: 6px 8px;
+      font-size: 10px;
+      line-height: 1.4;
+      margin-top: 6px;
+      display: none;
+    }
+
+    .annual-alert-box.warning {
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      color: #fcd34d;
+    }
+
+    .annual-alert-box.info {
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      color: #93c5fd;
+    }
+
+    .alert-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 700;
+      margin-bottom: 3px;
+    }
+
+    .btn-auto-adjust {
+      background: #f59e0b;
+      color: #000;
+      border: none;
+      font-size: 9.5px;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 4px;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+    }
+
     /* Controls Area */
     .control-group {
       margin-bottom: 7px;
@@ -553,6 +598,16 @@
       border-color: rgba(16, 185, 129, 0.5);
       color: #34d399;
       background: rgba(16, 185, 129, 0.1);
+    }
+    .preset-btn.amber {
+      border-color: rgba(245, 158, 11, 0.5);
+      color: #fbbf24;
+      background: rgba(245, 158, 11, 0.1);
+    }
+    .preset-btn.danger {
+      border-color: rgba(239, 68, 68, 0.5);
+      color: #f87171;
+      background: rgba(239, 68, 68, 0.1);
     }
 
     .toggle-group {
@@ -756,7 +811,9 @@
           <div class="preset-container">
             <button class="preset-btn" onclick="setPreset('initial', 0)">0円</button>
             <button class="preset-btn" onclick="setPreset('initial', 1000000)">100万</button>
-            <button class="preset-btn" onclick="setPreset('initial', 2400000)">240万(年枠)</button>
+            <button class="preset-btn" onclick="setPreset('initial', 2400000)">240万(成長枠)</button>
+            <button class="preset-btn highlight" onclick="setPreset('initial', 3600000)">360万(年上限)</button>
+            <button class="preset-btn" onclick="setPreset('initial', 5000000)">500万(既存)</button>
           </div>
         </div>
 
@@ -801,6 +858,18 @@
             <span class="slider"></span>
           </label>
         </div>
+
+        <!-- 年間360万円超過アラート / 既存資産案内ボックス -->
+        <div id="annualCapAlert" class="annual-alert-box">
+          <div class="alert-header">
+            <span id="alertHeaderTitle">⚠️ 年間投資枠（360万円）を超過</span>
+          </div>
+          <div id="alertBodyText"></div>
+          <button id="btnAutoAdjustCap" class="btn-auto-adjust" onclick="autoAdjustToAnnualCap()">
+            ⚡ 年360万以内に自動調整 (月<span id="targetMonthlyText">0</span>万に設定)
+          </button>
+        </div>
+
       </div>
 
       <!-- Drawdown Controls -->
@@ -827,6 +896,7 @@
           </div>
         </div>
 
+        <!-- Mode A: 定額取り崩し -->
         <div id="drawControlFixed">
           <div class="control-group">
             <div class="control-label">
@@ -841,11 +911,14 @@
               <button class="preset-btn" onclick="setPreset('drawMonthly', 100000)">10万</button>
               <button class="preset-btn" onclick="setPreset('drawMonthly', 150000)">15万</button>
               <button class="preset-btn" onclick="setPreset('drawMonthly', 200000)">20万</button>
-              <button class="preset-btn highlight" onclick="apply4PercentMonthly()">4%相当額</button>
+              <button class="preset-btn highlight" onclick="applyPercentMonthly(0.04)">4%相当</button>
+              <button class="preset-btn amber" onclick="applyPercentMonthly(0.05)">5%相当</button>
+              <button class="preset-btn danger" onclick="applyPercentMonthly(0.07)">7%相当</button>
             </div>
           </div>
         </div>
 
+        <!-- Mode B: 定率取り崩し -->
         <div id="drawControlPercent" style="display: none;">
           <div class="control-group">
             <div class="control-label">
@@ -858,8 +931,9 @@
             <input type="range" id="rangeDrawRate" min="1.0" max="10.0" step="0.1" value="4.0" oninput="syncInputs('drawRate', 'range')">
             <div class="preset-container">
               <button class="preset-btn" onclick="setPreset('drawRate', 3.0)">3%(超堅実)</button>
-              <button class="preset-btn highlight" onclick="setPreset('drawRate', 4.0)">4%(定番)</button>
-              <button class="preset-btn" onclick="setPreset('drawRate', 5.0)">5%</button>
+              <button class="preset-btn highlight" onclick="setPreset('drawRate', 4.0)">4%(黄金則)</button>
+              <button class="preset-btn amber" onclick="setPreset('drawRate', 5.0)">5%(計画消費)</button>
+              <button class="preset-btn danger" onclick="setPreset('drawRate', 7.0)">7%(急減注意)</button>
             </div>
           </div>
         </div>
@@ -876,7 +950,8 @@
           <div class="preset-container">
             <button class="preset-btn" onclick="setPreset('drawReturn', 1.0)">1%(低リスク)</button>
             <button class="preset-btn" onclick="setPreset('drawReturn', 3.0)">3%(バランス)</button>
-            <button class="preset-btn" onclick="setPreset('drawReturn', 4.0)">4%(株式)</button>
+            <button class="preset-btn highlight" onclick="setPreset('drawReturn', 5.0)">5%(オルカン)</button>
+            <button class="preset-btn amber" onclick="setPreset('drawReturn', 7.0)">7%(S&P500)</button>
           </div>
         </div>
       </div>
@@ -1113,15 +1188,15 @@
   function importFromGrowthResult() {
     document.getElementById('numDrawStart').value = lastGrowthTotal;
     document.getElementById('rangeDrawStart').value = Math.min(100000000, lastGrowthTotal);
-    apply4PercentMonthly();
+    applyPercentMonthly(0.04);
     saveAndRun();
   }
 
-  function apply4PercentMonthly() {
+  function applyPercentMonthly(rate) {
     const startAsset = parseInt(document.getElementById('numDrawStart').value) || 0;
-    const monthly4Pct = Math.round((startAsset * 0.04) / 12);
-    document.getElementById('numDrawMonthly').value = monthly4Pct;
-    document.getElementById('rangeDrawMonthly').value = Math.min(500000, monthly4Pct);
+    const monthlyAmt = Math.round((startAsset * rate) / 12);
+    document.getElementById('numDrawMonthly').value = monthlyAmt;
+    document.getElementById('rangeDrawMonthly').value = Math.min(500000, monthlyAmt);
     saveAndRun();
   }
 
@@ -1222,12 +1297,58 @@
     requestAnimationFrame(update);
   }
 
+  /* 年間投資枠（360万）の超過チェック & 案内表示 */
+  let optimalMonthlyCap = 0;
+
+  function checkAnnualCapAlert(monthly, initial) {
+    const alertBox = document.getElementById('annualCapAlert');
+    const headerTitle = document.getElementById('alertHeaderTitle');
+    const bodyText = document.getElementById('alertBodyText');
+    const autoBtn = document.getElementById('btnAutoAdjustCap');
+    const targetMonthlyText = document.getElementById('targetMonthlyText');
+
+    const firstYearTotal = initial + (monthly * 12);
+    const ANNUAL_CAP = 3600000;
+
+    if (firstYearTotal <= ANNUAL_CAP) {
+      alertBox.style.display = 'none';
+      return;
+    }
+
+    alertBox.style.display = 'block';
+
+    if (initial > ANNUAL_CAP) {
+      alertBox.className = 'annual-alert-box info';
+      headerTitle.innerText = '💡 既存残高・移行シミュレーション';
+      bodyText.innerHTML = `初期投資額（${fmtYen(initial)}）が新NISAの年間上限（360万円）を超えています。すでに運用中の残高や、特定口座からの順次移行を想定した試算としてそのまま計算しています。`;
+      autoBtn.style.display = 'none';
+    } else {
+      alertBox.className = 'annual-alert-box warning';
+      const overAmount = firstYearTotal - ANNUAL_CAP;
+      const maxMonthly = Math.max(0, Math.floor((ANNUAL_CAP - initial) / 12 / 1000) * 1000);
+      optimalMonthlyCap = maxMonthly;
+
+      headerTitle.innerText = '⚠️ 年間投資枠（360万円）を超過しています';
+      bodyText.innerHTML = `初年度の投資予定額が <b>${fmtYen(firstYearTotal)}</b>（超過: +${fmtYen(overAmount)}）になっています。実際のNISAでは年360万円（つみたて120万＋成長240万）が上限となります。`;
+      
+      targetMonthlyText.innerText = (maxMonthly / 10000).toFixed(maxMonthly % 10000 === 0 ? 0 : 1);
+      autoBtn.style.display = 'inline-flex';
+    }
+  }
+
+  function autoAdjustToAnnualCap() {
+    setPreset('monthly', optimalMonthlyCap);
+    showToast(`毎月の積立額を ¥${optimalMonthlyCap.toLocaleString()} に調整しました`);
+  }
+
   function runGrowthSim() {
     const monthly = Math.max(0, parseInt(document.getElementById('numMonthly').value) || 0);
     const initial = Math.max(0, parseInt(document.getElementById('numInitial').value) || 0);
     const annualReturn = Math.max(0, parseFloat(document.getElementById('numReturn').value) || 0);
     const horizon = Math.max(1, parseInt(document.getElementById('numHorizon').value) || 1);
     const capEnabled = document.getElementById('inputCapToggle').checked;
+
+    checkAnnualCapAlert(monthly, initial);
 
     const monthlyRate = (annualReturn / 100) / 12;
     const totalMonths = horizon * 12;
@@ -1314,7 +1435,7 @@
     `;
     document.getElementById('tableBody').innerHTML = tableRows.join('');
 
-    // --- 改善版：実戦型RPGレーダー計算カーブ (資産形成) ---
+    // --- 実戦型RPGレーダー計算カーブ (資産形成) ---
     let atkScore = 0;
     if (monthly === 0 && initial === 0) {
       atkScore = 0;
@@ -1474,7 +1595,7 @@
     });
   }
 
-  /* --- 修正版：0〜100点に完全固定されたレーダーチャート --- */
+  /* 0〜100点固定レーダーチャート */
   function renderRadarChart(labels, stats) {
     const ctx = document.getElementById('simChart').getContext('2d');
     if (chartInstance) chartInstance.destroy();
@@ -1524,6 +1645,8 @@
   }
 
   function runDrawdownSim() {
+    document.getElementById('annualCapAlert').style.display = 'none';
+
     const startAsset = Math.max(0, parseInt(document.getElementById('numDrawStart').value) || 0);
     const drawReturn = Math.max(0, parseFloat(document.getElementById('numDrawReturn').value) || 0);
     const monthlyRate = (drawReturn / 100) / 12;
@@ -1603,9 +1726,10 @@
       const bp = Math.round(startAsset / 15) + Math.round(totalReceivedInvest / 10);
       animateCounter(bp);
 
+      // --- 実戦型RPGレーダー計算カーブ (定額取り崩し) ---
       const atk = monthlyDraw === 0 ? 0 : (monthlyDraw <= 150000 ? Math.round((monthlyDraw / 150000) * 80) : Math.min(100, Math.round(80 + ((monthlyDraw - 150000) / 150000) * 20)));
       const def = depletedInvestYear ? Math.min(100, Math.round((depletedInvestYear / 30) * 80)) : 100;
-      const cri = drawReturn <= 0 ? 0 : (drawReturn <= 3 ? Math.round((drawReturn / 3) * 70) : Math.min(100, Math.round(70 + ((drawReturn - 3) / 2) * 30)));
+      const cri = drawReturn <= 0 ? 0 : (drawReturn <= 3 ? Math.round((drawReturn / 3) * 70) : Math.min(100, Math.round(70 + ((drawReturn - 3) / 4) * 30)));
       const guard = !depletedInvestYear ? 100 : Math.min(100, Math.round((depletedInvestYear / 25) * 80));
       const vit = startAsset <= 0 ? 0 : (startAsset <= 50000000 ? Math.round((startAsset / 50000000) * 80) : Math.min(100, Math.round(80 + ((startAsset - 50000000) / 50000000) * 20)));
       radarStats = [atk, def, cri, guard, vit];
@@ -1658,9 +1782,10 @@
       const bp = Math.round(startAsset / 12) + Math.round(totalReceivedInvest / 10);
       animateCounter(bp);
 
+      // --- 実戦型RPGレーダー計算カーブ (定率取り崩し) ---
       const atk = Math.min(100, Math.round((drawRate / 0.04) * 80));
       const def = 100;
-      const cri = drawReturn <= 0 ? 0 : (drawReturn <= 3 ? Math.round((drawReturn / 3) * 70) : Math.min(100, Math.round(70 + ((drawReturn - 3) / 2) * 30)));
+      const cri = drawReturn <= 0 ? 0 : (drawReturn <= 3 ? Math.round((drawReturn / 3) * 70) : Math.min(100, Math.round(70 + ((drawReturn - 3) / 4) * 30)));
       const guard = drawRate <= 0.04 ? 100 : Math.max(50, Math.round(100 - (drawRate - 0.04) * 500));
       const vit = startAsset <= 0 ? 0 : (startAsset <= 50000000 ? Math.round((startAsset / 50000000) * 80) : Math.min(100, Math.round(80 + ((startAsset - 50000000) / 50000000) * 20)));
       radarStats = [atk, def, cri, guard, vit];
