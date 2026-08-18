@@ -1,0 +1,2171 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>新NISA 資産形成・戦闘力シミュレーター</title>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg-primary: #090c13;
+      --bg-card: #121824;
+      --bg-input: #1a2333;
+      --bg-input-focus: #243147;
+      --accent-blue: #3b82f6;
+      --accent-green: #10b981;
+      --accent-orange: #f59e0b;
+      --accent-pink: #f472b6;
+      --accent-purple: #8b5cf6;
+      --accent-gold: #fbbf24;
+      --text-main: #f3f4f6;
+      --text-muted: #8e9db2;
+      --border-color: #202b3c;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 10px 8px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      max-width: 1100px;
+      width: 100%;
+    }
+
+    /* Header */
+    header {
+      margin-bottom: 8px;
+      text-align: center;
+    }
+
+    header h1 {
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #60a5fa, #34d399, #fbbf24);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 2px;
+    }
+
+    header p {
+      color: var(--text-muted);
+      font-size: 10.5px;
+    }
+
+    /* Top Action Bar */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .save-slots {
+      display: flex;
+      background: var(--bg-card);
+      padding: 2px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      gap: 2px;
+    }
+
+    .slot-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 7px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .slot-btn.active {
+      background: var(--accent-purple);
+      color: #ffffff;
+      box-shadow: 0 0 8px rgba(139, 92, 246, 0.4);
+    }
+
+    .tab-container {
+      display: flex;
+      gap: 3px;
+      background: var(--bg-card);
+      padding: 2px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .tab-btn.active {
+      background: var(--accent-blue);
+      color: #ffffff;
+      box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
+    }
+
+    /* Sub Tabs */
+    .sub-tab-container {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 8px;
+      background: var(--bg-input);
+      padding: 2px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+    }
+
+    .sub-tab-btn {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 10px;
+      font-weight: 600;
+      padding: 4px 6px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .sub-tab-btn.active {
+      background: var(--accent-green);
+      color: #0a0d14;
+      font-weight: 800;
+    }
+
+    /* Main Grid */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 10px;
+    }
+
+    @media (max-width: 900px) {
+      .main-grid {
+        display: flex;
+        flex-direction: column;
+      }
+      .panel-results {
+        order: 1;
+        position: sticky;
+        top: 4px;
+        z-index: 20;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+      }
+      .panel-controls {
+        order: 2;
+      }
+    }
+
+    .panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 10px;
+    }
+
+    .panel-title {
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .panel-title-left {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .panel-title-left::before {
+      content: "";
+      display: inline-block;
+      width: 3px;
+      height: 12px;
+      background: var(--accent-blue);
+      border-radius: 2px;
+    }
+
+    .sync-badge-btn {
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid rgba(59, 130, 246, 0.4);
+      color: #93c5fd;
+      font-size: 9.5px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    /* Compact Header */
+    .compact-header-card {
+      background: linear-gradient(135deg, #181c30, #20132e);
+      border: 1px solid #7c3aed;
+      border-radius: 8px;
+      padding: 6px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+      box-shadow: 0 0 10px rgba(124, 58, 237, 0.2);
+    }
+
+    .header-stat-box {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header-stat-label {
+      font-size: 9px;
+      color: #c4b5fd;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .header-stat-val {
+      font-size: 15px;
+      font-weight: 900;
+      color: #fbbf24;
+      font-family: "Courier New", monospace;
+      letter-spacing: 0.5px;
+    }
+
+    .header-stat-val.primary {
+      color: #60a5fa;
+      font-family: inherit;
+    }
+
+    /* Sub Stats Row */
+    .sub-stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+      margin-bottom: 6px;
+    }
+
+    .sub-stat-chip {
+      background: var(--bg-input);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 3px 4px;
+      text-align: center;
+    }
+
+    .chip-label {
+      font-size: 8.5px;
+      color: var(--text-muted);
+      margin-bottom: 1px;
+      white-space: nowrap;
+    }
+
+    .chip-val {
+      font-size: 11.5px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .chip-val.principal { color: #93c5fd; }
+    .chip-val.gains { color: #34d399; }
+    .chip-val.tax { color: #fbbf24; }
+    .chip-val.danger { color: #ef4444; }
+
+    /* View Switcher */
+    .view-switcher-bar {
+      display: flex;
+      background: var(--bg-input);
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      padding: 2px;
+      gap: 2px;
+      margin-bottom: 4px;
+    }
+
+    .view-tab-btn {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 4px 6px;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      transition: all 0.15s;
+    }
+
+    .view-tab-btn.active {
+      background: var(--accent-blue);
+      color: #ffffff;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    }
+    .view-tab-btn.active.gold {
+      background: linear-gradient(135deg, #7c3aed, #a855f7);
+      color: #fff;
+    }
+
+    /* Unified View Box */
+    .unified-display-box {
+      position: relative;
+      height: 185px;
+      width: 100%;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 4px;
+    }
+
+    .diagnosis-view-content {
+      width: 100%;
+      height: 100%;
+      display: none;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 6px 8px;
+      background: linear-gradient(145deg, rgba(26, 34, 48, 0.98), rgba(15, 23, 42, 0.98));
+      border-radius: 6px;
+      border: 1px solid rgba(139, 92, 246, 0.3);
+    }
+
+    .diag-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .diag-main-title {
+      font-size: 13.5px;
+      font-weight: 800;
+      color: #ffffff;
+    }
+
+    .diag-rank-tag {
+      font-size: 9px;
+      font-weight: 800;
+      color: #fbbf24;
+      background: rgba(251, 191, 36, 0.15);
+      border: 1px solid rgba(251, 191, 36, 0.3);
+      padding: 1px 5px;
+      border-radius: 3px;
+    }
+
+    .diag-tags-row {
+      display: flex;
+      gap: 3px;
+      flex-wrap: wrap;
+      margin: 2px 0;
+    }
+
+    .style-tag {
+      background: rgba(139, 92, 246, 0.2);
+      border: 1px solid rgba(139, 92, 246, 0.4);
+      color: #d8b4fe;
+      font-size: 9px;
+      font-weight: 600;
+      padding: 1px 4px;
+      border-radius: 3px;
+    }
+
+    .diag-text-desc {
+      font-size: 9.5px;
+      color: #cbd5e1;
+      line-height: 1.35;
+      overflow-y: auto;
+      max-height: 55px;
+    }
+
+    .share-btn-row {
+      display: flex;
+      gap: 5px;
+    }
+
+    .share-btn-mini {
+      flex: 1;
+      padding: 4px 6px;
+      border-radius: 4px;
+      border: none;
+      font-size: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+    }
+
+    .share-btn-mini.x-btn {
+      background: #000;
+      color: #fff;
+      border: 1px solid #333;
+    }
+
+    .share-btn-mini.url-btn {
+      background: rgba(59, 130, 246, 0.25);
+      color: #93c5fd;
+      border: 1px solid rgba(59, 130, 246, 0.4);
+    }
+
+    /* Annual Cap Alert Box */
+    .annual-alert-box {
+      border-radius: 6px;
+      padding: 6px 8px;
+      font-size: 10px;
+      line-height: 1.4;
+      margin-top: 6px;
+      display: none;
+    }
+
+    .annual-alert-box.warning {
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      color: #fcd34d;
+    }
+
+    .annual-alert-box.info {
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      color: #93c5fd;
+    }
+
+    .alert-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 700;
+      margin-bottom: 3px;
+    }
+
+    .btn-auto-adjust {
+      background: #f59e0b;
+      color: #000;
+      border: none;
+      font-size: 9.5px;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 4px;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    /* Controls Area */
+    .control-group {
+      margin-bottom: 7px;
+    }
+
+    .control-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 10.5px;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+    }
+
+    .input-box-wrapper {
+      display: flex;
+      align-items: center;
+      background: var(--bg-input);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      padding: 1px 4px;
+    }
+
+    .input-box-wrapper:focus-within {
+      border-color: var(--accent-blue);
+      background-color: var(--bg-input-focus);
+    }
+
+    .input-unit-prefix, .input-unit-suffix {
+      color: var(--text-muted);
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .num-input {
+      background: transparent;
+      border: none;
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 11.5px;
+      text-align: right;
+      width: 75px;
+      outline: none;
+      padding: 1px 2px;
+      font-family: inherit;
+    }
+
+    .num-input::-webkit-outer-spin-button,
+    .num-input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    .num-input[type=number] {
+      -moz-appearance: textfield;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      height: 4px;
+      background: var(--bg-input);
+      border-radius: 2px;
+      outline: none;
+      -webkit-appearance: none;
+      cursor: pointer;
+      margin-top: 2px;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--accent-blue);
+      cursor: pointer;
+      border: 2px solid #ffffff;
+      box-shadow: 0 0 4px rgba(0,0,0,0.5);
+    }
+
+    .preset-container {
+      display: flex;
+      gap: 3px;
+      margin-top: 2px;
+      overflow-x: auto;
+      padding-bottom: 1px;
+    }
+
+    .preset-btn {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      padding: 1px 5px;
+      font-size: 9.5px;
+      border-radius: 3px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s;
+    }
+
+    .preset-btn:hover, .preset-btn:active {
+      background: var(--accent-blue);
+      color: #fff;
+      border-color: var(--accent-blue);
+    }
+    .preset-btn.highlight {
+      border-color: rgba(16, 185, 129, 0.5);
+      color: #34d399;
+      background: rgba(16, 185, 129, 0.1);
+    }
+    .preset-btn.amber {
+      border-color: rgba(245, 158, 11, 0.5);
+      color: #fbbf24;
+      background: rgba(245, 158, 11, 0.1);
+    }
+    .preset-btn.danger {
+      border-color: rgba(239, 68, 68, 0.5);
+      color: #f87171;
+      background: rgba(239, 68, 68, 0.1);
+    }
+    .preset-btn.stress-active {
+      background: rgba(239, 68, 68, 0.35) !important;
+      border-color: #ef4444 !important;
+      color: #fecaca !important;
+      font-weight: 800;
+      box-shadow: 0 0 6px rgba(239, 68, 68, 0.4);
+    }
+    .preset-btn.stress-active-none {
+      background: rgba(16, 185, 129, 0.25) !important;
+      border-color: #10b981 !important;
+      color: #a7f3d0 !important;
+      font-weight: 800;
+    }
+
+    .toggle-group {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 5px 8px;
+      background: var(--bg-input);
+      border-radius: 6px;
+      margin-top: 4px;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 34px;
+      height: 18px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #4b5563;
+      transition: .3s;
+      border-radius: 18px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 12px;
+      width: 12px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .3s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: var(--accent-blue);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(16px);
+    }
+
+    /* Details Table */
+    .details-section {
+      margin-top: 6px;
+    }
+
+    .collapse-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 5px 8px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      width: 100%;
+      justify-content: center;
+    }
+
+    .table-wrapper {
+      max-height: 180px;
+      overflow-y: auto;
+      margin-top: 4px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      display: none;
+    }
+
+    .table-wrapper.open {
+      display: block;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 9.5px;
+      text-align: right;
+    }
+
+    th, td {
+      padding: 4px 6px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    th {
+      background: #151a22;
+      color: var(--text-muted);
+      position: sticky;
+      top: 0;
+    }
+
+    td:first-child, th:first-child {
+      text-align: center;
+    }
+
+    tr:nth-child(even) {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    #toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #10b981;
+      color: #ffffff;
+      padding: 5px 12px;
+      border-radius: 16px;
+      font-size: 11px;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      transition: transform 0.3s ease;
+      z-index: 100;
+      pointer-events: none;
+      opacity: 0;
+    }
+    #toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>新NISA 資産形成・戦闘力シミュレーター</h1>
+    <p>1,800万円自動ストップ ＆ RPG戦闘力レーダー・FIRE診断</p>
+  </header>
+
+  <!-- Top Action Bar -->
+  <div class="top-bar">
+    <div class="save-slots">
+      <span style="font-size:9px; color:var(--text-muted); align-self:center; margin-right:2px; font-weight:700;">💾 保存:</span>
+      <button class="slot-btn active" id="slotBtn1" onclick="switchSlot(1)">① 現在値</button>
+      <button class="slot-btn" id="slotBtn2" onclick="switchSlot(2)">② 理想型</button>
+      <button class="slot-btn" id="slotBtn3" onclick="switchSlot(3)">③ 攻め型</button>
+    </div>
+
+    <div class="tab-container">
+      <button class="tab-btn active" id="tabGrowth" onclick="switchTab('growth')">資産形成</button>
+      <button class="tab-btn" id="tabDrawdown" onclick="switchTab('drawdown')">出口・取り崩し</button>
+    </div>
+  </div>
+
+  <div class="main-grid">
+    <!-- Controls Panel -->
+    <div class="panel panel-controls">
+      <div class="panel-title">
+        <div class="panel-title-left" id="ctrlTitle">シミュレーション条件設定</div>
+        <button id="btnImportFromGrowth" class="sync-badge-btn" style="display: none;" onclick="importFromGrowthResult()">
+          ⚡ 形成結果を反映
+        </button>
+      </div>
+
+      <!-- Growth Controls -->
+      <div id="growthControls">
+        <div class="control-group">
+          <div class="control-label">
+            <span>毎月の積立額</span>
+            <div class="input-box-wrapper">
+              <span class="input-unit-prefix">¥</span>
+              <input type="number" class="num-input" id="numMonthly" value="50000" min="0" max="3000000" step="1000" oninput="syncInputs('monthly', 'num')">
+            </div>
+          </div>
+          <input type="range" id="rangeMonthly" min="0" max="300000" step="5000" value="50000" oninput="syncInputs('monthly', 'range')">
+          <div class="preset-container">
+            <button class="preset-btn" onclick="setPreset('monthly', 0)">0円</button>
+            <button class="preset-btn" onclick="setPreset('monthly', 30000)">3万</button>
+            <button class="preset-btn" onclick="setPreset('monthly', 50000)">5万</button>
+            <button class="preset-btn" onclick="setPreset('monthly', 100000)">10万</button>
+            <button class="preset-btn" onclick="setPreset('monthly', 300000)">30万(上限)</button>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <div class="control-label">
+            <span>初期投資額（一括）</span>
+            <div class="input-box-wrapper">
+              <span class="input-unit-prefix">¥</span>
+              <input type="number" class="num-input" id="numInitial" value="0" min="0" max="18000000" step="10000" oninput="syncInputs('initial', 'num')">
+            </div>
+          </div>
+          <input type="range" id="rangeInitial" min="0" max="18000000" step="100000" value="0" oninput="syncInputs('initial', 'range')">
+          <div class="preset-container">
+            <button class="preset-btn" onclick="setPreset('initial', 0)">0円</button>
+            <button class="preset-btn" onclick="setPreset('initial', 1000000)">100万</button>
+            <button class="preset-btn" onclick="setPreset('initial', 2400000)">240万(成長枠)</button>
+            <button class="preset-btn highlight" onclick="setPreset('initial', 3600000)">360万(年上限)</button>
+            <button class="preset-btn" onclick="setPreset('initial', 5000000)">500万(既存)</button>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <div class="control-label">
+            <span>想定年利回り</span>
+            <div class="input-box-wrapper">
+              <input type="number" class="num-input" id="numReturn" value="5.0" min="0" max="30.0" step="0.1" style="width: 50px;" oninput="syncInputs('return', 'num')">
+              <span class="input-unit-suffix">%</span>
+            </div>
+          </div>
+          <input type="range" id="rangeReturn" min="0.1" max="15.0" step="0.1" value="5.0" oninput="syncInputs('return', 'range')">
+          <div class="preset-container">
+            <button class="preset-btn" onclick="setPreset('return', 3.0)">3%</button>
+            <button class="preset-btn" onclick="setPreset('return', 5.0)">5%(全世界)</button>
+            <button class="preset-btn" onclick="setPreset('return', 7.0)">7%(S&P500)</button>
+            <button class="preset-btn" onclick="setPreset('return', 12.0)">12%(強気)</button>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <div class="control-label">
+            <span>運用年数</span>
+            <div class="input-box-wrapper">
+              <input type="number" class="num-input" id="numHorizon" value="30" min="1" max="60" step="1" style="width: 40px;" oninput="syncInputs('horizon', 'num')">
+              <span class="input-unit-suffix">年</span>
+            </div>
+          </div>
+          <input type="range" id="rangeHorizon" min="1" max="50" step="1" value="30" oninput="syncInputs('horizon', 'range')">
+          <div class="preset-container">
+            <button class="preset-btn" onclick="setPreset('horizon', 10)">10年</button>
+            <button class="preset-btn" onclick="setPreset('horizon', 20)">20年</button>
+            <button class="preset-btn" onclick="setPreset('horizon', 30)">30年</button>
+            <button class="preset-btn" onclick="setPreset('horizon', 50)">50年</button>
+          </div>
+        </div>
+
+        <!-- 歴史的暴落ストレステスト（簡易版） -->
+        <div class="control-group">
+          <div class="control-label">
+            <span>歴史的暴落ストレステスト</span>
+          </div>
+          <div class="preset-container" id="stressButtons">
+            <button class="preset-btn highlight" id="stressBtnNone" onclick="setStress('none')">通常</button>
+            <button class="preset-btn danger" id="stressBtnLehman" onclick="setStress('lehman')">リーマン級(-50%)</button>
+            <button class="preset-btn danger" id="stressBtnCorona" onclick="setStress('corona')">コロナ級(-35%)</button>
+            <button class="preset-btn danger" id="stressBtnDotcom" onclick="setStress('dotcom')">ドットコム級(-45%)</button>
+          </div>
+          <div id="stressInfo" style="font-size:9.5px; color:var(--text-muted); margin-top:4px; line-height:1.35;">
+            暴落なし（通常の右肩上がりシミュレーション）
+          </div>
+        </div>
+
+        <div class="toggle-group">
+          <span style="font-size:10.5px; font-weight:500;">1,800万円上限で積立ストップ</span>
+          <label class="switch">
+            <input type="checkbox" id="inputCapToggle" checked onchange="saveAndRun()">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <!-- 年間360万円超過アラート / 既存資産案内ボックス -->
+        <div id="annualCapAlert" class="annual-alert-box">
+          <div class="alert-header">
+            <span id="alertHeaderTitle">⚠️ 年間投資枠（360万円）を超過</span>
+          </div>
+          <div id="alertBodyText"></div>
+          <button id="btnAutoAdjustCap" class="btn-auto-adjust" onclick="autoAdjustToAnnualCap()">
+            ⚡ 年360万以内に自動調整 (月<span id="targetMonthlyText">0</span>万に設定)
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Drawdown Controls -->
+      <div id="drawdownControls" style="display: none;">
+        <div class="sub-tab-container">
+          <button class="sub-tab-btn active" id="subTabFixed" onclick="switchDrawdownMode('fixed')">定額取崩 (毎月○万)</button>
+          <button class="sub-tab-btn" id="subTabPercent" onclick="switchDrawdownMode('percent')">定率取崩 (年○%ルール)</button>
+        </div>
+
+        <div class="control-group">
+          <div class="control-label">
+            <span>開始時 資産総額</span>
+            <div class="input-box-wrapper">
+              <span class="input-unit-prefix">¥</span>
+              <input type="number" class="num-input" id="numDrawStart" value="40000000" min="0" max="500000000" step="100000" oninput="syncInputs('drawStart', 'num')">
+            </div>
+          </div>
+          <input type="range" id="rangeDrawStart" min="0" max="100000000" step="1000000" value="40000000" oninput="syncInputs('drawStart', 'range')">
+          <div class="preset-container">
+            <button class="preset-btn" onclick="setPreset('drawStart', 20000000)">2,000万</button>
+            <button class="preset-btn" onclick="setPreset('drawStart', 30000000)">3,000万</button>
+            <button class="preset-btn" onclick="setPreset('drawStart', 50000000)">5,000万</button>
+            <button class="preset-btn highlight" onclick="importFromGrowthResult()">形成結果代入</button>
+          </div>
+        </div>
+
+        <!-- Mode A: 定額取り崩し -->
+        <div id="drawControlFixed">
+          <div class="control-group">
+            <div class="control-label">
+              <span>毎月の取り崩し額</span>
+              <div class="input-box-wrapper">
+                <span class="input-unit-prefix">¥</span>
+                <input type="number" class="num-input" id="numDrawMonthly" value="150000" min="0" max="3000000" step="5000" oninput="syncInputs('drawMonthly', 'num')">
+              </div>
+            </div>
+            <input type="range" id="rangeDrawMonthly" min="10000" max="500000" step="10000" value="150000" oninput="syncInputs('drawMonthly', 'range')">
+            <div class="preset-container">
+              <button class="preset-btn" onclick="setPreset('drawMonthly', 100000)">10万</button>
+              <button class="preset-btn" onclick="setPreset('drawMonthly', 150000)">15万</button>
+              <button class="preset-btn" onclick="setPreset('drawMonthly', 200000)">20万</button>
+              <button class="preset-btn highlight" onclick="applyPercentMonthly(0.04)">4%相当</button>
+              <button class="preset-btn amber" onclick="applyPercentMonthly(0.05)">5%相当</button>
+              <button class="preset-btn danger" onclick="applyPercentMonthly(0.07)">7%相当</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mode B: 定率取り崩し -->
+        <div id="drawControlPercent" style="display: none;">
+          <div class="control-group">
+            <div class="control-label">
+              <span>年間取り崩し率</span>
+              <div class="input-box-wrapper">
+                <input type="number" class="num-input" id="numDrawRate" value="4.0" min="0.5" max="15.0" step="0.1" style="width: 50px;" oninput="syncInputs('drawRate', 'num')">
+                <span class="input-unit-suffix">%</span>
+              </div>
+            </div>
+            <input type="range" id="rangeDrawRate" min="1.0" max="10.0" step="0.1" value="4.0" oninput="syncInputs('drawRate', 'range')">
+            <div class="preset-container">
+              <button class="preset-btn" onclick="setPreset('drawRate', 3.0)">3%(超堅実)</button>
+              <button class="preset-btn highlight" onclick="setPreset('drawRate', 4.0)">4%(黄金則)</button>
+              <button class="preset-btn amber" onclick="setPreset('drawRate', 5.0)">5%(計画消費)</button>
+              <button class="preset-btn danger" onclick="setPreset('drawRate', 7.0)">7%(急減注意)</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <div class="control-label">
+            <span>取り崩し期間の想定利回り</span>
+            <div class="input-box-wrapper">
+              <input type="number" class="num-input" id="numDrawReturn" value="3.0" min="0" max="20.0" step="0.1" style="width: 50px;" oninput="syncInputs('drawReturn', 'num')">
+              <span class="input-unit-suffix">%</span>
+            </div>
+          </div>
+          <input type="range" id="rangeDrawReturn" min="0.0" max="10.0" step="0.1" value="3.0" oninput="syncInputs('drawReturn', 'range')">
+          <div class="preset-container">
+            <button class="preset-btn" onclick="setPreset('drawReturn', 1.0)">1%(低リスク)</button>
+            <button class="preset-btn" onclick="setPreset('drawReturn', 3.0)">3%(バランス)</button>
+            <button class="preset-btn highlight" onclick="setPreset('drawReturn', 5.0)">5%(オルカン)</button>
+            <button class="preset-btn amber" onclick="setPreset('drawReturn', 7.0)">7%(S&P500)</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results Panel -->
+    <div class="panel panel-results">
+      
+      <!-- 1段目: コンパクト統合ヘッダー (戦闘力 & 総資産/寿命) -->
+      <div class="compact-header-card">
+        <div class="header-stat-box">
+          <div class="header-stat-label">⚡ 投資戦闘力 (BP)</div>
+          <div class="header-stat-val" id="bpValue">0</div>
+        </div>
+        <div class="header-stat-box" style="text-align: right;">
+          <div class="header-stat-label" id="mainStatHeaderLabel" style="justify-content: flex-end;">最終資産総額</div>
+          <div class="header-stat-val primary" id="mainStatHeaderValue">¥0</div>
+        </div>
+      </div>
+
+      <!-- 2段目: スリムサブ指標 (1行3分割) -->
+      <div class="sub-stats-row" id="rowGrowthStats">
+        <div class="sub-stat-chip">
+          <div class="chip-label">投資元本</div>
+          <div class="chip-val principal" id="chipPrincipal">¥0</div>
+        </div>
+        <div class="sub-stat-chip">
+          <div class="chip-label">運用益(利益)</div>
+          <div class="chip-val gains" id="chipGains">¥0</div>
+        </div>
+        <div class="sub-stat-chip">
+          <div class="chip-label">節税バリア</div>
+          <div class="chip-val tax" id="chipTax">¥0</div>
+        </div>
+      </div>
+
+      <div class="sub-stats-row" id="rowDrawdownStats" style="display: none;">
+        <div class="sub-stat-chip">
+          <div class="chip-label" id="chipDrawAnnualLabel">年間取崩額</div>
+          <div class="chip-val principal" id="chipDrawAnnual">¥0</div>
+        </div>
+        <div class="sub-stat-chip">
+          <div class="chip-label">受取累計額</div>
+          <div class="chip-val gains" id="chipDrawTotal">¥0</div>
+        </div>
+        <div class="sub-stat-chip">
+          <div class="chip-label">延命効果</div>
+          <div class="chip-val tax" id="chipDrawDiff">--</div>
+        </div>
+      </div>
+
+      <!-- 3段目: 表示切替タブ (推移 / レーダー / 診断) -->
+      <div class="view-switcher-bar">
+        <button class="view-tab-btn active" id="btnViewLine" onclick="switchDisplayView('line')">
+          📈 資産推移
+        </button>
+        <button class="view-tab-btn" id="btnViewRadar" onclick="switchDisplayView('radar')">
+          📊 レーダー
+        </button>
+        <button class="view-tab-btn gold" id="btnViewDiag" onclick="switchDisplayView('diag')">
+          🎯 称号・診断
+        </button>
+      </div>
+
+      <!-- 4段目: 統合表示エリア -->
+      <div class="unified-display-box">
+        <canvas id="simChart"></canvas>
+
+        <div class="diagnosis-view-content" id="diagnosisViewBox">
+          <div class="diag-title-row">
+            <div class="diag-main-title" id="diagTitle">--</div>
+            <div class="diag-rank-tag" id="diagLevelTag">RANK</div>
+          </div>
+          <div class="diag-tags-row" id="diagTags"></div>
+          <div class="diag-text-desc" id="diagDesc">--</div>
+          <div class="share-btn-row">
+            <button class="share-btn-mini x-btn" onclick="shareOnX()">
+              𝕏 で戦闘力をポスト
+            </button>
+            <button class="share-btn-mini url-btn" onclick="copySimulationUrl()">
+              🔗 設定URLコピー
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5段目: 詳細表トグル -->
+      <div class="details-section" id="tableSection">
+        <button class="collapse-btn" onclick="toggleTable()">
+          <span id="collapseIcon">▼</span> 年次推移の詳細表を見る
+        </button>
+        <div class="table-wrapper" id="tableWrapper">
+          <table id="dataTable">
+            <thead id="tableHeader"></thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div id="toast">設定を保存しました！</div>
+
+<script>
+  let currentTab = 'growth';
+  let drawdownMode = 'fixed';
+  let displayView = 'line';
+  let currentSlot = 1;
+  let chartInstance = null;
+  let lastGrowthTotal = 40000000;
+  let currentDiagTitle = '';
+  let currentBP = 0;
+
+  // Radar chart data cache
+  let radarStats = [50, 50, 50, 50, 50];
+
+  // 歴史的暴落ストレステスト（簡易版）
+  let currentStress = 'none'; // 'none' | 'lehman' | 'corona' | 'dotcom'
+  const STRESS_CONFIG = {
+    none:   { drop: 0.00, label: '通常運用（暴落なし）', short: '通常' },
+    lehman: { drop: 0.50, label: 'リーマン級ショック（約-50%）', short: 'リーマン級' },
+    corona: { drop: 0.35, label: 'コロナショック（約-35%）', short: 'コロナ級' },
+    dotcom: { drop: 0.45, label: 'ドットコムバブル崩壊（約-45%）', short: 'ドットコム級' }
+  };
+
+  function fmtYen(num) {
+    return '¥' + Math.round(num).toLocaleString('ja-JP');
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.innerText = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2000);
+  }
+
+  function switchSlot(slotNum) {
+    saveCurrentSlot();
+    currentSlot = slotNum;
+    [1, 2, 3].forEach(i => {
+      document.getElementById(`slotBtn${i}`).classList.toggle('active', i === slotNum);
+    });
+    loadSlot(slotNum);
+    showToast(`スロット${slotNum} を読み込みました`);
+    updateAll();
+  }
+
+  function saveCurrentSlot() {
+    const data = {
+      monthly: document.getElementById('numMonthly').value,
+      initial: document.getElementById('numInitial').value,
+      returnRate: document.getElementById('numReturn').value,
+      horizon: document.getElementById('numHorizon').value,
+      capToggle: document.getElementById('inputCapToggle').checked,
+      stress: currentStress,
+      drawStart: document.getElementById('numDrawStart').value,
+      drawMonthly: document.getElementById('numDrawMonthly').value,
+      drawRate: document.getElementById('numDrawRate').value,
+      drawReturn: document.getElementById('numDrawReturn').value,
+      tab: currentTab,
+      drawMode: drawdownMode
+    };
+    localStorage.setItem(`nisa_sim_slot_${currentSlot}`, JSON.stringify(data));
+  }
+
+  function loadSlot(slotNum) {
+    const saved = localStorage.getItem(`nisa_sim_slot_${slotNum}`);
+    if (saved) {
+      try {
+        const d = JSON.parse(saved);
+        if (d.monthly !== undefined) document.getElementById('numMonthly').value = d.monthly;
+        if (d.initial !== undefined) document.getElementById('numInitial').value = d.initial;
+        if (d.returnRate !== undefined) document.getElementById('numReturn').value = d.returnRate;
+        if (d.horizon !== undefined) document.getElementById('numHorizon').value = d.horizon;
+        if (d.capToggle !== undefined) document.getElementById('inputCapToggle').checked = d.capToggle;
+        if (d.drawStart !== undefined) document.getElementById('numDrawStart').value = d.drawStart;
+        if (d.drawMonthly !== undefined) document.getElementById('numDrawMonthly').value = d.drawMonthly;
+        if (d.drawRate !== undefined) document.getElementById('numDrawRate').value = d.drawRate;
+        if (d.drawReturn !== undefined) document.getElementById('numDrawReturn').value = d.drawReturn;
+        ['monthly', 'initial', 'return', 'horizon', 'drawStart', 'drawMonthly', 'drawRate', 'drawReturn'].forEach(f => syncInputs(f, 'num', false));
+        // ストレステストのボタン状態を復元
+        if (d.stress) {
+          setStress(d.stress);
+        } else {
+          setStress('none');
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }
+
+  function switchDisplayView(view) {
+    displayView = view;
+    document.getElementById('btnViewLine').classList.toggle('active', view === 'line');
+    document.getElementById('btnViewRadar').classList.toggle('active', view === 'radar');
+    document.getElementById('btnViewDiag').classList.toggle('active', view === 'diag');
+
+    const canvas = document.getElementById('simChart');
+    const diagBox = document.getElementById('diagnosisViewBox');
+
+    if (view === 'diag') {
+      canvas.style.display = 'none';
+      diagBox.style.display = 'flex';
+    } else {
+      canvas.style.display = 'block';
+      diagBox.style.display = 'none';
+      updateAll();
+    }
+  }
+
+  function switchTab(tab) {
+    currentTab = tab;
+    document.getElementById('tabGrowth').classList.toggle('active', tab === 'growth');
+    document.getElementById('tabDrawdown').classList.toggle('active', tab === 'drawdown');
+
+    document.getElementById('growthControls').style.display = tab === 'growth' ? 'block' : 'none';
+    document.getElementById('drawdownControls').style.display = tab === 'drawdown' ? 'block' : 'none';
+    document.getElementById('rowGrowthStats').style.display = tab === 'growth' ? 'grid' : 'none';
+    document.getElementById('rowDrawdownStats').style.display = tab === 'drawdown' ? 'grid' : 'none';
+    document.getElementById('btnImportFromGrowth').style.display = tab === 'drawdown' ? 'inline-flex' : 'none';
+
+    if (tab === 'drawdown') {
+      document.getElementById('ctrlTitle').innerText = '取り崩し条件設定';
+      document.getElementById('mainStatHeaderLabel').innerText = '資産寿命';
+    } else {
+      document.getElementById('ctrlTitle').innerText = 'シミュレーション条件設定';
+      document.getElementById('mainStatHeaderLabel').innerText = '最終資産総額';
+    }
+    saveAndRun();
+  }
+
+  function switchDrawdownMode(mode) {
+    drawdownMode = mode;
+    document.getElementById('subTabFixed').classList.toggle('active', mode === 'fixed');
+    document.getElementById('subTabPercent').classList.toggle('active', mode === 'percent');
+    document.getElementById('drawControlFixed').style.display = mode === 'fixed' ? 'block' : 'none';
+    document.getElementById('drawControlPercent').style.display = mode === 'percent' ? 'block' : 'none';
+
+    if (mode === 'fixed') {
+      document.getElementById('chipDrawAnnualLabel').innerText = '年間取崩額';
+    } else {
+      document.getElementById('chipDrawAnnualLabel').innerText = '初年取崩額';
+    }
+    saveAndRun();
+  }
+
+  function importFromGrowthResult() {
+    document.getElementById('numDrawStart').value = lastGrowthTotal;
+    document.getElementById('rangeDrawStart').value = Math.min(100000000, lastGrowthTotal);
+    applyPercentMonthly(0.04);
+    saveAndRun();
+  }
+
+  function applyPercentMonthly(rate) {
+    const startAsset = parseInt(document.getElementById('numDrawStart').value) || 0;
+    const monthlyAmt = Math.round((startAsset * rate) / 12);
+    document.getElementById('numDrawMonthly').value = monthlyAmt;
+    document.getElementById('rangeDrawMonthly').value = Math.min(500000, monthlyAmt);
+    saveAndRun();
+  }
+
+  function setPreset(field, val) {
+    if (field === 'monthly') {
+      document.getElementById('numMonthly').value = val;
+      document.getElementById('rangeMonthly').value = val;
+    } else if (field === 'initial') {
+      document.getElementById('numInitial').value = val;
+      document.getElementById('rangeInitial').value = val;
+    } else if (field === 'return') {
+      document.getElementById('numReturn').value = val;
+      document.getElementById('rangeReturn').value = val;
+    } else if (field === 'horizon') {
+      document.getElementById('numHorizon').value = val;
+      document.getElementById('rangeHorizon').value = val;
+    } else if (field === 'drawStart') {
+      document.getElementById('numDrawStart').value = val;
+      document.getElementById('rangeDrawStart').value = Math.min(100000000, val);
+    } else if (field === 'drawMonthly') {
+      document.getElementById('numDrawMonthly').value = val;
+      document.getElementById('rangeDrawMonthly').value = Math.min(500000, val);
+    } else if (field === 'drawRate') {
+      document.getElementById('numDrawRate').value = val;
+      document.getElementById('rangeDrawRate').value = val;
+    } else if (field === 'drawReturn') {
+      document.getElementById('numDrawReturn').value = val;
+      document.getElementById('rangeDrawReturn').value = val;
+    }
+    saveAndRun();
+  }
+
+  function setStress(type) {
+    currentStress = type;
+    // ボタンの見た目を更新
+    ['none', 'lehman', 'corona', 'dotcom'].forEach(t => {
+      const btn = document.getElementById('stressBtn' + (t === 'none' ? 'None' : t.charAt(0).toUpperCase() + t.slice(1)));
+      if (!btn) return;
+      btn.classList.remove('stress-active', 'stress-active-none', 'highlight');
+      if (t === type) {
+        if (t === 'none') {
+          btn.classList.add('stress-active-none');
+        } else {
+          btn.classList.add('stress-active');
+        }
+      } else if (t === 'none') {
+        btn.classList.add('highlight');
+      }
+    });
+
+    // 説明文の更新
+    const info = document.getElementById('stressInfo');
+    const cfg = STRESS_CONFIG[type] || STRESS_CONFIG.none;
+    if (type === 'none') {
+      info.innerHTML = '暴落なし（通常の右肩上がりシミュレーション）';
+      info.style.color = 'var(--text-muted)';
+    } else {
+      info.innerHTML = `⚠ ${cfg.label}<br>運用期間の約40%地点で一時的に資産が下落します。積立は継続します。`;
+      info.style.color = '#fca5a5';
+    }
+    saveAndRun();
+  }
+
+  function syncInputs(field, source, shouldRun = true) {
+    const numEl = document.getElementById(
+      field === 'monthly' ? 'numMonthly' :
+      field === 'initial' ? 'numInitial' :
+      field === 'return' ? 'numReturn' :
+      field === 'horizon' ? 'numHorizon' :
+      field === 'drawStart' ? 'numDrawStart' :
+      field === 'drawMonthly' ? 'numDrawMonthly' :
+      field === 'drawRate' ? 'numDrawRate' : 'numDrawReturn'
+    );
+    const rangeEl = document.getElementById(
+      field === 'monthly' ? 'rangeMonthly' :
+      field === 'initial' ? 'rangeInitial' :
+      field === 'return' ? 'rangeReturn' :
+      field === 'horizon' ? 'rangeHorizon' :
+      field === 'drawStart' ? 'rangeDrawStart' :
+      field === 'drawMonthly' ? 'rangeDrawMonthly' :
+      field === 'drawRate' ? 'rangeDrawRate' : 'rangeDrawReturn'
+    );
+
+    if (source === 'range') {
+      numEl.value = rangeEl.value;
+    } else if (source === 'num') {
+      let val = parseFloat(numEl.value);
+      if (!isNaN(val)) {
+        rangeEl.value = val;
+      }
+    }
+    if (shouldRun) saveAndRun();
+  }
+
+  function toggleTable() {
+    const wrapper = document.getElementById('tableWrapper');
+    const icon = document.getElementById('collapseIcon');
+    wrapper.classList.toggle('open');
+    icon.innerText = wrapper.classList.contains('open') ? '▲' : '▼';
+  }
+
+  function saveAndRun() {
+    saveCurrentSlot();
+    updateAll();
+  }
+
+  function updateAll() {
+    if (currentTab === 'growth') {
+      runGrowthSim();
+    } else {
+      runDrawdownSim();
+    }
+  }
+
+  function animateCounter(target) {
+    const el = document.getElementById('bpValue');
+    const start = currentBP;
+    currentBP = target;
+    const duration = 200;
+    const startTime = performance.now();
+
+    function update(time) {
+      const elapsed = time - startTime;
+      const progress = Math.min(1, elapsed / duration);
+      const val = Math.round(start + (target - start) * progress);
+      el.innerText = val.toLocaleString();
+      if (progress < 1) requestAnimationFrame(update);
+    }
+    requestAnimationFrame(update);
+  }
+
+  /* 年間投資枠（360万）の超過チェック & 案内表示 */
+  let optimalMonthlyCap = 0;
+
+  function checkAnnualCapAlert(monthly, initial) {
+    const alertBox = document.getElementById('annualCapAlert');
+    const headerTitle = document.getElementById('alertHeaderTitle');
+    const bodyText = document.getElementById('alertBodyText');
+    const autoBtn = document.getElementById('btnAutoAdjustCap');
+    const targetMonthlyText = document.getElementById('targetMonthlyText');
+
+    const firstYearTotal = initial + (monthly * 12);
+    const ANNUAL_CAP = 3600000;
+
+    if (firstYearTotal <= ANNUAL_CAP) {
+      alertBox.style.display = 'none';
+      return;
+    }
+
+    alertBox.style.display = 'block';
+
+    if (initial > ANNUAL_CAP) {
+      alertBox.className = 'annual-alert-box info';
+      headerTitle.innerText = '💡 既存残高・移行シミュレーション';
+      bodyText.innerHTML = `初期投資額（${fmtYen(initial)}）が新NISAの年間上限（360万円）を超えています。すでに運用中の残高や、特定口座からの順次移行を想定した試算としてそのまま計算しています。`;
+      autoBtn.style.display = 'none';
+    } else {
+      alertBox.className = 'annual-alert-box warning';
+      const overAmount = firstYearTotal - ANNUAL_CAP;
+      const maxMonthly = Math.max(0, Math.floor((ANNUAL_CAP - initial) / 12 / 1000) * 1000);
+      optimalMonthlyCap = maxMonthly;
+
+      headerTitle.innerText = '⚠️ 年間投資枠（360万円）を超過しています';
+      bodyText.innerHTML = `初年度の投資予定額が <b>${fmtYen(firstYearTotal)}</b>（超過: +${fmtYen(overAmount)}）になっています。実際のNISAでは年360万円（つみたて120万＋成長240万）が上限となります。`;
+      
+      targetMonthlyText.innerText = (maxMonthly / 10000).toFixed(maxMonthly % 10000 === 0 ? 0 : 1);
+      autoBtn.style.display = 'inline-flex';
+    }
+  }
+
+  function autoAdjustToAnnualCap() {
+    setPreset('monthly', optimalMonthlyCap);
+    showToast(`毎月の積立額を ¥${optimalMonthlyCap.toLocaleString()} に調整しました`);
+  }
+
+  function runGrowthSim() {
+    const monthly = Math.max(0, parseInt(document.getElementById('numMonthly').value) || 0);
+    const initial = Math.max(0, parseInt(document.getElementById('numInitial').value) || 0);
+    const annualReturn = Math.max(0, parseFloat(document.getElementById('numReturn').value) || 0);
+    const horizon = Math.max(1, parseInt(document.getElementById('numHorizon').value) || 1);
+    const capEnabled = document.getElementById('inputCapToggle').checked;
+
+    checkAnnualCapAlert(monthly, initial);
+
+    const monthlyRate = (annualReturn / 100) / 12;
+    const totalMonths = horizon * 12;
+    const CAP_LIMIT = 18000000;
+
+    // ストレステスト設定
+    const stressCfg = STRESS_CONFIG[currentStress] || STRESS_CONFIG.none;
+    // 運用期間の約40%地点で暴落を発生させる（最低1年目以降）
+    const crashMonth = (stressCfg.drop > 0 && totalMonths > 12)
+      ? Math.max(12, Math.floor(totalMonths * 0.4))
+      : -1;
+
+    let principal = initial;
+    let balance = initial;
+    let capMonth = null;
+    let crashApplied = false;
+
+    const labels = [];
+    const dataPrincipal = [];
+    const dataTotal = [];
+    const dataGains = [];
+    const dataTaxable = [];
+    const tableRows = [];
+
+    labels.push('0年');
+    dataPrincipal.push(initial);
+    dataTotal.push(initial);
+    dataGains.push(0);
+    dataTaxable.push(initial);
+
+    for (let m = 1; m <= totalMonths; m++) {
+      let add = 0;
+      if (!capEnabled || principal < CAP_LIMIT) {
+        if (capEnabled && (principal + monthly > CAP_LIMIT)) {
+          add = CAP_LIMIT - principal;
+        } else {
+          add = monthly;
+        }
+      }
+      principal += add;
+      balance = balance * (1 + monthlyRate) + add;
+
+      // 簡易版ストレステスト：指定月に一気に下落
+      if (m === crashMonth && !crashApplied) {
+        balance = balance * (1 - stressCfg.drop);
+        crashApplied = true;
+      }
+
+      if (capEnabled && principal >= CAP_LIMIT && capMonth === null) {
+        capMonth = m;
+      }
+
+      if (m % 12 === 0) {
+        const year = m / 12;
+        const gains = balance - principal;                 // マイナスも許可（含み損を可視化）
+        const taxableNet = principal + Math.max(0, gains) * (1 - 0.20315);
+        const taxSaved = Math.max(0, gains) * 0.20315;     // 節税は利益が出ている分のみ
+
+        labels.push(year + '年');
+        dataPrincipal.push(Math.round(principal));
+        dataTotal.push(Math.round(balance));
+        dataGains.push(Math.round(gains));
+        dataTaxable.push(Math.round(taxableNet));
+
+        const gainsColor = gains >= 0 ? '#34d399' : '#f87171';
+        const gainsText = (gains >= 0 ? '+' : '') + fmtYen(gains);
+        const taxSavedText = taxSaved > 0 ? '+' + fmtYen(taxSaved) : fmtYen(0);
+
+        tableRows.push(`
+          <tr>
+            <td>${year}年目</td>
+            <td>${fmtYen(principal)}</td>
+            <td style="color: ${gainsColor};">${gainsText}</td>
+            <td style="font-weight: 700; color: #60a5fa;">${fmtYen(balance)}</td>
+            <td style="color: #fbbf24;">${fmtYen(taxableNet)}</td>
+            <td style="color: #f472b6;">${taxSavedText}</td>
+          </tr>
+        `);
+      }
+    }
+
+    lastGrowthTotal = Math.round(balance);
+    const finalTotal = balance;
+    const finalPrincipal = principal;
+    const finalGains = finalTotal - finalPrincipal;        // マイナスも許可
+    const finalTaxSaved = Math.max(0, finalGains) * 0.20315;
+
+    document.getElementById('mainStatHeaderValue').innerText = fmtYen(finalTotal);
+    document.getElementById('chipPrincipal').innerText = fmtYen(finalPrincipal);
+
+    // 運用益チップ：プラスは緑、マイナスは赤
+    const chipGainsEl = document.getElementById('chipGains');
+    chipGainsEl.innerText = (finalGains >= 0 ? '+' : '') + fmtYen(finalGains);
+    chipGainsEl.classList.remove('gains', 'danger');
+    chipGainsEl.classList.add(finalGains >= 0 ? 'gains' : 'danger');
+
+    document.getElementById('chipTax').innerText = fmtYen(finalTaxSaved);
+
+    document.getElementById('tableHeader').innerHTML = `
+      <tr>
+        <th>年数</th>
+        <th>元本</th>
+        <th>運用益</th>
+        <th>総資産</th>
+        <th>課税手取り</th>
+        <th>節税</th>
+      </tr>
+    `;
+    document.getElementById('tableBody').innerHTML = tableRows.join('');
+
+    // --- 実戦型RPGレーダー計算カーブ (資産形成) ---
+    let atkScore = 0;
+    if (monthly === 0 && initial === 0) {
+      atkScore = 0;
+    } else {
+      const monthlyP = monthly <= 100000 
+        ? (monthly / 100000) * 80 
+        : 80 + ((monthly - 100000) / 200000) * 20;
+      const initialBonus = (initial / 2400000) * 15;
+      atkScore = Math.min(100, Math.round(monthlyP + initialBonus));
+    }
+
+    let defScore = 0;
+    if (horizon <= 10) {
+      defScore = Math.round(15 + (horizon / 10) * 40);
+    } else if (horizon <= 20) {
+      defScore = Math.round(55 + ((horizon - 10) / 10) * 25);
+    } else {
+      defScore = Math.min(100, Math.round(80 + ((horizon - 20) / 10) * 20));
+    }
+
+    let criScore = 0;
+    if (annualReturn <= 0) {
+      criScore = 0;
+    } else if (annualReturn <= 3) {
+      criScore = Math.round((annualReturn / 3) * 45);
+    } else if (annualReturn <= 5) {
+      criScore = Math.round(45 + ((annualReturn - 3) / 2) * 20);
+    } else if (annualReturn <= 7) {
+      criScore = Math.round(65 + ((annualReturn - 5) / 2) * 15);
+    } else {
+      criScore = Math.min(100, Math.round(80 + ((annualReturn - 7) / 3) * 20));
+    }
+
+    let guardScore = 0;
+    if (finalTaxSaved <= 0) {
+      guardScore = 0;
+    } else if (finalTaxSaved <= 3000000) {
+      guardScore = Math.round((finalTaxSaved / 3000000) * 60);
+    } else if (finalTaxSaved <= 6000000) {
+      guardScore = Math.round(60 + ((finalTaxSaved - 3000000) / 3000000) * 20);
+    } else {
+      guardScore = Math.min(100, Math.round(80 + ((finalTaxSaved - 6000000) / 4000000) * 20));
+    }
+
+    let vitScore = 0;
+    if (finalTotal <= 0) {
+      vitScore = 0;
+    } else if (finalTotal <= 20000000) {
+      vitScore = Math.round((finalTotal / 20000000) * 50);
+    } else if (finalTotal <= 50000000) {
+      vitScore = Math.round(50 + ((finalTotal - 20000000) / 30000000) * 30);
+    } else {
+      vitScore = Math.min(100, Math.round(80 + ((finalTotal - 50000000) / 50000000) * 20));
+    }
+
+    radarStats = [atkScore, defScore, criScore, guardScore, vitScore];
+
+    const bp = Math.round(finalTotal / 10) + Math.round(finalTaxSaved / 5);
+    animateCounter(bp);
+
+    if (displayView === 'line') {
+      renderGrowthLineChart(labels, dataPrincipal, dataTotal, dataGains, dataTaxable);
+    } else if (displayView === 'radar') {
+      renderRadarChart(['入金火力 (ATK)', '複利耐久 (DEF)', '会心利回り (CRI)', '節税障壁 (GUARD)', '資産体力 (VIT)'], radarStats);
+    }
+
+    updateDiagnosis('growth', finalTotal, monthly, initial, annualReturn, horizon);
+  }
+
+  function renderGrowthLineChart(labels, dataPrincipal, dataTotal, dataGains, dataTaxable) {
+    const ctx = document.getElementById('simChart').getContext('2d');
+    if (chartInstance) chartInstance.destroy();
+
+    chartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: '総資産額',
+            data: dataTotal,
+            backgroundColor: 'rgba(16, 185, 129, 0.65)',
+            borderColor: '#10b981',
+            borderWidth: 1.5,
+            fill: 1,
+            pointRadius: 0,
+            pointHoverRadius: 4,
+          },
+          {
+            label: '投資元本',
+            data: dataPrincipal,
+            backgroundColor: 'rgba(59, 130, 246, 0.85)',
+            borderColor: '#3b82f6',
+            borderWidth: 1.5,
+            fill: 'origin',
+            pointRadius: 0,
+            pointHoverRadius: 4,
+          },
+          {
+            label: '課税手取り比較',
+            data: dataTaxable,
+            borderColor: '#f59e0b',
+            borderWidth: 1.5,
+            borderDash: [3, 3],
+            fill: false,
+            pointRadius: 0,
+            pointHoverRadius: 4,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: {
+            position: 'top',
+            labels: { color: '#d1d5db', font: { size: 9 }, boxWidth: 8, usePointStyle: true, pointStyle: 'circle' }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(17, 24, 39, 0.95)',
+            padding: 6,
+            titleFont: { size: 10 },
+            bodyFont: { size: 9.5 },
+            callbacks: {
+              title: (items) => `運用年数: ${items[0].label}`,
+              beforeBody: (items) => {
+                const idx = items[0].dataIndex;
+                const g = dataGains[idx];
+                const gainsLabel = g >= 0
+                  ? `運用益: +${fmtYen(g)}`
+                  : `運用益: ${fmtYen(g)}（含み損）`;
+                return [
+                  `投資元本: ${fmtYen(dataPrincipal[idx])}`,
+                  gainsLabel,
+                  `課税手取り: ${fmtYen(dataTaxable[idx])}`,
+                  `-------------------`,
+                  `総資産額: ${fmtYen(dataTotal[idx])}`
+                ];
+              },
+              label: () => null
+            }
+          }
+        },
+        scales: {
+          x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#9ca3af', font: { size: 9 } } },
+          y: {
+            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+            ticks: {
+              color: '#9ca3af',
+              font: { size: 9 },
+              callback: (val) => {
+                if (val >= 100000000) return (val / 100000000).toFixed(1) + '億';
+                if (val >= 10000) return (val / 10000).toLocaleString() + '万';
+                return val;
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  /* 0〜100点固定レーダーチャート */
+  function renderRadarChart(labels, stats) {
+    const ctx = document.getElementById('simChart').getContext('2d');
+    if (chartInstance) chartInstance.destroy();
+
+    chartInstance = new Chart(ctx, {
+      type: 'radar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: '能力値ビルド',
+          data: stats,
+          backgroundColor: 'rgba(168, 85, 247, 0.35)',
+          borderColor: '#c084fc',
+          borderWidth: 1.8,
+          pointBackgroundColor: '#fbbf24',
+          pointBorderColor: '#fff',
+          pointRadius: 3
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          r: {
+            min: 0,
+            max: 100,
+            beginAtZero: true,
+            angleLines: { color: 'rgba(255, 255, 255, 0.12)' },
+            grid: { color: 'rgba(255, 255, 255, 0.08)' },
+            pointLabels: { color: '#cbd5e1', font: { size: 9.5, weight: 'bold' } },
+            ticks: {
+              display: false,
+              stepSize: 20
+            }
+          }
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (context) => `能力値: ${context.raw} / 100`
+            }
+          }
+        }
+      }
+    });
+  }
+
+  function runDrawdownSim() {
+    document.getElementById('annualCapAlert').style.display = 'none';
+
+    const startAsset = Math.max(0, parseInt(document.getElementById('numDrawStart').value) || 0);
+    const drawReturn = Math.max(0, parseFloat(document.getElementById('numDrawReturn').value) || 0);
+    const monthlyRate = (drawReturn / 100) / 12;
+
+    const maxYears = 45;
+    const labels = [];
+    const dataInvest = [];
+    const dataCash = [];
+    const tableRows = [];
+
+    labels.push('0年');
+    dataInvest.push(startAsset);
+    dataCash.push(startAsset);
+
+    let balanceInvest = startAsset;
+    let balanceCash = startAsset;
+    let depletedInvestYear = null;
+    let depletedCashYear = null;
+    let totalReceivedInvest = 0;
+
+    if (drawdownMode === 'fixed') {
+      const monthlyDraw = Math.max(0, parseInt(document.getElementById('numDrawMonthly').value) || 0);
+      const annualDraw = monthlyDraw * 12;
+
+      for (let y = 1; y <= maxYears; y++) {
+        let yearDrawInvest = 0;
+        for (let m = 1; m <= 12; m++) {
+          if (balanceInvest > 0) {
+            const draw = Math.min(balanceInvest, monthlyDraw);
+            balanceInvest = (balanceInvest - draw) * (1 + monthlyRate);
+            yearDrawInvest += draw;
+            totalReceivedInvest += draw;
+            if (balanceInvest <= 0 && depletedInvestYear === null) {
+              depletedInvestYear = (y - 1) + (m / 12);
+            }
+          }
+
+          if (balanceCash > 0) {
+            const drawC = Math.min(balanceCash, monthlyDraw);
+            balanceCash -= drawC;
+            if (balanceCash <= 0 && depletedCashYear === null) {
+              depletedCashYear = (y - 1) + (m / 12);
+            }
+          }
+        }
+
+        labels.push(y + '年後');
+        dataInvest.push(Math.max(0, Math.round(balanceInvest)));
+        dataCash.push(Math.max(0, Math.round(balanceCash)));
+
+        tableRows.push(`
+          <tr>
+            <td>${y}年後</td>
+            <td style="color:#34d399;">${fmtYen(yearDrawInvest)}</td>
+            <td style="font-weight:700; color:#60a5fa;">${fmtYen(balanceInvest)}</td>
+            <td style="color:#ef4444;">${fmtYen(balanceCash)}</td>
+            <td style="color:#fbbf24;">${fmtYen(totalReceivedInvest)}</td>
+          </tr>
+        `);
+      }
+
+      const lifeText = startAsset === 0 ? '0年' : (depletedInvestYear ? `${depletedInvestYear.toFixed(1)}年` : '45年以上(永続)');
+      document.getElementById('mainStatHeaderValue').innerText = lifeText;
+      document.getElementById('chipDrawAnnual').innerText = fmtYen(annualDraw);
+      document.getElementById('chipDrawTotal').innerText = fmtYen(totalReceivedInvest);
+
+      const cashLife = depletedCashYear ? depletedCashYear.toFixed(1) : (startAsset / (annualDraw || 1)).toFixed(1);
+      if (startAsset === 0) {
+        document.getElementById('chipDrawDiff').innerText = '元本ゼロ';
+      } else if (depletedInvestYear) {
+        const diff = (depletedInvestYear - parseFloat(cashLife)).toFixed(1);
+        document.getElementById('chipDrawDiff').innerText = diff > 0 ? `+${diff}年 延命` : '差なし';
+      } else {
+        document.getElementById('chipDrawDiff').innerText = '枯渇せず (+∞)';
+      }
+
+      const bp = Math.round(startAsset / 15) + Math.round(totalReceivedInvest / 10);
+      animateCounter(bp);
+
+      // --- 実戦型RPGレーダー計算カーブ (定額取り崩し) ---
+      const atk = monthlyDraw === 0 ? 0 : (monthlyDraw <= 150000 ? Math.round((monthlyDraw / 150000) * 80) : Math.min(100, Math.round(80 + ((monthlyDraw - 150000) / 150000) * 20)));
+      const def = depletedInvestYear ? Math.min(100, Math.round((depletedInvestYear / 30) * 80)) : 100;
+      const cri = drawReturn <= 0 ? 0 : (drawReturn <= 3 ? Math.round((drawReturn / 3) * 70) : Math.min(100, Math.round(70 + ((drawReturn - 3) / 4) * 30)));
+      const guard = !depletedInvestYear ? 100 : Math.min(100, Math.round((depletedInvestYear / 25) * 80));
+      const vit = startAsset <= 0 ? 0 : (startAsset <= 50000000 ? Math.round((startAsset / 50000000) * 80) : Math.min(100, Math.round(80 + ((startAsset - 50000000) / 50000000) * 20)));
+      radarStats = [atk, def, cri, guard, vit];
+
+      if (displayView === 'line') {
+        renderDrawdownLineChart(labels, dataInvest, dataCash);
+      } else if (displayView === 'radar') {
+        renderRadarChart(['取崩火力 (消費)', '生存耐久 (寿命)', '運用利回り (CRI)', '枯渇耐性 (GUARD)', '元本体力 (VIT)'], radarStats);
+      }
+
+      updateDiagnosis('drawdown', startAsset, monthlyDraw, 0, drawReturn, 0, depletedInvestYear);
+
+    } else {
+      const drawRate = Math.max(0.1, parseFloat(document.getElementById('numDrawRate').value) || 4.0) / 100;
+      const initialAnnual = startAsset * drawRate;
+
+      for (let y = 1; y <= maxYears; y++) {
+        let yearDraw = 0;
+        if (balanceInvest > 0) {
+          yearDraw = balanceInvest * drawRate;
+          totalReceivedInvest += yearDraw;
+          balanceInvest = (balanceInvest - yearDraw) * (1 + (drawReturn / 100));
+        }
+
+        if (balanceCash > 0) {
+          const cashDraw = balanceCash * drawRate;
+          balanceCash -= cashDraw;
+        }
+
+        labels.push(y + '年後');
+        dataInvest.push(Math.max(0, Math.round(balanceInvest)));
+        dataCash.push(Math.max(0, Math.round(balanceCash)));
+
+        tableRows.push(`
+          <tr>
+            <td>${y}年後</td>
+            <td style="color:#34d399;">${fmtYen(yearDraw)} (${fmtYen(yearDraw/12)}/月)</td>
+            <td style="font-weight:700; color:#60a5fa;">${fmtYen(balanceInvest)}</td>
+            <td style="color:#ef4444;">${fmtYen(balanceCash)}</td>
+            <td style="color:#fbbf24;">${fmtYen(totalReceivedInvest)}</td>
+          </tr>
+        `);
+      }
+
+      document.getElementById('mainStatHeaderValue').innerText = startAsset === 0 ? '0年' : '枯渇なし(永続)';
+      document.getElementById('chipDrawAnnual').innerText = `${fmtYen(initialAnnual)}(初年)`;
+      document.getElementById('chipDrawTotal').innerText = fmtYen(totalReceivedInvest);
+      document.getElementById('chipDrawDiff').innerText = startAsset === 0 ? '元本ゼロ' : '残高追従';
+
+      const bp = Math.round(startAsset / 12) + Math.round(totalReceivedInvest / 10);
+      animateCounter(bp);
+
+      // --- 実戦型RPGレーダー計算カーブ (定率取り崩し) ---
+      const atk = Math.min(100, Math.round((drawRate / 0.04) * 80));
+      const def = 100;
+      const cri = drawReturn <= 0 ? 0 : (drawReturn <= 3 ? Math.round((drawReturn / 3) * 70) : Math.min(100, Math.round(70 + ((drawReturn - 3) / 4) * 30)));
+      const guard = drawRate <= 0.04 ? 100 : Math.max(50, Math.round(100 - (drawRate - 0.04) * 500));
+      const vit = startAsset <= 0 ? 0 : (startAsset <= 50000000 ? Math.round((startAsset / 50000000) * 80) : Math.min(100, Math.round(80 + ((startAsset - 50000000) / 50000000) * 20)));
+      radarStats = [atk, def, cri, guard, vit];
+
+      if (displayView === 'line') {
+        renderDrawdownLineChart(labels, dataInvest, dataCash);
+      } else if (displayView === 'radar') {
+        renderRadarChart(['取崩割合 (RATE)', '永続耐久 (DEF)', '運用利回り (CRI)', '枯渇耐性 (GUARD)', '元本体力 (VIT)'], radarStats);
+      }
+
+      updateDiagnosis('drawdown_percent', startAsset, 0, 0, drawReturn, 0, null, drawRate);
+    }
+
+    document.getElementById('tableHeader').innerHTML = `
+      <tr>
+        <th>経過</th>
+        <th>年間受取額</th>
+        <th>運用残高</th>
+        <th>現金のみ残高</th>
+        <th>受取累計額</th>
+      </tr>
+    `;
+    document.getElementById('tableBody').innerHTML = tableRows.join('');
+  }
+
+  function renderDrawdownLineChart(labels, dataInvest, dataCash) {
+    const ctx = document.getElementById('simChart').getContext('2d');
+    if (chartInstance) chartInstance.destroy();
+
+    chartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: '運用取崩残高',
+            data: dataInvest,
+            borderColor: '#34d399',
+            backgroundColor: 'rgba(16, 185, 129, 0.2)',
+            borderWidth: 1.8,
+            fill: true,
+            pointRadius: 0,
+            pointHoverRadius: 4,
+          },
+          {
+            label: '現金のみ残高',
+            data: dataCash,
+            borderColor: '#ef4444',
+            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+            borderWidth: 1.2,
+            borderDash: [3, 3],
+            fill: true,
+            pointRadius: 0,
+            pointHoverRadius: 4,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: {
+            position: 'top',
+            labels: { color: '#d1d5db', font: { size: 9 }, boxWidth: 8, usePointStyle: true, pointStyle: 'circle' }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(17, 24, 39, 0.95)',
+            padding: 6,
+            callbacks: {
+              title: (items) => `経過年数: ${items[0].label}`,
+              label: (context) => `${context.dataset.label}: ${fmtYen(context.raw)}`
+            }
+          }
+        },
+        scales: {
+          x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#9ca3af', font: { size: 9 } } },
+          y: {
+            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+            ticks: {
+              color: '#9ca3af',
+              font: { size: 9 },
+              callback: (val) => {
+                if (val >= 100000000) return (val / 100000000).toFixed(1) + '億';
+                if (val >= 10000) return (val / 10000).toLocaleString() + '万';
+                return val;
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  function updateDiagnosis(mode, total, monthly, initial, returnRate, horizon, depletedYear = null, drawRate = null) {
+    let title = '';
+    let desc = '';
+    let level = '';
+    let tags = [];
+
+    if (mode === 'growth') {
+      if (monthly === 0 && initial === 0) {
+        title = '👀 観客席の傍観者（ノーポジ待機）';
+        desc = 'まだ投資元本が1円も投入されていない完全無風状態！まずは月1,000円からでも複利の雪だるま作りを始めてみませんか？';
+        level = 'RANK 0';
+        tags = ['#ノーポジション', '#見学中'];
+      } else if (total >= 300000000) {
+        title = '🪐 超富裕層・石油王・FIRE神';
+        desc = `最終資産は驚異の${fmtYen(total)}！もはや個人の老後やFIREの次元を超越した資産規模。次世代への資産継承を考える領域です。`;
+        level = 'RANK GOD';
+        tags = ['#資産3億円超', '#超富裕層', '#不労所得マスター'];
+      } else if (total >= 100000000) {
+        title = '👑 億り人・完全FIRE級 (Fat FIRE)';
+        desc = `最終資産は圧巻の${fmtYen(total)}！年4%（月33万円以上）の運用益だけで労働から完全に解放される経済的自由の最高峰です。`;
+        level = 'RANK SSS';
+        tags = ['#億り人', '#完全FIRE達成', '#経済的自由'];
+      } else if (total >= 50000000) {
+        title = '🏝️ サイドFIRE・準富裕層クラス';
+        desc = `資産5,000万円突破！年間4%（月16.6万円）の不労所得＋好きな仕事で悠々自適に暮らせる理想的なセミリタイア領域です。`;
+        level = 'RANK S';
+        tags = ['#準富裕層', '#サイドFIRE', '#選択的労働'];
+      } else if (total >= 30000000) {
+        title = '🛡️ アッパーマス層・安心老後級';
+        desc = `資産3,000万円以上！全世帯上位20%に到達。老後2,000万円問題を完全クリアし、人生の選択肢と安心感を獲得しています。`;
+        level = 'RANK A';
+        tags = ['#アッパーマス層', '#老後安泰'];
+      } else if (total >= 15000000) {
+        title = '🌱 安定投資家タイプ';
+        desc = `元本と複利の力でまとまった資産（${fmtYen(total)}）を構築！教育費や住宅購入などあらゆるライフイベントに対応できる優秀な基盤です。`;
+        level = 'RANK B';
+        tags = ['#堅実投資', '#ライフプラン万全'];
+      } else {
+        title = '🚀 コツコツ投資家・スタート級';
+        desc = `着実に資産形成を一歩ずつ前進中！積立期間や利回り、元本を少し増やすだけで複利の力が後半爆発的に効いてきます。`;
+        level = 'RANK C';
+        tags = ['#コツコツ積立', '#長期投資'];
+      }
+
+      if (monthly >= 300000) tags.push('🏎️ #新NISA_RTA走者');
+      else if (monthly >= 100000) tags.push('🚀 #ハイペース積立');
+      if (initial > 0 && monthly === 0) tags.push('🧘 #寝かせ仙人');
+      if (returnRate >= 10) tags.push('🎰 #ハイリスク強気派');
+      if (horizon >= 40) tags.push('🐢 #超長寿インデックス派');
+
+    } else if (mode === 'drawdown') {
+      if (total === 0) {
+        title = '📭 金庫空っぽ・取り崩し不可';
+        desc = '開始資産が0円です！まずは「資産形成」タブで運用元本を育てましょう。';
+        level = 'NO DATA';
+        tags = ['#元本ゼロ'];
+      } else if (depletedYear && depletedYear < 10) {
+        title = '🔥 豪遊炎上・超特急枯渇モード';
+        desc = `わずか${depletedYear.toFixed(1)}年で資産が底をつきます！毎月の引き出し額を減らすか、運用利回りを高めて資産延命を図りましょう。`;
+        level = 'DANGER';
+        tags = ['#超速枯渇', '#支出過多'];
+      } else if (!depletedYear) {
+        title = '♾️ 永久機関・資産増殖型リタイア';
+        desc = '毎月の取り崩し額よりも運用益のほうが大きく、使っても資産が減らない無敵のポートフォリオです！';
+        level = 'RANK INFINITY';
+        tags = ['#永久機関', '#使っても減らない'];
+      } else {
+        title = '🌿 スマート・バランス取崩ライフ';
+        desc = `運用継続によって資産寿命を【${depletedYear.toFixed(1)}年】まで延命！老後生活を豊かに支える堅実な出口戦略です。`;
+        level = 'EXIT RANK A';
+        tags = ['#バランス取崩', '#資産延命成功'];
+      }
+    } else {
+      if (total === 0) {
+        title = '📭 金庫空っぽ・取り崩し不可';
+        desc = '開始資産が0円です！まずは資産形成シミュレーションを行いましょう。';
+        level = 'NO DATA';
+        tags = ['#元本ゼロ'];
+      } else if (drawRate <= 0.04) {
+        title = '👑 黄金律・4%ルール実践マスター';
+        desc = '米国の研究でも実証された資産枯渇リスク極小の黄金ルール。相場変動に合わせて受取額を調整しながら半永久的に資産を維持できます。';
+        level = 'EXIT MASTER';
+        tags = ['#4パーセントルール', '#枯渇リスク極小'];
+      } else {
+        title = '⚡ アグレッシブ定率取崩しスタイル';
+        desc = '高めの割合で積極的に取り崩すプラン。相場下落時は生活費のバッファを確保しておきましょう。';
+        level = 'EXIT RANK B';
+        tags = ['#積極取崩', '#相場追従型'];
+      }
+    }
+
+    currentDiagTitle = title;
+    document.getElementById('diagTitle').innerText = title;
+    document.getElementById('diagDesc').innerText = desc;
+    document.getElementById('diagLevelTag').innerText = level;
+    document.getElementById('diagTags').innerHTML = tags.map(t => `<span class="style-tag">${t}</span>`).join('');
+  }
+
+  function shareOnX() {
+    let text = '';
+    const siteUrl = window.location.href.split('?')[0];
+    const bpStr = currentBP.toLocaleString();
+    if (currentTab === 'growth') {
+      const total = document.getElementById('mainStatHeaderValue').innerText;
+      text = `【新NISA投資戦闘力】私の戦闘力は… 【 ${bpStr} BP 】！
+称号: ${currentDiagTitle}
+
+💰 最終資産総額: ${total}
+新NISAシミュレーターで能力値レーダー・FIRE診断してみました！
+#新NISA #FIRE #投資戦闘力
+`;
+    } else {
+      const life = document.getElementById('mainStatHeaderValue').innerText;
+      text = `【新NISA出口戦略戦闘力】私の耐久力は… 【 ${bpStr} BP 】！
+称号: ${currentDiagTitle}
+
+⏳ 資産寿命: ${life}
+新NISAシミュレーターで取り崩し戦略を試算しました！
+#新NISA #出口戦略 #FIRE
+`;
+    }
+    const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(siteUrl)}`;
+    window.open(shareUrl, '_blank');
+  }
+
+  function copySimulationUrl() {
+    const params = new URLSearchParams();
+    if (currentTab === 'growth') {
+      params.set('tab', 'growth');
+      params.set('m', document.getElementById('numMonthly').value);
+      params.set('init', document.getElementById('numInitial').value);
+      params.set('r', document.getElementById('numReturn').value);
+      params.set('y', document.getElementById('numHorizon').value);
+      if (currentStress && currentStress !== 'none') {
+        params.set('stress', currentStress);
+      }
+    } else {
+      params.set('tab', 'drawdown');
+      params.set('start', document.getElementById('numDrawStart').value);
+      params.set('dm', document.getElementById('numDrawMonthly').value);
+      params.set('dr', document.getElementById('numDrawReturn').value);
+    }
+    const fullUrl = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+    navigator.clipboard.writeText(fullUrl).then(() => {
+      showToast('設定URLをコピーしました！');
+    }).catch(() => {
+      prompt('以下のURLをコピーしてください:', fullUrl);
+    });
+  }
+
+  function loadFromUrlParams() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('m')) document.getElementById('numMonthly').value = params.get('m');
+    if (params.has('init')) document.getElementById('numInitial').value = params.get('init');
+    if (params.has('r')) document.getElementById('numReturn').value = params.get('r');
+    if (params.has('y')) document.getElementById('numHorizon').value = params.get('y');
+    if (params.has('stress')) {
+      currentStress = params.get('stress');
+    }
+
+    if (params.has('start')) document.getElementById('numDrawStart').value = params.get('start');
+    if (params.has('dm')) document.getElementById('numDrawMonthly').value = params.get('dm');
+    if (params.has('dr')) document.getElementById('numDrawReturn').value = params.get('dr');
+
+    ['monthly', 'initial', 'return', 'horizon', 'drawStart', 'drawMonthly', 'drawReturn'].forEach(f => syncInputs(f, 'num', false));
+
+    if (params.get('tab') === 'drawdown') {
+      switchTab('drawdown');
+    }
+  }
+
+  window.onload = () => {
+    if (window.location.search) {
+      loadFromUrlParams();
+    } else {
+      loadSlot(1);
+    }
+    // ストレステストのUI初期状態を同期（loadSlot内でも呼ばれるが念のため）
+    setStress(currentStress);
+    updateAll();
+  };
+</script>
+
+</body>
+</html>
