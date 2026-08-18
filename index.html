@@ -18,9 +18,48 @@
       --accent-pink: #f472b6;
       --accent-purple: #8b5cf6;
       --accent-gold: #fbbf24;
+      --accent-cyan: #06b6d4;
       --text-main: #f3f4f6;
       --text-muted: #8e9db2;
       --border-color: #202b3c;
+
+      /* Responsive dynamic variables */
+      --container-max-w: 1120px;
+      --grid-ctrl-w: 360px;
+      --font-base: 11px;
+      --font-title: 19px;
+      --font-card-title: 13.5px;
+      --font-val-lg: 16px;
+      --display-box-h: 215px;
+      --carte-max-h: 105px;
+    }
+
+    /* 1400px〜 (フルHD・大画面PC) */
+    @media (min-width: 1400px) {
+      :root {
+        --container-max-w: 1380px;
+        --grid-ctrl-w: 420px;
+        --font-base: 12.5px;
+        --font-title: 22px;
+        --font-card-title: 15px;
+        --font-val-lg: 18px;
+        --display-box-h: 260px;
+        --carte-max-h: 140px;
+      }
+    }
+
+    /* 2000px〜 (WQHD / 4K) */
+    @media (min-width: 2000px) {
+      :root {
+        --container-max-w: 1680px;
+        --grid-ctrl-w: 500px;
+        --font-base: 14px;
+        --font-title: 26px;
+        --font-card-title: 17px;
+        --font-val-lg: 22px;
+        --display-box-h: 320px;
+        --carte-max-h: 180px;
+      }
     }
 
     * {
@@ -35,64 +74,64 @@
       background-color: var(--bg-primary);
       color: var(--text-main);
       min-height: 100vh;
-      padding: 10px 8px;
-      display: flex;
-      justify-content: center;
+      padding: 12px 14px;
+      font-size: var(--font-base);
+      overflow-x: hidden;
     }
 
     .container {
-      max-width: 1100px;
+      max-width: var(--container-max-w);
       width: 100%;
+      margin: 0 auto;
+      min-width: 0;
     }
 
-    /* Header */
     header {
-      margin-bottom: 8px;
+      margin-bottom: 12px;
       text-align: center;
     }
 
     header h1 {
-      font-size: 18px;
+      font-size: var(--font-title);
       font-weight: 800;
       letter-spacing: -0.5px;
       background: linear-gradient(135deg, #60a5fa, #34d399, #fbbf24);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      margin-bottom: 2px;
+      margin-bottom: 3px;
     }
 
     header p {
       color: var(--text-muted);
-      font-size: 10.5px;
+      font-size: calc(var(--font-base) * 0.95);
     }
 
-    /* Top Action Bar */
     .top-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 8px;
-      gap: 6px;
+      margin-bottom: 10px;
+      gap: 8px;
       flex-wrap: wrap;
     }
 
     .save-slots {
       display: flex;
       background: var(--bg-card);
-      padding: 2px;
-      border-radius: 6px;
+      padding: 3px;
+      border-radius: 8px;
       border: 1px solid var(--border-color);
-      gap: 2px;
+      gap: 3px;
     }
 
     .slot-btn {
       background: transparent;
       border: none;
       color: var(--text-muted);
-      font-size: 10px;
+      font-size: calc(var(--font-base) * 0.92);
       font-weight: 700;
-      padding: 3px 7px;
-      border-radius: 4px;
+      padding: 4px 10px;
+      border-radius: 6px;
       cursor: pointer;
       transition: all 0.15s;
     }
@@ -100,15 +139,15 @@
     .slot-btn.active {
       background: var(--accent-purple);
       color: #ffffff;
-      box-shadow: 0 0 8px rgba(139, 92, 246, 0.4);
+      box-shadow: 0 0 10px rgba(139, 92, 246, 0.4);
     }
 
     .tab-container {
       display: flex;
-      gap: 3px;
+      gap: 4px;
       background: var(--bg-card);
-      padding: 2px;
-      border-radius: 6px;
+      padding: 3px;
+      border-radius: 8px;
       border: 1px solid var(--border-color);
     }
 
@@ -116,10 +155,10 @@
       background: transparent;
       border: none;
       color: var(--text-muted);
-      font-size: 11px;
+      font-size: var(--font-base);
       font-weight: 700;
-      padding: 4px 10px;
-      border-radius: 5px;
+      padding: 5px 14px;
+      border-radius: 6px;
       cursor: pointer;
       transition: all 0.15s;
     }
@@ -127,16 +166,64 @@
     .tab-btn.active {
       background: var(--accent-blue);
       color: #ffffff;
-      box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
     }
 
-    /* Sub Tabs */
+    /* Scenario Quick Preset Banner */
+    .scenario-banner {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 6px 10px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .scenario-label {
+      font-size: calc(var(--font-base) * 0.85);
+      font-weight: 800;
+      color: var(--accent-gold);
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .scenario-btn {
+      background: var(--bg-input);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      font-size: calc(var(--font-base) * 0.85);
+      font-weight: 700;
+      padding: 4px 9px;
+      border-radius: 6px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s;
+    }
+
+    .scenario-btn:hover {
+      border-color: var(--accent-blue);
+      color: #fff;
+    }
+
+    .scenario-btn.active {
+      background: var(--accent-blue);
+      color: #ffffff;
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
+    }
+
     .sub-tab-container {
       display: flex;
       gap: 4px;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
       background: var(--bg-input);
-      padding: 2px;
+      padding: 3px;
       border-radius: 6px;
       border: 1px solid var(--border-color);
     }
@@ -146,9 +233,9 @@
       background: transparent;
       border: none;
       color: var(--text-muted);
-      font-size: 10px;
+      font-size: calc(var(--font-base) * 0.9);
       font-weight: 600;
-      padding: 4px 6px;
+      padding: 5px 8px;
       border-radius: 4px;
       cursor: pointer;
       transition: all 0.15s;
@@ -160,14 +247,14 @@
       font-weight: 800;
     }
 
-    /* Main Grid */
     .main-grid {
       display: grid;
-      grid-template-columns: 360px 1fr;
-      gap: 10px;
+      grid-template-columns: var(--grid-ctrl-w) minmax(0, 1fr);
+      gap: 14px;
+      width: 100%;
     }
 
-    @media (max-width: 900px) {
+    @media (max-width: 960px) {
       .main-grid {
         display: flex;
         flex-direction: column;
@@ -188,13 +275,14 @@
       background: var(--bg-card);
       border: 1px solid var(--border-color);
       border-radius: 12px;
-      padding: 10px;
+      padding: 12px 14px;
+      min-width: 0;
     }
 
     .panel-title {
-      font-size: 12px;
+      font-size: calc(var(--font-base) * 1.1);
       font-weight: 700;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -203,14 +291,14 @@
     .panel-title-left {
       display: flex;
       align-items: center;
-      gap: 5px;
+      gap: 6px;
     }
 
     .panel-title-left::before {
       content: "";
       display: inline-block;
       width: 3px;
-      height: 12px;
+      height: 14px;
       background: var(--accent-blue);
       border-radius: 2px;
     }
@@ -219,27 +307,26 @@
       background: rgba(59, 130, 246, 0.15);
       border: 1px solid rgba(59, 130, 246, 0.4);
       color: #93c5fd;
-      font-size: 9.5px;
+      font-size: calc(var(--font-base) * 0.85);
       font-weight: 600;
-      padding: 2px 6px;
+      padding: 3px 8px;
       border-radius: 8px;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      gap: 3px;
+      gap: 4px;
     }
 
-    /* Compact Header */
     .compact-header-card {
       background: linear-gradient(135deg, #181c30, #20132e);
       border: 1px solid #7c3aed;
-      border-radius: 8px;
-      padding: 6px 10px;
+      border-radius: 10px;
+      padding: 8px 14px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 6px;
-      box-shadow: 0 0 10px rgba(124, 58, 237, 0.2);
+      margin-bottom: 8px;
+      box-shadow: 0 0 12px rgba(124, 58, 237, 0.25);
     }
 
     .header-stat-box {
@@ -248,16 +335,16 @@
     }
 
     .header-stat-label {
-      font-size: 9px;
+      font-size: calc(var(--font-base) * 0.85);
       color: #c4b5fd;
       font-weight: 700;
       display: flex;
       align-items: center;
-      gap: 3px;
+      gap: 4px;
     }
 
     .header-stat-val {
-      font-size: 15px;
+      font-size: var(--font-val-lg);
       font-weight: 900;
       color: #fbbf24;
       font-family: "Courier New", monospace;
@@ -269,31 +356,30 @@
       font-family: inherit;
     }
 
-    /* Sub Stats Row */
     .sub-stats-row {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 4px;
-      margin-bottom: 6px;
+      gap: 6px;
+      margin-bottom: 8px;
     }
 
     .sub-stat-chip {
       background: var(--bg-input);
       border: 1px solid var(--border-color);
-      border-radius: 6px;
-      padding: 3px 4px;
+      border-radius: 8px;
+      padding: 5px 6px;
       text-align: center;
     }
 
     .chip-label {
-      font-size: 8.5px;
+      font-size: calc(var(--font-base) * 0.8);
       color: var(--text-muted);
-      margin-bottom: 1px;
+      margin-bottom: 2px;
       white-space: nowrap;
     }
 
     .chip-val {
-      font-size: 11.5px;
+      font-size: calc(var(--font-base) * 1.05);
       font-weight: 800;
       white-space: nowrap;
     }
@@ -303,15 +389,14 @@
     .chip-val.tax { color: #fbbf24; }
     .chip-val.danger { color: #ef4444; }
 
-    /* View Switcher */
     .view-switcher-bar {
       display: flex;
       background: var(--bg-input);
-      border-radius: 6px;
+      border-radius: 8px;
       border: 1px solid var(--border-color);
-      padding: 2px;
-      gap: 2px;
-      margin-bottom: 4px;
+      padding: 3px;
+      gap: 3px;
+      margin-bottom: 6px;
     }
 
     .view-tab-btn {
@@ -319,41 +404,42 @@
       background: transparent;
       border: none;
       color: var(--text-muted);
-      font-size: 10px;
+      font-size: calc(var(--font-base) * 0.92);
       font-weight: 700;
-      padding: 4px 6px;
-      border-radius: 4px;
+      padding: 5px 8px;
+      border-radius: 6px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 3px;
+      gap: 4px;
       transition: all 0.15s;
     }
 
     .view-tab-btn.active {
       background: var(--accent-blue);
       color: #ffffff;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+      box-shadow: 0 1px 6px rgba(0,0,0,0.3);
     }
     .view-tab-btn.active.gold {
       background: linear-gradient(135deg, #7c3aed, #a855f7);
       color: #fff;
     }
 
-    /* Unified View Box */
     .unified-display-box {
       position: relative;
-      height: 185px;
+      height: var(--display-box-h);
       width: 100%;
       background: rgba(0, 0, 0, 0.2);
-      border-radius: 8px;
+      border-radius: 10px;
       border: 1px solid rgba(255, 255, 255, 0.03);
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      padding: 4px;
+      padding: 6px;
+      min-width: 0;
+      overflow: hidden;
     }
 
     .diagnosis-view-content {
@@ -362,97 +448,181 @@
       display: none;
       flex-direction: column;
       justify-content: space-between;
-      padding: 6px 8px;
-      background: linear-gradient(145deg, rgba(26, 34, 48, 0.98), rgba(15, 23, 42, 0.98));
-      border-radius: 6px;
+      padding: 8px 10px;
+      background: linear-gradient(145deg, rgba(22, 30, 44, 0.98), rgba(12, 18, 28, 0.98));
+      border-radius: 8px;
       border: 1px solid rgba(139, 92, 246, 0.3);
+      overflow: hidden;
     }
 
     .diag-title-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      margin-bottom: 3px;
     }
 
     .diag-main-title {
-      font-size: 13.5px;
+      font-size: var(--font-card-title);
       font-weight: 800;
       color: #ffffff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .diag-rank-tag {
-      font-size: 9px;
+      font-size: calc(var(--font-base) * 0.8);
       font-weight: 800;
       color: #fbbf24;
       background: rgba(251, 191, 36, 0.15);
       border: 1px solid rgba(251, 191, 36, 0.3);
-      padding: 1px 5px;
-      border-radius: 3px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      white-space: nowrap;
+      margin-left: 6px;
     }
 
     .diag-tags-row {
       display: flex;
-      gap: 3px;
+      gap: 4px;
       flex-wrap: wrap;
-      margin: 2px 0;
+      margin-bottom: 4px;
     }
 
     .style-tag {
       background: rgba(139, 92, 246, 0.2);
       border: 1px solid rgba(139, 92, 246, 0.4);
       color: #d8b4fe;
-      font-size: 9px;
+      font-size: calc(var(--font-base) * 0.78);
       font-weight: 600;
-      padding: 1px 4px;
-      border-radius: 3px;
-    }
-
-    .diag-text-desc {
-      font-size: 9.5px;
-      color: #cbd5e1;
-      line-height: 1.35;
-      overflow-y: auto;
-      max-height: 55px;
-    }
-
-    .share-btn-row {
-      display: flex;
-      gap: 5px;
-    }
-
-    .share-btn-mini {
-      flex: 1;
-      padding: 4px 6px;
+      padding: 2px 6px;
       border-radius: 4px;
+    }
+
+    .fp-carte-container {
+      background: rgba(15, 23, 42, 0.75);
+      border-left: 3px solid #38bdf8;
+      border-radius: 6px;
+      padding: 6px 10px;
+      overflow-y: auto;
+      max-height: var(--carte-max-h);
+      scrollbar-width: thin;
+      flex: 1;
+      margin-bottom: 4px;
+    }
+
+    .fp-carte-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: calc(var(--font-base) * 0.85);
+      font-weight: 800;
+      color: #38bdf8;
+      margin-bottom: 4px;
+      border-bottom: 1px solid rgba(56, 189, 248, 0.15);
+      padding-bottom: 3px;
+    }
+
+    .carte-block {
+      margin-bottom: 5px;
+      line-height: 1.45;
+    }
+    .carte-block:last-child {
+      margin-bottom: 0;
+    }
+
+    .carte-heading {
+      font-size: calc(var(--font-base) * 0.85);
+      font-weight: 700;
+      color: #93c5fd;
+      display: inline;
+    }
+
+    .carte-text {
+      font-size: calc(var(--font-base) * 0.9);
+      color: #cbd5e1;
+      display: inline;
+    }
+
+    .prescription-btn-wrap {
+      margin-top: 4px;
+      padding-top: 4px;
+      border-top: 1px dashed rgba(255, 255, 255, 0.08);
+    }
+
+    .btn-rx-action {
+      background: linear-gradient(135deg, #0284c7, #0369a1);
+      color: #ffffff;
+      border: 1px solid #38bdf8;
+      font-size: calc(var(--font-base) * 0.82);
+      font-weight: 800;
+      padding: 3px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s;
+    }
+
+    .btn-rx-action:active {
+      transform: scale(0.97);
+    }
+
+    .action-btn-group {
+      display: flex;
+      gap: 6px;
+      margin-top: 4px;
+      flex-wrap: wrap;
+    }
+
+    .action-btn {
+      flex: 1;
+      min-width: 100px;
+      padding: 5px 8px;
+      border-radius: 6px;
       border: none;
-      font-size: 10px;
+      font-size: calc(var(--font-base) * 0.88);
       font-weight: 700;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 3px;
+      gap: 4px;
+      transition: all 0.15s;
     }
 
-    .share-btn-mini.x-btn {
+    .action-btn.x-btn {
       background: #000;
       color: #fff;
       border: 1px solid #333;
     }
 
-    .share-btn-mini.url-btn {
+    .action-btn.url-btn {
       background: rgba(59, 130, 246, 0.25);
       color: #93c5fd;
       border: 1px solid rgba(59, 130, 246, 0.4);
     }
 
-    /* Annual Cap Alert Box */
+    .action-btn.img-btn {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(6, 182, 212, 0.3));
+      color: #6ee7b7;
+      border: 1px solid rgba(16, 185, 129, 0.5);
+    }
+
+    .action-btn.csv-btn {
+      background: rgba(245, 158, 11, 0.25);
+      color: #fcd34d;
+      border: 1px solid rgba(245, 158, 11, 0.4);
+    }
+
     .annual-alert-box {
-      border-radius: 6px;
-      padding: 6px 8px;
-      font-size: 10px;
-      line-height: 1.4;
-      margin-top: 6px;
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: calc(var(--font-base) * 0.9);
+      line-height: 1.45;
+      margin-top: 8px;
       display: none;
     }
 
@@ -473,36 +643,35 @@
       justify-content: space-between;
       align-items: center;
       font-weight: 700;
-      margin-bottom: 3px;
+      margin-bottom: 4px;
     }
 
     .btn-auto-adjust {
       background: #f59e0b;
       color: #000;
       border: none;
-      font-size: 9.5px;
+      font-size: calc(var(--font-base) * 0.85);
       font-weight: 800;
-      padding: 2px 6px;
+      padding: 3px 8px;
       border-radius: 4px;
       cursor: pointer;
-      margin-top: 4px;
+      margin-top: 5px;
       display: inline-flex;
       align-items: center;
-      gap: 3px;
+      gap: 4px;
     }
 
-    /* Controls Area */
     .control-group {
-      margin-bottom: 7px;
+      margin-bottom: 9px;
     }
 
     .control-label {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 10.5px;
+      font-size: var(--font-base);
       color: var(--text-muted);
-      margin-bottom: 2px;
+      margin-bottom: 3px;
     }
 
     .input-box-wrapper {
@@ -510,8 +679,8 @@
       align-items: center;
       background: var(--bg-input);
       border: 1px solid var(--border-color);
-      border-radius: 4px;
-      padding: 1px 4px;
+      border-radius: 6px;
+      padding: 2px 6px;
     }
 
     .input-box-wrapper:focus-within {
@@ -521,7 +690,7 @@
 
     .input-unit-prefix, .input-unit-suffix {
       color: var(--text-muted);
-      font-size: 10px;
+      font-size: calc(var(--font-base) * 0.95);
       font-weight: 600;
     }
 
@@ -530,12 +699,19 @@
       border: none;
       color: #ffffff;
       font-weight: 700;
-      font-size: 11.5px;
+      font-size: calc(var(--font-base) * 1.08);
       text-align: right;
-      width: 75px;
+      width: 85px;
       outline: none;
-      padding: 1px 2px;
+      padding: 2px 3px;
       font-family: inherit;
+    }
+
+    @media (min-width: 1400px) {
+      .num-input { width: 105px; }
+    }
+    @media (min-width: 2000px) {
+      .num-input { width: 125px; }
     }
 
     .num-input::-webkit-outer-spin-button,
@@ -549,41 +725,41 @@
 
     input[type="range"] {
       width: 100%;
-      height: 4px;
+      height: 5px;
       background: var(--bg-input);
-      border-radius: 2px;
+      border-radius: 3px;
       outline: none;
       -webkit-appearance: none;
       cursor: pointer;
-      margin-top: 2px;
+      margin-top: 3px;
     }
 
     input[type="range"]::-webkit-slider-thumb {
       -webkit-appearance: none;
-      width: 14px;
-      height: 14px;
+      width: 15px;
+      height: 15px;
       border-radius: 50%;
       background: var(--accent-blue);
       cursor: pointer;
       border: 2px solid #ffffff;
-      box-shadow: 0 0 4px rgba(0,0,0,0.5);
+      box-shadow: 0 0 5px rgba(0,0,0,0.5);
     }
 
     .preset-container {
       display: flex;
-      gap: 3px;
-      margin-top: 2px;
+      gap: 4px;
+      margin-top: 3px;
       overflow-x: auto;
-      padding-bottom: 1px;
+      padding-bottom: 2px;
     }
 
     .preset-btn {
       background: rgba(255, 255, 255, 0.04);
       border: 1px solid var(--border-color);
       color: var(--text-muted);
-      padding: 1px 5px;
-      font-size: 9.5px;
-      border-radius: 3px;
+      padding: 2px 7px;
+      font-size: calc(var(--font-base) * 0.88);
+      border-radius: 4px;
       cursor: pointer;
       white-space: nowrap;
       transition: all 0.15s;
@@ -627,16 +803,16 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 5px 8px;
+      padding: 6px 10px;
       background: var(--bg-input);
       border-radius: 6px;
-      margin-top: 4px;
+      margin-top: 6px;
     }
 
     .switch {
       position: relative;
       display: inline-block;
-      width: 34px;
+      width: 36px;
       height: 18px;
     }
 
@@ -672,34 +848,33 @@
     }
 
     input:checked + .slider:before {
-      transform: translateX(16px);
+      transform: translateX(18px);
     }
 
-    /* Details Table */
     .details-section {
-      margin-top: 6px;
+      margin-top: 8px;
     }
 
     .collapse-btn {
       background: var(--bg-card);
       border: 1px solid var(--border-color);
       color: var(--text-main);
-      padding: 5px 8px;
+      padding: 6px 10px;
       border-radius: 6px;
-      font-size: 10px;
+      font-size: calc(var(--font-base) * 0.92);
       font-weight: 600;
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 5px;
       width: 100%;
       justify-content: center;
     }
 
     .table-wrapper {
-      max-height: 180px;
+      max-height: 200px;
       overflow-y: auto;
-      margin-top: 4px;
+      margin-top: 6px;
       border: 1px solid var(--border-color);
       border-radius: 6px;
       display: none;
@@ -712,12 +887,12 @@
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 9.5px;
+      font-size: calc(var(--font-base) * 0.88);
       text-align: right;
     }
 
     th, td {
-      padding: 4px 6px;
+      padding: 5px 8px;
       border-bottom: 1px solid var(--border-color);
     }
 
@@ -743,9 +918,9 @@
       transform: translateX(-50%) translateY(100px);
       background: #10b981;
       color: #ffffff;
-      padding: 5px 12px;
-      border-radius: 16px;
-      font-size: 11px;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: calc(var(--font-base) * 0.95);
       font-weight: 700;
       box-shadow: 0 4px 12px rgba(0,0,0,0.5);
       transition: transform 0.3s ease;
@@ -764,13 +939,12 @@
 <div class="container">
   <header>
     <h1>新NISA 資産形成・戦闘力シミュレーター</h1>
-    <p>1,800万円自動ストップ ＆ RPG戦闘力レーダー・FIRE診断</p>
+    <p>1,800万円自動ストップ ＆ RPG戦闘力レーダー・資産カルテ</p>
   </header>
 
-  <!-- Top Action Bar -->
   <div class="top-bar">
     <div class="save-slots">
-      <span style="font-size:9px; color:var(--text-muted); align-self:center; margin-right:2px; font-weight:700;">💾 保存:</span>
+      <span style="font-size:calc(var(--font-base)*0.85); color:var(--text-muted); align-self:center; margin-right:2px; font-weight:700;">💾 保存:</span>
       <button class="slot-btn active" id="slotBtn1" onclick="switchSlot(1)">① 現在値</button>
       <button class="slot-btn" id="slotBtn2" onclick="switchSlot(2)">② 理想型</button>
       <button class="slot-btn" id="slotBtn3" onclick="switchSlot(3)">③ 攻め型</button>
@@ -782,8 +956,17 @@
     </div>
   </div>
 
+  <!-- シナリオ一発プリセットバー -->
+  <div class="scenario-banner">
+    <span class="scenario-label">⚡ シナリオ:</span>
+    <button class="scenario-btn" id="scBtn_standard" onclick="applyScenario('standard')">🌱 王道オルカン積立</button>
+    <button class="scenario-btn" id="scBtn_sp500_growth" onclick="applyScenario('sp500_growth')">🚀 S&P500積極形成</button>
+    <button class="scenario-btn" id="scBtn_fast_rta" onclick="applyScenario('fast_rta')">🏎️ 最短5年カンスト</button>
+    <button class="scenario-btn" id="scBtn_crash_survival" onclick="applyScenario('crash_survival')">💥 暴落耐久テスト</button>
+    <button class="scenario-btn" id="scBtn_fire_exit" onclick="applyScenario('fire_exit')">🏝️ 4%サイドFIRE</button>
+  </div>
+
   <div class="main-grid">
-    <!-- Controls Panel -->
     <div class="panel panel-controls">
       <div class="panel-title">
         <div class="panel-title-left" id="ctrlTitle">シミュレーション条件設定</div>
@@ -834,7 +1017,7 @@
           <div class="control-label">
             <span>想定年利回り</span>
             <div class="input-box-wrapper">
-              <input type="number" class="num-input" id="numReturn" value="5.0" min="0" max="30.0" step="0.1" style="width: 50px;" oninput="syncInputs('return', 'num')">
+              <input type="number" class="num-input" id="numReturn" value="5.0" min="0" max="30.0" step="0.1" style="width: 55px;" oninput="syncInputs('return', 'num')">
               <span class="input-unit-suffix">%</span>
             </div>
           </div>
@@ -851,7 +1034,7 @@
           <div class="control-label">
             <span>運用年数</span>
             <div class="input-box-wrapper">
-              <input type="number" class="num-input" id="numHorizon" value="30" min="1" max="60" step="1" style="width: 40px;" oninput="syncInputs('horizon', 'num')">
+              <input type="number" class="num-input" id="numHorizon" value="30" min="1" max="60" step="1" style="width: 45px;" oninput="syncInputs('horizon', 'num')">
               <span class="input-unit-suffix">年</span>
             </div>
           </div>
@@ -864,7 +1047,7 @@
           </div>
         </div>
 
-        <!-- 歴史的暴落ストレステスト（簡易版） -->
+        <!-- 歴史的暴落ストレステスト -->
         <div class="control-group">
           <div class="control-label">
             <span>歴史的暴落ストレステスト</span>
@@ -875,20 +1058,19 @@
             <button class="preset-btn danger" id="stressBtnCorona" onclick="setStress('corona')">コロナ級(-35%)</button>
             <button class="preset-btn danger" id="stressBtnDotcom" onclick="setStress('dotcom')">ドットコム級(-45%)</button>
           </div>
-          <div id="stressInfo" style="font-size:9.5px; color:var(--text-muted); margin-top:4px; line-height:1.35;">
+          <div id="stressInfo" style="font-size:calc(var(--font-base)*0.85); color:var(--text-muted); margin-top:4px; line-height:1.35;">
             暴落なし（通常の右肩上がりシミュレーション）
           </div>
         </div>
 
         <div class="toggle-group">
-          <span style="font-size:10.5px; font-weight:500;">1,800万円上限で積立ストップ</span>
+          <span style="font-size:calc(var(--font-base)*0.95); font-weight:500;">1,800万円上限で積立ストップ</span>
           <label class="switch">
             <input type="checkbox" id="inputCapToggle" checked onchange="saveAndRun()">
             <span class="slider"></span>
           </label>
         </div>
 
-        <!-- 年間360万円超過アラート / 既存資産案内ボックス -->
         <div id="annualCapAlert" class="annual-alert-box">
           <div class="alert-header">
             <span id="alertHeaderTitle">⚠️ 年間投資枠（360万円）を超過</span>
@@ -925,7 +1107,6 @@
           </div>
         </div>
 
-        <!-- Mode A: 定額取り崩し -->
         <div id="drawControlFixed">
           <div class="control-group">
             <div class="control-label">
@@ -947,13 +1128,12 @@
           </div>
         </div>
 
-        <!-- Mode B: 定率取り崩し -->
         <div id="drawControlPercent" style="display: none;">
           <div class="control-group">
             <div class="control-label">
               <span>年間取り崩し率</span>
               <div class="input-box-wrapper">
-                <input type="number" class="num-input" id="numDrawRate" value="4.0" min="0.5" max="15.0" step="0.1" style="width: 50px;" oninput="syncInputs('drawRate', 'num')">
+                <input type="number" class="num-input" id="numDrawRate" value="4.0" min="0.5" max="15.0" step="0.1" style="width: 55px;" oninput="syncInputs('drawRate', 'num')">
                 <span class="input-unit-suffix">%</span>
               </div>
             </div>
@@ -971,7 +1151,7 @@
           <div class="control-label">
             <span>取り崩し期間の想定利回り</span>
             <div class="input-box-wrapper">
-              <input type="number" class="num-input" id="numDrawReturn" value="3.0" min="0" max="20.0" step="0.1" style="width: 50px;" oninput="syncInputs('drawReturn', 'num')">
+              <input type="number" class="num-input" id="numDrawReturn" value="3.0" min="0" max="20.0" step="0.1" style="width: 55px;" oninput="syncInputs('drawReturn', 'num')">
               <span class="input-unit-suffix">%</span>
             </div>
           </div>
@@ -988,8 +1168,6 @@
 
     <!-- Results Panel -->
     <div class="panel panel-results">
-      
-      <!-- 1段目: コンパクト統合ヘッダー (戦闘力 & 総資産/寿命) -->
       <div class="compact-header-card">
         <div class="header-stat-box">
           <div class="header-stat-label">⚡ 投資戦闘力 (BP)</div>
@@ -1001,7 +1179,6 @@
         </div>
       </div>
 
-      <!-- 2段目: スリムサブ指標 (1行3分割) -->
       <div class="sub-stats-row" id="rowGrowthStats">
         <div class="sub-stat-chip">
           <div class="chip-label">投資元本</div>
@@ -1032,7 +1209,6 @@
         </div>
       </div>
 
-      <!-- 3段目: 表示切替タブ (推移 / レーダー / 診断) -->
       <div class="view-switcher-bar">
         <button class="view-tab-btn active" id="btnViewLine" onclick="switchDisplayView('line')">
           📈 資産推移
@@ -1041,11 +1217,10 @@
           📊 レーダー
         </button>
         <button class="view-tab-btn gold" id="btnViewDiag" onclick="switchDisplayView('diag')">
-          🎯 称号・診断
+          🎯 称号・資産カルテ
         </button>
       </div>
 
-      <!-- 4段目: 統合表示エリア -->
       <div class="unified-display-box">
         <canvas id="simChart"></canvas>
 
@@ -1055,19 +1230,34 @@
             <div class="diag-rank-tag" id="diagLevelTag">RANK</div>
           </div>
           <div class="diag-tags-row" id="diagTags"></div>
-          <div class="diag-text-desc" id="diagDesc">--</div>
-          <div class="share-btn-row">
-            <button class="share-btn-mini x-btn" onclick="shareOnX()">
-              𝕏 で戦闘力をポスト
-            </button>
-            <button class="share-btn-mini url-btn" onclick="copySimulationUrl()">
-              🔗 設定URLコピー
-            </button>
+          
+          <div class="fp-carte-container">
+            <div class="fp-carte-header">
+              <span>📋 中立FPの資産カルテ</span>
+              <span id="fpStatusBadge" style="color:#93c5fd; font-size:calc(var(--font-base)*0.78); font-weight:700;">診断完了</span>
+            </div>
+            <div id="carteContentArea"></div>
+            <div class="prescription-btn-wrap" id="prescriptionBox" style="display: none;"></div>
           </div>
         </div>
       </div>
 
-      <!-- 5段目: 詳細表トグル -->
+      <!-- アクションボタン群 -->
+      <div class="action-btn-group">
+        <button class="action-btn x-btn" onclick="shareOnX()">
+          𝕏 ポスト
+        </button>
+        <button class="action-btn url-btn" onclick="copySimulationUrl()">
+          🔗 URL共有
+        </button>
+        <button class="action-btn img-btn" onclick="exportChartImage()">
+          📸 グラフ画像保存
+        </button>
+        <button class="action-btn csv-btn" onclick="exportCsvReport()">
+          📄 CSV出力
+        </button>
+      </div>
+
       <div class="details-section" id="tableSection">
         <button class="collapse-btn" onclick="toggleTable()">
           <span id="collapseIcon">▼</span> 年次推移の詳細表を見る
@@ -1096,11 +1286,10 @@
   let currentDiagTitle = '';
   let currentBP = 0;
 
-  // Radar chart data cache
   let radarStats = [50, 50, 50, 50, 50];
+  let latestTableData = [];
 
-  // 歴史的暴落ストレステスト（簡易版）
-  let currentStress = 'none'; // 'none' | 'lehman' | 'corona' | 'dotcom'
+  let currentStress = 'none';
   const STRESS_CONFIG = {
     none:   { drop: 0.00, label: '通常運用（暴落なし）', short: '通常' },
     lehman: { drop: 0.50, label: 'リーマン級ショック（約-50%）', short: 'リーマン級' },
@@ -1117,6 +1306,313 @@
     t.innerText = msg;
     t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 2000);
+  }
+
+  /* シナリオ一発適用（ボタンハイライト連動 ＆ 一括更新） */
+  function applyScenario(type) {
+    ['standard', 'sp500_growth', 'fast_rta', 'crash_survival', 'fire_exit'].forEach(t => {
+      const btn = document.getElementById('scBtn_' + t);
+      if (btn) btn.classList.toggle('active', t === type);
+    });
+
+    if (type === 'standard') {
+      switchTab('growth', false);
+      setPresetValues({ monthly: 50000, initial: 0, returnRate: 5.0, horizon: 30, stress: 'none' });
+      showToast('🌱 王道オルカン積立シナリオを適用しました');
+    } else if (type === 'sp500_growth') {
+      switchTab('growth', false);
+      setPresetValues({ monthly: 100000, initial: 1000000, returnRate: 7.0, horizon: 25, stress: 'none' });
+      showToast('🚀 S&P500積極形成シナリオを適用しました');
+    } else if (type === 'fast_rta') {
+      switchTab('growth', false);
+      setPresetValues({ monthly: 300000, initial: 0, returnRate: 7.0, horizon: 20, stress: 'none' });
+      showToast('🏎️ 最短5年カンストRTAシナリオを適用しました');
+    } else if (type === 'crash_survival') {
+      switchTab('growth', false);
+      setPresetValues({ monthly: 50000, initial: 1000000, returnRate: 7.0, horizon: 20, stress: 'lehman' });
+      showToast('💥 リーマン級暴落耐久テストを適用しました');
+    } else if (type === 'fire_exit') {
+      switchTab('drawdown', false);
+      switchDrawdownMode('fixed', false);
+      document.getElementById('numDrawStart').value = 50000000;
+      document.getElementById('rangeDrawStart').value = 50000000;
+      const monthlyAmt = Math.round((50000000 * 0.04) / 12);
+      document.getElementById('numDrawMonthly').value = monthlyAmt;
+      document.getElementById('rangeDrawMonthly').value = Math.min(500000, monthlyAmt);
+      document.getElementById('numDrawReturn').value = 5.0;
+      document.getElementById('rangeDrawReturn').value = 5.0;
+      saveAndRun();
+      showToast('🏝️ 4%サイドFIRE取り崩しシナリオを適用しました');
+    }
+  }
+
+  /* 複数値を一括セットして1回だけ再描画 */
+  function setPresetValues(obj) {
+    if (obj.monthly !== undefined) {
+      document.getElementById('numMonthly').value = obj.monthly;
+      document.getElementById('rangeMonthly').value = obj.monthly;
+    }
+    if (obj.initial !== undefined) {
+      document.getElementById('numInitial').value = obj.initial;
+      document.getElementById('rangeInitial').value = obj.initial;
+    }
+    if (obj.returnRate !== undefined) {
+      document.getElementById('numReturn').value = obj.returnRate;
+      document.getElementById('rangeReturn').value = obj.returnRate;
+    }
+    if (obj.horizon !== undefined) {
+      document.getElementById('numHorizon').value = obj.horizon;
+      document.getElementById('rangeHorizon').value = obj.horizon;
+    }
+    if (obj.stress !== undefined) {
+      setStress(obj.stress, false);
+    }
+    saveAndRun();
+  }
+
+  /* 📸 グラフ画像の強化エクスポート (カード風サマリーバナー＋ダークテーマ合成) */
+  function exportChartImage() {
+    const chartCanvas = document.getElementById('simChart');
+    if (!chartCanvas) {
+      showToast('グラフが生成されていません');
+      return;
+    }
+
+    const prevView = displayView;
+    if (prevView !== 'line') {
+      switchDisplayView('line');
+    }
+
+    setTimeout(() => {
+      try {
+        const outW = 1200;
+        const outH = 780;
+        const offCanvas = document.createElement('canvas');
+        offCanvas.width = outW;
+        offCanvas.height = outH;
+        const ctx = offCanvas.getContext('2d');
+
+        // 1. 背景
+        const bgGrad = ctx.createLinearGradient(0, 0, 0, outH);
+        bgGrad.addColorStop(0, '#0f172a');
+        bgGrad.addColorStop(1, '#090d16');
+        ctx.fillStyle = bgGrad;
+        ctx.fillRect(0, 0, outW, outH);
+
+        ctx.strokeStyle = '#1e293b';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(1, 1, outW - 2, outH - 2);
+
+        // 2. タイトル
+        ctx.fillStyle = '#60a5fa';
+        ctx.font = 'bold 24px sans-serif';
+        ctx.fillText('新NISA 資産形成・戦闘力シミュレーション レポート', 36, 42);
+
+        // 3. サマリーカード
+        const cardX = 36, cardY = 58, cardW = outW - 72, cardH = 135;
+        ctx.fillStyle = '#131c2e';
+        ctx.strokeStyle = '#7c3aed';
+        ctx.lineWidth = 1.5;
+        roundRect(ctx, cardX, cardY, cardW, cardH, 10, true, true);
+
+        const bp = document.getElementById('bpValue').innerText;
+        const mainVal = document.getElementById('mainStatHeaderValue').innerText;
+        const title = currentDiagTitle;
+
+        ctx.fillStyle = '#c4b5fd';
+        ctx.font = 'bold 12px sans-serif';
+        ctx.fillText('⚡ 投資戦闘力', cardX + 20, cardY + 28);
+        ctx.fillStyle = '#fbbf24';
+        ctx.font = '900 24px "Courier New", monospace';
+        ctx.fillText(bp + ' BP', cardX + 20, cardY + 58);
+
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = 'bold 12px sans-serif';
+        ctx.fillText(currentTab === 'growth' ? '💰 最終資産総額' : '⏳ 資産寿命', cardX + 240, cardY + 28);
+        ctx.fillStyle = '#60a5fa';
+        ctx.font = '900 24px sans-serif';
+        ctx.fillText(mainVal, cardX + 240, cardY + 58);
+
+        ctx.fillStyle = '#fef08a';
+        ctx.font = 'bold 14px sans-serif';
+        ctx.fillText(title, cardX + 20, cardY + 92);
+
+        let cond1 = '', cond2 = '';
+        if (currentTab === 'growth') {
+          const m = parseInt(document.getElementById('numMonthly').value) || 0;
+          const init = parseInt(document.getElementById('numInitial').value) || 0;
+          const r = document.getElementById('numReturn').value;
+          const y = document.getElementById('numHorizon').value;
+          const stressLabel = STRESS_CONFIG[currentStress].short;
+          cond1 = `【設定条件】 毎月積立: ¥${m.toLocaleString()}  /  初期投資: ¥${init.toLocaleString()}`;
+          cond2 = `想定年利: ${r}%  /  運用期間: ${y}年  /  ストレステスト: ${stressLabel}`;
+        } else {
+          const start = parseInt(document.getElementById('numDrawStart').value) || 0;
+          const r = document.getElementById('numDrawReturn').value;
+          cond1 = `【設定条件】 開始資産: ¥${start.toLocaleString()}  /  想定利回り: ${r}%`;
+          if (drawdownMode === 'fixed') {
+            const dm = parseInt(document.getElementById('numDrawMonthly').value) || 0;
+            cond2 = `取崩方式: 定額 (毎月 ¥${dm.toLocaleString()} / 年 ¥${(dm*12).toLocaleString()})`;
+          } else {
+            const dr = document.getElementById('numDrawRate').value;
+            cond2 = `取崩方式: 定率 (年 ${dr}%)`;
+          }
+        }
+        ctx.fillStyle = '#cbd5e1';
+        ctx.font = '13px sans-serif';
+        ctx.fillText(cond1, cardX + 540, cardY + 38);
+        ctx.fillText(cond2, cardX + 540, cardY + 65);
+
+        // 4. グラフ
+        const graphX = 36, graphY = 208, graphW = outW - 72, graphH = 515;
+        ctx.fillStyle = '#0f172a';
+        ctx.strokeStyle = '#1e293b';
+        ctx.lineWidth = 1;
+        roundRect(ctx, graphX, graphY, graphW, graphH, 10, true, true);
+
+        ctx.drawImage(chartCanvas, graphX + 10, graphY + 10, graphW - 20, graphH - 20);
+
+        // 5. フッター
+        ctx.fillStyle = '#64748b';
+        ctx.font = '11px sans-serif';
+        const nowStr = new Date().toLocaleString('ja-JP');
+        ctx.fillText(`作成日時: ${nowStr}  |  新NISA 資産形成・戦闘力シミュレーター`, 40, outH - 18);
+
+        const a = document.createElement('a');
+        const filenamePrefix = currentTab === 'growth' ? '新NISA資産形成' : '新NISA出口戦略';
+        const dateStr = new Date().toISOString().slice(0, 10);
+        a.href = offCanvas.toDataURL('image/png', 1.0);
+        a.download = `${filenamePrefix}_${dateStr}.png`;
+        a.click();
+        showToast('📸 高解像度レポート画像を保存しました！');
+
+      } catch (e) {
+        console.error(e);
+        showToast('画像の生成に失敗しました');
+      } finally {
+        if (prevView !== 'line') {
+          switchDisplayView(prevView);
+        }
+      }
+    }, 100);
+  }
+
+  function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + width - radius, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+    ctx.lineTo(x + width, y + height - radius);
+    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+    ctx.lineTo(x + radius, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+    ctx.lineTo(x, y + radius);
+    ctx.quadraticCurveTo(x, y, x + radius, y);
+    ctx.closePath();
+    if (fill) ctx.fill();
+    if (stroke) ctx.stroke();
+  }
+
+  /* 📄 CSVレポートの出力 */
+  function exportCsvReport() {
+    if (!latestTableData || latestTableData.length === 0) {
+      showToast('出力可能なデータがありません');
+      return;
+    }
+    const lines = [];
+    const nowStr = new Date().toLocaleString('ja-JP');
+    const dateFileStr = new Date().toISOString().slice(0, 10);
+    let filename = '';
+
+    if (currentTab === 'growth') {
+      const m = parseInt(document.getElementById('numMonthly').value) || 0;
+      const init = parseInt(document.getElementById('numInitial').value) || 0;
+      const r = document.getElementById('numReturn').value;
+      const y = document.getElementById('numHorizon').value;
+      const stress = STRESS_CONFIG[currentStress].label;
+      const finalTot = document.getElementById('mainStatHeaderValue').innerText;
+      const finalPr = document.getElementById('chipPrincipal').innerText;
+      const finalGn = document.getElementById('chipGains').innerText;
+      const finalTx = document.getElementById('chipTax').innerText;
+      const bp = document.getElementById('bpValue').innerText;
+
+      filename = `新NISA_月${Math.round(m/10000)}万_年${r}％_${y}年_${dateFileStr}.csv`;
+
+      lines.push('# ==========================================');
+      lines.push('# 新NISA 資産形成シミュレーション レポート');
+      lines.push(`# 出力日時: ${nowStr}`);
+      lines.push('# ------------------------------------------');
+      lines.push('# ■ シミュレーション設定条件');
+      lines.push(`# 毎月の積立額, ¥${m.toLocaleString()}`);
+      lines.push(`# 初期投資額, ¥${init.toLocaleString()}`);
+      lines.push(`# 想定年利回り, ${r}%`);
+      lines.push(`# 運用期間, ${y}年`);
+      lines.push(`# ストレステスト, ${stress}`);
+      lines.push('# ------------------------------------------');
+      lines.push('# ■ 試算結果サマリー');
+      lines.push(`# 最終資産総額, ${finalTot}`);
+      lines.push(`# 投資元本合計, ${finalPr}`);
+      lines.push(`# 運用益(利益), ${finalGn}`);
+      lines.push(`# 節税バリア効果, ${finalTx}`);
+      lines.push(`# 投資戦闘力, ${bp} BP`);
+      lines.push(`# 獲得称号, ${currentDiagTitle}`);
+      lines.push('# ==========================================');
+      lines.push('');
+      lines.push('運用年数,投資元本(円),運用益(円),総資産額(円),課税口座手取り(円),非課税節税額(円)');
+
+      latestTableData.forEach(row => {
+        lines.push(`${row.year}年目,${row.principal},${row.gains},${row.balance},${row.taxableNet},${row.taxSaved}`);
+      });
+
+    } else {
+      const start = parseInt(document.getElementById('numDrawStart').value) || 0;
+      const r = document.getElementById('numDrawReturn').value;
+      const life = document.getElementById('mainStatHeaderValue').innerText;
+      const annualDraw = document.getElementById('chipDrawAnnual').innerText;
+      const totalRec = document.getElementById('chipDrawTotal').innerText;
+      const bp = document.getElementById('bpValue').innerText;
+
+      filename = `新NISA出口戦略_${Math.round(start/10000)}万開始_${dateFileStr}.csv`;
+
+      lines.push('# ==========================================');
+      lines.push('# 新NISA 出口・取り崩しシミュレーション レポート');
+      lines.push(`# 出力日時: ${nowStr}`);
+      lines.push('# ------------------------------------------');
+      lines.push('# ■ 取り崩し設定条件');
+      lines.push(`# 開始時資産総額, ¥${start.toLocaleString()}`);
+      if (drawdownMode === 'fixed') {
+        const dm = parseInt(document.getElementById('numDrawMonthly').value) || 0;
+        lines.push(`# 取崩方式, 定額取り崩し (毎月 ¥${dm.toLocaleString()} / 年間 ¥${(dm*12).toLocaleString()})`);
+      } else {
+        const dr = document.getElementById('numDrawRate').value;
+        lines.push(`# 取崩方式, 定率取り崩し (年 ${dr}%)`);
+      }
+      lines.push(`# 運用想定利回り, ${r}%`);
+      lines.push('# ------------------------------------------');
+      lines.push('# ■ 試算結果サマリー');
+      lines.push(`# 推定資産寿命, ${life}`);
+      lines.push(`# 年間取崩額(初年), ${annualDraw}`);
+      lines.push(`# 受取累計総額, ${totalRec}`);
+      lines.push(`# 出口耐久戦闘力, ${bp} BP`);
+      lines.push(`# 獲得称号, ${currentDiagTitle}`);
+      lines.push('# ==========================================');
+      lines.push('');
+      lines.push('経過年数,年間受取額(円),運用取崩残高(円),現金のみ残高(円),受取累計額(円)');
+
+      latestTableData.forEach(row => {
+        lines.push(`${row.year}年後,${row.draw},${row.balanceInvest},${row.balanceCash},${row.totalReceived}`);
+      });
+    }
+
+    const csvContent = '\uFEFF' + lines.join('\n') + '\n';
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast(`📄 CSVレポート「${filename}」を出力しました！`);
   }
 
   function switchSlot(slotNum) {
@@ -1163,11 +1659,10 @@
         if (d.drawRate !== undefined) document.getElementById('numDrawRate').value = d.drawRate;
         if (d.drawReturn !== undefined) document.getElementById('numDrawReturn').value = d.drawReturn;
         ['monthly', 'initial', 'return', 'horizon', 'drawStart', 'drawMonthly', 'drawRate', 'drawReturn'].forEach(f => syncInputs(f, 'num', false));
-        // ストレステストのボタン状態を復元
         if (d.stress) {
-          setStress(d.stress);
+          setStress(d.stress, false);
         } else {
-          setStress('none');
+          setStress('none', false);
         }
       } catch (e) {
         console.error(e);
@@ -1194,7 +1689,7 @@
     }
   }
 
-  function switchTab(tab) {
+  function switchTab(tab, shouldRun = true) {
     currentTab = tab;
     document.getElementById('tabGrowth').classList.toggle('active', tab === 'growth');
     document.getElementById('tabDrawdown').classList.toggle('active', tab === 'drawdown');
@@ -1212,10 +1707,10 @@
       document.getElementById('ctrlTitle').innerText = 'シミュレーション条件設定';
       document.getElementById('mainStatHeaderLabel').innerText = '最終資産総額';
     }
-    saveAndRun();
+    if (shouldRun) saveAndRun();
   }
 
-  function switchDrawdownMode(mode) {
+  function switchDrawdownMode(mode, shouldRun = true) {
     drawdownMode = mode;
     document.getElementById('subTabFixed').classList.toggle('active', mode === 'fixed');
     document.getElementById('subTabPercent').classList.toggle('active', mode === 'percent');
@@ -1227,7 +1722,7 @@
     } else {
       document.getElementById('chipDrawAnnualLabel').innerText = '初年取崩額';
     }
-    saveAndRun();
+    if (shouldRun) saveAndRun();
   }
 
   function importFromGrowthResult() {
@@ -1274,9 +1769,8 @@
     saveAndRun();
   }
 
-  function setStress(type) {
+  function setStress(type, shouldRun = true) {
     currentStress = type;
-    // ボタンの見た目を更新
     ['none', 'lehman', 'corona', 'dotcom'].forEach(t => {
       const btn = document.getElementById('stressBtn' + (t === 'none' ? 'None' : t.charAt(0).toUpperCase() + t.slice(1)));
       if (!btn) return;
@@ -1292,7 +1786,6 @@
       }
     });
 
-    // 説明文の更新
     const info = document.getElementById('stressInfo');
     const cfg = STRESS_CONFIG[type] || STRESS_CONFIG.none;
     if (type === 'none') {
@@ -1302,7 +1795,7 @@
       info.innerHTML = `⚠ ${cfg.label}<br>運用期間の約40%地点で一時的に資産が下落します。積立は継続します。`;
       info.style.color = '#fca5a5';
     }
-    saveAndRun();
+    if (shouldRun) saveAndRun();
   }
 
   function syncInputs(field, source, shouldRun = true) {
@@ -1373,7 +1866,6 @@
     requestAnimationFrame(update);
   }
 
-  /* 年間投資枠（360万）の超過チェック & 案内表示 */
   let optimalMonthlyCap = 0;
 
   function checkAnnualCapAlert(monthly, initial) {
@@ -1430,9 +1922,7 @@
     const totalMonths = horizon * 12;
     const CAP_LIMIT = 18000000;
 
-    // ストレステスト設定
     const stressCfg = STRESS_CONFIG[currentStress] || STRESS_CONFIG.none;
-    // 運用期間の約40%地点で暴落を発生させる（最低1年目以降）
     const crashMonth = (stressCfg.drop > 0 && totalMonths > 12)
       ? Math.max(12, Math.floor(totalMonths * 0.4))
       : -1;
@@ -1448,6 +1938,7 @@
     const dataGains = [];
     const dataTaxable = [];
     const tableRows = [];
+    latestTableData = [];
 
     labels.push('0年');
     dataPrincipal.push(initial);
@@ -1467,7 +1958,6 @@
       principal += add;
       balance = balance * (1 + monthlyRate) + add;
 
-      // 簡易版ストレステスト：指定月に一気に下落
       if (m === crashMonth && !crashApplied) {
         balance = balance * (1 - stressCfg.drop);
         crashApplied = true;
@@ -1479,15 +1969,24 @@
 
       if (m % 12 === 0) {
         const year = m / 12;
-        const gains = balance - principal;                 // マイナスも許可（含み損を可視化）
+        const gains = balance - principal;
         const taxableNet = principal + Math.max(0, gains) * (1 - 0.20315);
-        const taxSaved = Math.max(0, gains) * 0.20315;     // 節税は利益が出ている分のみ
+        const taxSaved = Math.max(0, gains) * 0.20315;
 
         labels.push(year + '年');
         dataPrincipal.push(Math.round(principal));
         dataTotal.push(Math.round(balance));
         dataGains.push(Math.round(gains));
         dataTaxable.push(Math.round(taxableNet));
+
+        latestTableData.push({
+          year: year,
+          principal: Math.round(principal),
+          gains: Math.round(gains),
+          balance: Math.round(balance),
+          taxableNet: Math.round(taxableNet),
+          taxSaved: Math.round(taxSaved)
+        });
 
         const gainsColor = gains >= 0 ? '#34d399' : '#f87171';
         const gainsText = (gains >= 0 ? '+' : '') + fmtYen(gains);
@@ -1509,13 +2008,12 @@
     lastGrowthTotal = Math.round(balance);
     const finalTotal = balance;
     const finalPrincipal = principal;
-    const finalGains = finalTotal - finalPrincipal;        // マイナスも許可
+    const finalGains = finalTotal - finalPrincipal;
     const finalTaxSaved = Math.max(0, finalGains) * 0.20315;
 
     document.getElementById('mainStatHeaderValue').innerText = fmtYen(finalTotal);
     document.getElementById('chipPrincipal').innerText = fmtYen(finalPrincipal);
 
-    // 運用益チップ：プラスは緑、マイナスは赤
     const chipGainsEl = document.getElementById('chipGains');
     chipGainsEl.innerText = (finalGains >= 0 ? '+' : '') + fmtYen(finalGains);
     chipGainsEl.classList.remove('gains', 'danger');
@@ -1535,7 +2033,7 @@
     `;
     document.getElementById('tableBody').innerHTML = tableRows.join('');
 
-    // --- 実戦型RPGレーダー計算カーブ (資産形成) ---
+    // --- 実戦型RPGレーダー計算カーブ ---
     let atkScore = 0;
     if (monthly === 0 && initial === 0) {
       atkScore = 0;
@@ -1593,7 +2091,7 @@
 
     radarStats = [atkScore, defScore, criScore, guardScore, vitScore];
 
-    const bp = Math.round(finalTotal / 10) + Math.round(finalTaxSaved / 5);
+    const bp = Math.round(Math.max(0, finalTotal) / 10) + Math.round(finalTaxSaved / 5);
     animateCounter(bp);
 
     if (displayView === 'line') {
@@ -1653,13 +2151,13 @@
         plugins: {
           legend: {
             position: 'top',
-            labels: { color: '#d1d5db', font: { size: 9 }, boxWidth: 8, usePointStyle: true, pointStyle: 'circle' }
+            labels: { color: '#d1d5db', font: { size: 10 }, boxWidth: 10, usePointStyle: true, pointStyle: 'circle' }
           },
           tooltip: {
             backgroundColor: 'rgba(17, 24, 39, 0.95)',
-            padding: 6,
-            titleFont: { size: 10 },
-            bodyFont: { size: 9.5 },
+            padding: 8,
+            titleFont: { size: 11 },
+            bodyFont: { size: 10.5 },
             callbacks: {
               title: (items) => `運用年数: ${items[0].label}`,
               beforeBody: (items) => {
@@ -1681,12 +2179,12 @@
           }
         },
         scales: {
-          x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#9ca3af', font: { size: 9 } } },
+          x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#9ca3af', font: { size: 10 } } },
           y: {
             grid: { color: 'rgba(255, 255, 255, 0.05)' },
             ticks: {
               color: '#9ca3af',
-              font: { size: 9 },
+              font: { size: 10 },
               callback: (val) => {
                 if (val >= 100000000) return (val / 100000000).toFixed(1) + '億';
                 if (val >= 10000) return (val / 10000).toLocaleString() + '万';
@@ -1699,7 +2197,6 @@
     });
   }
 
-  /* 0〜100点固定レーダーチャート */
   function renderRadarChart(labels, stats) {
     const ctx = document.getElementById('simChart').getContext('2d');
     if (chartInstance) chartInstance.destroy();
@@ -1713,10 +2210,10 @@
           data: stats,
           backgroundColor: 'rgba(168, 85, 247, 0.35)',
           borderColor: '#c084fc',
-          borderWidth: 1.8,
+          borderWidth: 2,
           pointBackgroundColor: '#fbbf24',
           pointBorderColor: '#fff',
-          pointRadius: 3
+          pointRadius: 3.5
         }]
       },
       options: {
@@ -1729,7 +2226,7 @@
             beginAtZero: true,
             angleLines: { color: 'rgba(255, 255, 255, 0.12)' },
             grid: { color: 'rgba(255, 255, 255, 0.08)' },
-            pointLabels: { color: '#cbd5e1', font: { size: 9.5, weight: 'bold' } },
+            pointLabels: { color: '#cbd5e1', font: { size: 10.5, weight: 'bold' } },
             ticks: {
               display: false,
               stepSize: 20
@@ -1760,6 +2257,7 @@
     const dataInvest = [];
     const dataCash = [];
     const tableRows = [];
+    latestTableData = [];
 
     labels.push('0年');
     dataInvest.push(startAsset);
@@ -1800,6 +2298,14 @@
         labels.push(y + '年後');
         dataInvest.push(Math.max(0, Math.round(balanceInvest)));
         dataCash.push(Math.max(0, Math.round(balanceCash)));
+
+        latestTableData.push({
+          year: y,
+          draw: Math.round(yearDrawInvest),
+          balanceInvest: Math.round(balanceInvest),
+          balanceCash: Math.round(balanceCash),
+          totalReceived: Math.round(totalReceivedInvest)
+        });
 
         tableRows.push(`
           <tr>
@@ -1866,6 +2372,14 @@
         labels.push(y + '年後');
         dataInvest.push(Math.max(0, Math.round(balanceInvest)));
         dataCash.push(Math.max(0, Math.round(balanceCash)));
+
+        latestTableData.push({
+          year: y,
+          draw: Math.round(yearDraw),
+          balanceInvest: Math.round(balanceInvest),
+          balanceCash: Math.round(balanceCash),
+          totalReceived: Math.round(totalReceivedInvest)
+        });
 
         tableRows.push(`
           <tr>
@@ -1954,11 +2468,13 @@
         plugins: {
           legend: {
             position: 'top',
-            labels: { color: '#d1d5db', font: { size: 9 }, boxWidth: 8, usePointStyle: true, pointStyle: 'circle' }
+            labels: { color: '#d1d5db', font: { size: 10 }, boxWidth: 10, usePointStyle: true, pointStyle: 'circle' }
           },
           tooltip: {
             backgroundColor: 'rgba(17, 24, 39, 0.95)',
-            padding: 6,
+            padding: 8,
+            titleFont: { size: 11 },
+            bodyFont: { size: 10.5 },
             callbacks: {
               title: (items) => `経過年数: ${items[0].label}`,
               label: (context) => `${context.dataset.label}: ${fmtYen(context.raw)}`
@@ -1966,12 +2482,12 @@
           }
         },
         scales: {
-          x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#9ca3af', font: { size: 9 } } },
+          x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#9ca3af', font: { size: 10 } } },
           y: {
             grid: { color: 'rgba(255, 255, 255, 0.05)' },
             ticks: {
               color: '#9ca3af',
-              font: { size: 9 },
+              font: { size: 10 },
               callback: (val) => {
                 if (val >= 100000000) return (val / 100000000).toFixed(1) + '億';
                 if (val >= 10000) return (val / 10000).toLocaleString() + '万';
@@ -1984,102 +2500,222 @@
     });
   }
 
+  /* 📋 中立FPの資産カルテ（3段構造：分析・未来像・処方箋）生成ロジック */
   function updateDiagnosis(mode, total, monthly, initial, returnRate, horizon, depletedYear = null, drawRate = null) {
     let title = '';
-    let desc = '';
     let level = '';
     let tags = [];
+    let carteHtml = '';
+    let rxButtonHtml = '';
+    let statusBadgeText = 'カルテ作成完了';
 
     if (mode === 'growth') {
       if (monthly === 0 && initial === 0) {
         title = '👀 観客席の傍観者（ノーポジ待機）';
-        desc = 'まだ投資元本が1円も投入されていない完全無風状態！まずは月1,000円からでも複利の雪だるま作りを始めてみませんか？';
         level = 'RANK 0';
-        tags = ['#ノーポジション', '#見学中'];
-      } else if (total >= 300000000) {
+        tags = ['#ノーポジション', '#まずは少額から', '#時間の損失注意'];
+        carteHtml = `
+          <div class="carte-block"><span class="carte-heading">【現状分析】</span><span class="carte-text">投資元本が0円の無風状態です。インデックス投資における最大のリスクは「市場に資金を置いていない時間」そのものです。</span></div>
+          <div class="carte-block"><span class="carte-heading">【未来予測】</span><span class="carte-text">年2%のインフレが進むと、現金の購買力は20年で約33%目減りします。</span></div>
+          <div class="carte-block"><span class="carte-heading">【実践戦略】</span><span class="carte-text">生活費の半年分を手元に残した上で、月3,000円〜3万円の少額積立から雪だるま作りを始めましょう。</span></div>
+        `;
+        rxButtonHtml = `<button class="btn-rx-action" onclick="setPreset('monthly', 30000)">⚡ 処方箋: 月3万円で積立開始</button>`;
+      }
+      else if (currentStress !== 'none' && horizon < 15) {
+        title = '💥 暴落直撃・メンタル耐久テスト級';
+        level = 'WARNING';
+        tags = ['#暴落耐久中', '#ドルコスト効果', '#狼狽売り厳禁'];
+        statusBadgeText = '⚠️ 回復待ち';
+        carteHtml = `
+          <div class="carte-block"><span class="carte-heading">【現状分析】</span><span class="carte-text">${STRESS_CONFIG[currentStress].short}により一時的に資産が急減。期間が${horizon}年と短いため、底値からの回復カーブを十分に取り込めていません。</span></div>
+          <div class="carte-block"><span class="carte-heading">【歴史的教訓】</span><span class="carte-text">過去すべての歴史的暴落（リーマン・ITバブル等）は、15〜20年保有し続けた場合プラスに回帰しています。暴落時こそ「安く多く口数を仕込む好機」です。</span></div>
+          <div class="carte-block"><span class="carte-heading">【実践戦略】</span><span class="carte-text">相場から絶対に退場せず、運用期間を「20年以上」に設定して複利回復を確認してください。</span></div>
+        `;
+        rxButtonHtml = `<button class="btn-rx-action" onclick="setPreset('horizon', 20)">⚡ 処方箋: 期間を20年に延長（回復確認）</button>`;
+      }
+      else if (returnRate >= 10) {
+        title = '🎰 レバナス戦士・ハイレバドリーム級';
+        level = 'HIGH RISK';
+        tags = ['#ハイリスク強気', '#ドローダウン警戒', '#過信注意'];
+        statusBadgeText = '⚠️ 高リスク';
+        carteHtml = `
+          <div class="carte-block"><span class="carte-heading">【現状分析】</span><span class="carte-text">想定利回り${returnRate}%は魅力的な数字ですが、レバレッジ投信やハイテク集中投資など、資産が一時的に50〜70%削られるリスクを背負う水準です。</span></div>
+          <div class="carte-block"><span class="carte-heading">【未来予測】</span><span class="carte-text">上昇相場では爆発的に増えますが、リタイア直前に暴落を被弾すると計画が根底から崩壊します。</span></div>
+          <div class="carte-block"><span class="carte-heading">【実践戦略】</span><span class="carte-text">長期の資産形成プランは、歴史的平均（全世界株5%、S&P500 7%）をベースに堅牢に組むのが定石です。</span></div>
+        `;
+        rxButtonHtml = `<button class="btn-rx-action" onclick="setPreset('return', 7.0)">⚡ 処方箋: 年利7%（王道S&P500）に補正</button>`;
+      }
+      else if (horizon <= 5) {
+        title = '⏱️ 短期決戦・複利スリーパー級';
+        level = 'SHORT TERM';
+        tags = ['#短期運用', '#複利待機中', '#元本割れリスク'];
+        statusBadgeText = '💡 期間見直し推奨';
+        carteHtml = `
+          <div class="carte-block"><span class="carte-heading">【現状分析】</span><span class="carte-text">運用年数${horizon}年は投資信託において短期です。複利の真骨頂である「後半の二次曲線的な伸び」が発動する前に終了してしまいます。</span></div>
+          <div class="carte-block"><span class="carte-heading">【資金の色分け】</span><span class="carte-text">5年以内に使う予定の資金（学費・住宅頭金等）は定期預金等で守り、投資は10年超の長期資金で行うのが原則です。</span></div>
+          <div class="carte-block"><span class="carte-heading">【実践戦略】</span><span class="carte-text">使わない余裕資金であれば、期間を15〜20年に延ばして複利の恩恵を最大化しましょう。</span></div>
+        `;
+        rxButtonHtml = `<button class="btn-rx-action" onclick="setPreset('horizon', 20)">⚡ 処方箋: 複利が効く20年に設定</button>`;
+      }
+      else if (total >= 300000000) {
         title = '🪐 超富裕層・石油王・FIRE神';
-        desc = `最終資産は驚異の${fmtYen(total)}！もはや個人の老後やFIREの次元を超越した資産規模。次世代への資産継承を考える領域です。`;
         level = 'RANK GOD';
-        tags = ['#資産3億円超', '#超富裕層', '#不労所得マスター'];
-      } else if (total >= 100000000) {
+        tags = ['#資産3億円超', '#超富裕層', '#資産承継ステージ'];
+        carteHtml = `
+          <div class="carte-block"><span class="carte-heading">【現状分析】</span><span class="carte-text">最終資産【${fmtYen(total)}】到達。個人の生活費やFIREの次元を完全に超越した圧倒的な資産規模です。</span></div>
+          <div class="carte-block"><span class="carte-heading">【未来像】</span><span class="carte-text">年3%の配当・取り崩しでも年間900万円以上。インフレリスクも完全に克服しています。</span></div>
+          <div class="carte-block"><span class="carte-heading">【実践戦略】</span><span class="carte-text">今後は資産防衛に加え、プライベートカンパニー（資産管理法人）の設立や、生前贈与・相続税対策が主眼となります。</span></div>
+        `;
+      }
+      else if (total >= 100000000) {
         title = '👑 億り人・完全FIRE級 (Fat FIRE)';
-        desc = `最終資産は圧巻の${fmtYen(total)}！年4%（月33万円以上）の運用益だけで労働から完全に解放される経済的自由の最高峰です。`;
         level = 'RANK SSS';
         tags = ['#億り人', '#完全FIRE達成', '#経済的自由'];
-      } else if (total >= 50000000) {
+        carteHtml = `
+          <div class="carte-block"><span class="carte-heading">【現状分析】</span><span class="carte-text">資産1億円突破。非課税枠1,800万円の複利最大化に成功したトップクラスの資産家ポートフォリオです。</span></div>
+          <div class="carte-block"><span class="carte-heading">【未来像】</span><span class="carte-text">4%ルール適用で年間400万円（月33万円）の不労所得。労働から完全に解放される経済的自由が確立されます。</span></div>
+          <div class="carte-block"><span class="carte-heading">【実践戦略】</span><span class="carte-text">完全リタイア時は、生活防衛資金として2〜3年分の生活費（600〜900万円）を現金で別管理し、暴落時の投げ売りを防ぎましょう。</span></div>
+        `;
+      }
+      else if (total >= 50000000) {
         title = '🏝️ サイドFIRE・準富裕層クラス';
-        desc = `資産5,000万円突破！年間4%（月16.6万円）の不労所得＋好きな仕事で悠々自適に暮らせる理想的なセミリタイア領域です。`;
         level = 'RANK S';
         tags = ['#準富裕層', '#サイドFIRE', '#選択的労働'];
-      } else if (total >= 30000000) {
+        carteHtml = `
+          <div class="carte-block"><span class="carte-heading">【現状分析】</span><span class="carte-text">資産5,000万円を突破し「準富裕層」の仲間入りです。元本と運用益が1:1以上に育ち、複利が加速する理想的な状態です。</span></div>
+          <div class="carte-block"><span class="carte-heading">【未来像】</span><span class="carte-text">年間4%（月16.6万円）の取り崩し＋好きな副業や週3日労働（月10〜15万）で、ストレスのないセミリタイア生活が実現します。</span></div>
+          <div class="carte-block"><span class="carte-heading">【実践戦略】</span><span class="carte-text">出口タブで「定額・定率取り崩し」のシミュレーションを行い、理想の引き出しペースを検証してみましょう。</span></div>
+        `;
+      }
+      else if (total >= 30000000) {
         title = '🛡️ アッパーマス層・安心老後級';
-        desc = `資産3,000万円以上！全世帯上位20%に到達。老後2,000万円問題を完全クリアし、人生の選択肢と安心感を獲得しています。`;
         level = 'RANK A';
-        tags = ['#アッパーマス層', '#老後安泰'];
-      } else if (total >= 15000000) {
+        tags = ['#アッパーマス層', '#老後安泰', '#上位20%'];
+        carteHtml = `
+          <div class="carte-block"><span class="carte-heading">【現状分析】</span><span class="carte-text">資産3,000万円以上。日本の全世帯上位20%に到達し、老後2,000万円問題を完全クリアしています。</span></div>
+          <div class="carte-block"><span class="carte-heading">【未来像】</span><span class="carte-text">公的年金に加えて月10万円前後の資産取り崩しが可能となり、旅行や趣味を楽しめるゆとりある老後が約束されます。</span></div>
+          <div class="carte-block"><span class="carte-heading">【実践戦略】</span><span class="carte-text">家計の破綻リスクは極めて低いため、教育費や住宅ローンとのバランスを取りつつ、無理のないペースで枠を埋め続けましょう。</span></div>
+        `;
+      }
+      else if (total >= 15000000) {
         title = '🌱 安定投資家タイプ';
-        desc = `元本と複利の力でまとまった資産（${fmtYen(total)}）を構築！教育費や住宅購入などあらゆるライフイベントに対応できる優秀な基盤です。`;
         level = 'RANK B';
-        tags = ['#堅実投資', '#ライフプラン万全'];
-      } else {
+        tags = ['#堅実投資', '#ライフプラン万全', '#枠の再利用'];
+        carteHtml = `
+          <div class="carte-block"><span class="carte-heading">【現状分析】</span><span class="carte-text">まとまった資産【${fmtYen(total)}】を構築。新NISAの非課税メリット（節税約${fmtYen(finalTaxSaved)}）が強力に効いています。</span></div>
+          <div class="carte-block"><span class="carte-heading">【制度の強み】</span><span class="carte-text">新NISAは売却しても「翌年に非課税枠が再利用可能（簿価ベース）」です。人生の途中でお金が必要になっても柔軟に対応できます。</span></div>
+          <div class="carte-block"><span class="carte-heading">【実践戦略】</span><span class="carte-text">継続は力なり。市場の短期的な上下に一喜一憂せず、自動積立を淡々と継続することが3,000万突破の最短ルートです。</span></div>
+        `;
+      }
+      else {
         title = '🚀 コツコツ投資家・スタート級';
-        desc = `着実に資産形成を一歩ずつ前進中！積立期間や利回り、元本を少し増やすだけで複利の力が後半爆発的に効いてきます。`;
         level = 'RANK C';
-        tags = ['#コツコツ積立', '#長期投資'];
+        tags = ['#コツコツ積立', '#長期インデックス', '#複利の種まき'];
+        carteHtml = `
+          <div class="carte-block"><span class="carte-heading">【現状分析】</span><span class="carte-text">着実に資産形成の土台作りを進めています。初期段階は元本の積み上げがメインですが、10年目以降から運用の力（利益）が加速します。</span></div>
+          <div class="carte-block"><span class="carte-heading">【インフレ対策】</span><span class="carte-text">銀行預金だけでは物価上昇に負けてしまいます。低コスト全世界株やS&P500を毎月積み立てることが最大の購買力防衛になります。</span></div>
+          <div class="carte-block"><span class="carte-heading">【実践戦略】</span><span class="carte-text">昇給や固定費削減ができたら、月1万円でも積立額をアップさせると最終資産が大きく跳ね上がります。</span></div>
+        `;
       }
 
-      if (monthly >= 300000) tags.push('🏎️ #新NISA_RTA走者');
-      else if (monthly >= 100000) tags.push('🚀 #ハイペース積立');
+      if (monthly >= 300000) tags.push('🏎️ #新NISA_RTA');
+      else if (monthly >= 100000) tags.push('🚀 #ハイペース入金');
       if (initial > 0 && monthly === 0) tags.push('🧘 #寝かせ仙人');
-      if (returnRate >= 10) tags.push('🎰 #ハイリスク強気派');
-      if (horizon >= 40) tags.push('🐢 #超長寿インデックス派');
+      if (horizon >= 40) tags.push('🐢 #超長寿インデックス');
 
     } else if (mode === 'drawdown') {
       if (total === 0) {
         title = '📭 金庫空っぽ・取り崩し不可';
-        desc = '開始資産が0円です！まずは「資産形成」タブで運用元本を育てましょう。';
         level = 'NO DATA';
         tags = ['#元本ゼロ'];
-      } else if (depletedYear && depletedYear < 10) {
+        carteHtml = `
+          <div class="carte-block"><span class="carte-heading">【現状分析】</span><span class="carte-text">開始資産が0円です。まずは「資産形成」タブで元本を育ててから出口戦略をシミュレーションしましょう。</span></div>
+        `;
+      } else if (depletedYear && depletedYear < 15) {
         title = '🔥 豪遊炎上・超特急枯渇モード';
-        desc = `わずか${depletedYear.toFixed(1)}年で資産が底をつきます！毎月の引き出し額を減らすか、運用利回りを高めて資産延命を図りましょう。`;
         level = 'DANGER';
-        tags = ['#超速枯渇', '#支出過多'];
+        tags = ['#超速枯渇', '#支出過多', '#順序リスク直撃'];
+        statusBadgeText = '🚨 早期破綻リスク';
+        const safe4Amt = Math.round((total * 0.04) / 12);
+        carteHtml = `
+          <div class="carte-block"><span class="carte-heading">【リスク診断】</span><span class="carte-text">わずか【${depletedYear.toFixed(1)}年】で資産が底をつきます。引き出しペースが運用益を大幅にオーバーしています。</span></div>
+          <div class="carte-block"><span class="carte-heading">【順序リスク】</span><span class="carte-text">リタイア初期に暴落が起きると、元本が急激に削られ二度と回復できなくなります（収益率の順序リスク）。</span></div>
+          <div class="carte-block"><span class="carte-heading">【実践戦略】</span><span class="carte-text">安全域である「年4%以内（月${(safe4Amt/10000).toFixed(1)}万円）」に引き下げて資産延命を図ることを強く推奨します。</span></div>
+        `;
+        rxButtonHtml = `<button class="btn-rx-action" onclick="applyPercentMonthly(0.04)">⚡ 処方箋: 安全な4%（月${(safe4Amt/10000).toFixed(1)}万）に補正</button>`;
       } else if (!depletedYear) {
         title = '♾️ 永久機関・資産増殖型リタイア';
-        desc = '毎月の取り崩し額よりも運用益のほうが大きく、使っても資産が減らない無敵のポートフォリオです！';
         level = 'RANK INFINITY';
-        tags = ['#永久機関', '#使っても減らない'];
+        tags = ['#永久機関', '#不労所得生活', '#減らない資産'];
+        carteHtml = `
+          <div class="carte-block"><span class="carte-heading">【現状分析】</span><span class="carte-text">取り崩し額よりも年間の運用益が上回り、資産寿命は理論上無限大。使っても資産が増え続ける無敵状態です。</span></div>
+          <div class="carte-block"><span class="carte-heading">【DIE WITH ZERO視点】</span><span class="carte-text">「死ぬときに一番お金持ち」を避け、人生の充実にお金を使いたい場合は、年5〜7%に引き上げる選択肢もあります。</span></div>
+          <div class="carte-block"><span class="carte-heading">【実践戦略】</span><span class="carte-text">生活水準を上げるか、家族への贈与・旅行など有意義な支出に回すプランも検討してみましょう。</span></div>
+        `;
+        rxButtonHtml = `<button class="btn-rx-action" onclick="applyPercentMonthly(0.05)">⚡ 処方箋: 計画消費型（年5%）を試す</button>`;
       } else {
         title = '🌿 スマート・バランス取崩ライフ';
-        desc = `運用継続によって資産寿命を【${depletedYear.toFixed(1)}年】まで延命！老後生活を豊かに支える堅実な出口戦略です。`;
         level = 'EXIT RANK A';
-        tags = ['#バランス取崩', '#資産延命成功'];
+        tags = ['#バランス取崩', '#資産延命成功', '#キャッシュクッション'];
+        carteHtml = `
+          <div class="carte-block"><span class="carte-heading">【現状分析】</span><span class="carte-text">運用を継続しながら取り崩すことで、資産寿命を【${depletedYear.toFixed(1)}年】まで延命できています。</span></div>
+          <div class="carte-block"><span class="carte-heading">【暴落防衛策】</span><span class="carte-text">下落相場の年は投信売却を一時停止できるよう、生活費2〜3年分を普通預金（キャッシュクッション）に確保しておくと盤石です。</span></div>
+          <div class="carte-block"><span class="carte-heading">【実践戦略】</span><span class="carte-text">公的年金の受給開始後は取り崩し額を減らせるため、実質的な資産寿命はさらに伸びます。</span></div>
+        `;
       }
     } else {
       if (total === 0) {
         title = '📭 金庫空っぽ・取り崩し不可';
-        desc = '開始資産が0円です！まずは資産形成シミュレーションを行いましょう。';
         level = 'NO DATA';
         tags = ['#元本ゼロ'];
+        carteHtml = `<div class="carte-block"><span class="carte-heading">【現状分析】</span><span class="carte-text">まずは資産形成シミュレーションから始めましょう。</span></div>`;
       } else if (drawRate <= 0.04) {
         title = '👑 黄金律・4%ルール実践マスター';
-        desc = '米国の研究でも実証された資産枯渇リスク極小の黄金ルール。相場変動に合わせて受取額を調整しながら半永久的に資産を維持できます。';
         level = 'EXIT MASTER';
-        tags = ['#4パーセントルール', '#枯渇リスク極小'];
-      } else {
-        title = '⚡ アグレッシブ定率取崩しスタイル';
-        desc = '高めの割合で積極的に取り崩すプラン。相場下落時は生活費のバッファを確保しておきましょう。';
+        tags = ['#4%ルール', '#トリニティスタディ', '#枯渇リスク極小'];
+        carteHtml = `
+          <div class="carte-block"><span class="carte-heading">【理論的裏付け】</span><span class="carte-text">米トリニティ大学の研究でも実証された、資産枯渇リスクが極小の黄金ルールです。</span></div>
+          <div class="carte-block"><span class="carte-heading">【自律調整機能】</span><span class="carte-text">相場下落時は自動的に受取額が減り、好況時は増えるため、元本が枯渇することなく半永久的に資産を維持できます。</span></div>
+          <div class="carte-block"><span class="carte-heading">【実践戦略】</span><span class="carte-text">下落年の受取額減少に備え、生活費の基礎部分は年金や現金で賄えるよう設計しておくのがプロの定石です。</span></div>
+        `;
+      } else if (drawRate >= 0.07) {
+        title = '⚡ 急速消費・計画的使い切りスタイル';
         level = 'EXIT RANK B';
-        tags = ['#積極取崩', '#相場追従型'];
+        tags = ['#急速消費', '#相場追従型', '#年金併用確認'];
+        statusBadgeText = '💡 計画的使い切り';
+        carteHtml = `
+          <div class="carte-block"><span class="carte-heading">【現状分析】</span><span class="carte-text">年7%以上の定率取り崩しは、初期に多額の生活費を得られる反面、後半にかけて受取額が急速に小さくなります。</span></div>
+          <div class="carte-block"><span class="carte-heading">【未来予測】</span><span class="carte-text">資産残高が早く減るため、80代以降の取り崩し額は初期の半分以下になる可能性があります。</span></div>
+          <div class="carte-block"><span class="carte-heading">【実践戦略】</span><span class="carte-text">公的年金と合算して、高齢期の最低生活費が不足しないか確認した上で活用しましょう。</span></div>
+        `;
+        rxButtonHtml = `<button class="btn-rx-action" onclick="setPreset('drawRate', 4.0)">⚡ 処方箋: 黄金律4%ルールに戻す</button>`;
+      } else {
+        title = '🌿 バランス定率取崩しスタイル';
+        level = 'EXIT RANK A';
+        tags = ['#バランス定率', '#相場追従型', '#積極消費'];
+        carteHtml = `
+          <div class="carte-block"><span class="carte-heading">【現状分析】</span><span class="carte-text">年5%前後の積極消費型プラン。相場好調時は贅沢に使い、不調時は支出を抑える柔軟な家計管理に適しています。</span></div>
+          <div class="carte-block"><span class="carte-heading">【メリット】</span><span class="carte-text">定額取り崩しと違って理論上資産が尽きることがなく、元本を有効活用できます。</span></div>
+          <div class="carte-block"><span class="carte-heading">【実践戦略】</span><span class="carte-text">固定費を抑え、変動費（旅行・趣味）の割合を高めておくと相場変動に柔軟に対応できます。</span></div>
+        `;
       }
     }
 
     currentDiagTitle = title;
     document.getElementById('diagTitle').innerText = title;
-    document.getElementById('diagDesc').innerText = desc;
     document.getElementById('diagLevelTag').innerText = level;
     document.getElementById('diagTags').innerHTML = tags.map(t => `<span class="style-tag">${t}</span>`).join('');
+    document.getElementById('carteContentArea').innerHTML = carteHtml;
+    document.getElementById('fpStatusBadge').innerText = statusBadgeText;
+
+    const rxBox = document.getElementById('prescriptionBox');
+    if (rxButtonHtml) {
+      rxBox.innerHTML = rxButtonHtml;
+      rxBox.style.display = 'block';
+    } else {
+      rxBox.style.display = 'none';
+      rxBox.innerHTML = '';
+    }
   }
 
   function shareOnX() {
@@ -2092,7 +2728,7 @@
 称号: ${currentDiagTitle}
 
 💰 最終資産総額: ${total}
-新NISAシミュレーターで能力値レーダー・FIRE診断してみました！
+新NISAシミュレーターで能力値レーダー・資産カルテを作成してみました！
 #新NISA #FIRE #投資戦闘力
 `;
     } else {
@@ -2151,7 +2787,7 @@
     ['monthly', 'initial', 'return', 'horizon', 'drawStart', 'drawMonthly', 'drawReturn'].forEach(f => syncInputs(f, 'num', false));
 
     if (params.get('tab') === 'drawdown') {
-      switchTab('drawdown');
+      switchTab('drawdown', false);
     }
   }
 
@@ -2161,8 +2797,7 @@
     } else {
       loadSlot(1);
     }
-    // ストレステストのUI初期状態を同期（loadSlot内でも呼ばれるが念のため）
-    setStress(currentStress);
+    setStress(currentStress, false);
     updateAll();
   };
 </script>
