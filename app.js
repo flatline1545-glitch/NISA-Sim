@@ -835,146 +835,494 @@ function runGrowthSim() {
 }
 
 function renderGrowthLineChart(labels, dataPrincipal, dataTotal, dataGains, dataTaxable) {
-  const ctx = document.getElementById('simChart').getContext('2d');
-  if (chartInstance) chartInstance.destroy();
+    const canvas = document.getElementById('simChart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
 
-  chartInstance = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: labels,
-      datasets: [
-        {
-          label: '総資産額',
-          data: dataTotal,
-          backgroundColor: 'rgba(16, 185, 129, 0.65)',
-          borderColor: '#10b981',
-          borderWidth: 1.5,
-          fill: 1,
-          pointRadius: 0,
-          pointHoverRadius: 4,
-        },
-        {
-          label: '投資元本',
-          data: dataPrincipal,
-          backgroundColor: 'rgba(59, 130, 246, 0.85)',
-          borderColor: '#3b82f6',
-          borderWidth: 1.5,
-          fill: 'origin',
-          pointRadius: 0,
-          pointHoverRadius: 4,
-        },
-        {
-          label: '課税手取り比較',
-          data: dataTaxable,
-          borderColor: '#f59e0b',
-          borderWidth: 1.5,
-          borderDash: [3, 3],
-          fill: false,
-          pointRadius: 0,
-          pointHoverRadius: 4,
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
-      plugins: {
-        legend: {
-          position: 'top',
-          labels: { color: '#d1d5db', font: { size: 10 }, boxWidth: 10, usePointStyle: true, pointStyle: 'circle' }
-        },
-        tooltip: {
-          backgroundColor: 'rgba(17, 24, 39, 0.95)',
-          padding: 8,
-          titleFont: { size: 11 },
-          bodyFont: { size: 10.5 },
-          callbacks: {
-            title: (items) => `運用年数: ${items[0].label}`,
-            beforeBody: (items) => {
-              const idx = items[0].dataIndex;
-              const g = dataGains[idx];
-              const gainsLabel = g >= 0
-                ? `運用益: +${fmtYen(g)}`
-                : `運用益: ${fmtYen(g)}（含み損）`;
-              return [
-                `投資元本: ${fmtYen(dataPrincipal[idx])}`,
-                gainsLabel,
-                `課税手取り: ${fmtYen(dataTaxable[idx])}`,
-                `-------------------`,
-                `総資産額: ${fmtYen(dataTotal[idx])}`
-              ];
-            },
-            label: () => null
-          }
-        }
-      },
-      scales: {
-        x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#9ca3af', font: { size: 10 } } },
-        y: {
-          grid: { color: 'rgba(255, 255, 255, 0.05)' },
-          ticks: {
-            color: '#9ca3af',
-            font: { size: 10 },
-            callback: (val) => {
-              if (val >= 100000000) return (val / 100000000).toFixed(1) + '億';
-              if (val >= 10000) return (val / 10000).toLocaleString() + '万';
-              return val;
-            }
-          }
-        }
-      }
+    // すでに折れ線グラフ（3本データ）が存在する場合は、数値だけを上書き更新して滑らかに変形
+    if (chartInstance && chartInstance.config.type === 'line' && chartInstance.data.datasets.length === 3) {
+        chartInstance.data.labels = labels;
+        chartInstance.data.datasets[0].data = dataTotal;
+        chartInstance.data.datasets[1].data = dataPrincipal;
+        chartInstance.data.datasets[2].data = dataTaxable;
+        chartInstance.update('none');
+        return;
     }
-  });
+
+    if (chartInstance) chartInstance.destroy();
+
+    chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: '総資産額',
+                    data: dataTotal,
+                    backgroundColor: 'rgba(16, 185, 129, 0.65)',
+                    borderColor: '#10b981',
+                    borderWidth: 1.5,
+                    fill: 1,
+                    pointRadius: 0,
+                    pointHoverRadius: 4,
+                },
+                {
+                    label: '投資元本',
+                    data: dataPrincipal,
+                    backgroundColor: 'rgba(59, 130, 246, 0.85)',
+                    borderColor: '#3b82f6',
+                    borderWidth: 1.5,
+                    fill: 'origin',
+                    pointRadius: 0,
+                    pointHoverRadius: 4,
+                },
+                {
+                    label: '課税手取り比較',
+                    data: dataTaxable,
+                    borderColor: '#f59e0b',
+                    borderWidth: 1.5,
+                    borderDash: [3, 3],
+                    fill: false,
+                    pointRadius: 0,
+                    pointHoverRadius: 4,
+                }
+            ]
+        },
+        options: {
+            animation: false,
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: { color: '#d1d5db', font: { size: 10 }, boxWidth: 10, usePointStyle: true, pointStyle: 'circle' }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(17, 24, 39, 0.95)',
+                    padding: 8,
+                    titleFont: { size: 11 },
+                    bodyFont: { size: 10.5 },
+                    callbacks: {
+                        title: (items) => `運用年数: ${items[0].label}`,
+                        beforeBody: (items) => {
+                            const idx = items[0].dataIndex;
+                            const g = dataGains[idx];
+                            const gainsLabel = g >= 0
+                                ? `運用益: +${fmtYen(g)}`
+                                : `運用益: ${fmtYen(g)}（含み損）`;
+                            return [
+                                `投資元本: ${fmtYen(dataPrincipal[idx])}`,
+                                gainsLabel,
+                                `課税手取り: ${fmtYen(dataTaxable[idx])}`,
+                                `-------------------`,
+                                `総資産額: ${fmtYen(dataTotal[idx])}`
+                            ];
+                        },
+                        label: () => null
+                    }
+                }
+            },
+            scales: {
+                x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#9ca3af', font: { size: 10 } } },
+                y: {
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                    ticks: {
+                        color: '#9ca3af',
+                        font: { size: 10 },
+                        callback: (val) => {
+                            if (val >= 100000000) return (val / 100000000).toFixed(1) + '億';
+                            if (val >= 10000) return (val / 10000).toLocaleString() + '万';
+                            return val;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function renderGrowthLineChart(labels, dataPrincipal, dataTotal, dataGains, dataTaxable) {
+    const canvas = document.getElementById('simChart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
+    // すでに折れ線グラフ（3本データ）が存在する場合は、数値だけを上書き更新して滑らかに変形
+    if (chartInstance && chartInstance.config.type === 'line' && chartInstance.data.datasets.length === 3) {
+        chartInstance.data.labels = labels;
+        chartInstance.data.datasets[0].data = dataTotal;
+        chartInstance.data.datasets[1].data = dataPrincipal;
+        chartInstance.data.datasets[2].data = dataTaxable;
+        chartInstance.update('none');
+        return;
+    }
+
+    if (chartInstance) chartInstance.destroy();
+
+    chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: '総資産額',
+                    data: dataTotal,
+                    backgroundColor: 'rgba(16, 185, 129, 0.65)',
+                    borderColor: '#10b981',
+                    borderWidth: 1.5,
+                    fill: 1,
+                    pointRadius: 0,
+                    pointHoverRadius: 4,
+                },
+                {
+                    label: '投資元本',
+                    data: dataPrincipal,
+                    backgroundColor: 'rgba(59, 130, 246, 0.85)',
+                    borderColor: '#3b82f6',
+                    borderWidth: 1.5,
+                    fill: 'origin',
+                    pointRadius: 0,
+                    pointHoverRadius: 4,
+                },
+                {
+                    label: '課税手取り比較',
+                    data: dataTaxable,
+                    borderColor: '#f59e0b',
+                    borderWidth: 1.5,
+                    borderDash: [3, 3],
+                    fill: false,
+                    pointRadius: 0,
+                    pointHoverRadius: 4,
+                }
+            ]
+        },
+        options: {
+            animation: false,
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: { color: '#d1d5db', font: { size: 10 }, boxWidth: 10, usePointStyle: true, pointStyle: 'circle' }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(17, 24, 39, 0.95)',
+                    padding: 8,
+                    titleFont: { size: 11 },
+                    bodyFont: { size: 10.5 },
+                    callbacks: {
+                        title: (items) => `運用年数: ${items[0].label}`,
+                        beforeBody: (items) => {
+                            const idx = items[0].dataIndex;
+                            const g = dataGains[idx];
+                            const gainsLabel = g >= 0
+                                ? `運用益: +${fmtYen(g)}`
+                                : `運用益: ${fmtYen(g)}（含み損）`;
+                            return [
+                                `投資元本: ${fmtYen(dataPrincipal[idx])}`,
+                                gainsLabel,
+                                `課税手取り: ${fmtYen(dataTaxable[idx])}`,
+                                `-------------------`,
+                                `総資産額: ${fmtYen(dataTotal[idx])}`
+                            ];
+                        },
+                        label: () => null
+                    }
+                }
+            },
+            scales: {
+                x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#9ca3af', font: { size: 10 } } },
+                y: {
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                    ticks: {
+                        color: '#9ca3af',
+                        font: { size: 10 },
+                        callback: (val) => {
+                            if (val >= 100000000) return (val / 100000000).toFixed(1) + '億';
+                            if (val >= 10000) return (val / 10000).toLocaleString() + '万';
+                            return val;
+                        }
+                    }
+                }
+            }
+        }
+    });
 }
 
 function renderRadarChart(labels, stats) {
-  const ctx = document.getElementById('simChart').getContext('2d');
-  if (chartInstance) chartInstance.destroy();
+    const canvas = document.getElementById('simChart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
 
-  chartInstance = new Chart(ctx, {
-    type: 'radar',
-    data: {
-      labels: labels,
-      datasets: [{
-        label: '能力値ビルド',
-        data: stats,
-        backgroundColor: 'rgba(168, 85, 247, 0.35)',
-        borderColor: '#c084fc',
-        borderWidth: 2,
-        pointBackgroundColor: '#fbbf24',
-        pointBorderColor: '#fff',
-        pointRadius: 3.5
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: {
-        r: {
-          min: 0,
-          max: 100,
-          beginAtZero: true,
-          angleLines: { color: 'rgba(255, 255, 255, 0.12)' },
-          grid: { color: 'rgba(255, 255, 255, 0.08)' },
-          pointLabels: { color: '#cbd5e1', font: { size: 10.5, weight: 'bold' } },
-          ticks: {
-            display: false,
-            stepSize: 20
-          }
-        }
-      },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            label: (context) => `能力値: ${context.raw} / 100`
-          }
-        }
-      }
+    // すでにレーダーチャートが存在する場合は、頂点データだけを上書き更新
+    if (chartInstance && chartInstance.config.type === 'radar') {
+        chartInstance.data.labels = labels;
+        chartInstance.data.datasets[0].data = stats;
+        chartInstance.update('none');
+        return;
     }
-  });
+
+    if (chartInstance) chartInstance.destroy();
+
+    chartInstance = new Chart(ctx, {
+        type: 'radar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: '能力値ビルド',
+                data: stats,
+                backgroundColor: 'rgba(168, 85, 247, 0.35)',
+                borderColor: '#c084fc',
+                borderWidth: 2,
+                pointBackgroundColor: '#fbbf24',
+                pointBorderColor: '#fff',
+                pointRadius: 3.5
+            }]
+        },
+        options: {
+            animation: false,
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                r: {
+                    min: 0,
+                    max: 100,
+                    beginAtZero: true,
+                    angleLines: { color: 'rgba(255, 255, 255, 0.12)' },
+                    grid: { color: 'rgba(255, 255, 255, 0.08)' },
+                    pointLabels: { color: '#cbd5e1', font: { size: 10.5, weight: 'bold' } },
+                    ticks: {
+                        display: false,
+                        stepSize: 20
+                    }
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: (context) => `能力値: ${context.raw} / 100`
+                    }
+                }
+            }
+        }
+    });
 }
+
+function renderDrawdownLineChart(labels, dataInvest, dataCash) {
+    const canvas = document.getElementById('simChart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
+    // すでに取崩折れ線（2本データ）が存在する場合は、数値だけを上書き更新
+    if (chartInstance && chartInstance.config.type === 'line' && chartInstance.data.datasets.length === 2) {
+        chartInstance.data.labels = labels;
+        chartInstance.data.datasets[0].data = dataInvest;
+        chartInstance.data.datasets[1].data = dataCash;
+        chartInstance.update('none');
+        return;
+    }
+
+    if (chartInstance) chartInstance.destroy();
+
+    chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: '運用取崩残高',
+                    data: dataInvest,
+                    borderColor: '#34d399',
+                    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                    borderWidth: 1.8,
+                    fill: true,
+                    pointRadius: 0,
+                    pointHoverRadius: 4,
+                },
+                {
+                    label: '現金のみ残高',
+                    data: dataCash,
+                    borderColor: '#ef4444',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    borderWidth: 1.2,
+                    borderDash: [3, 3],
+                    fill: true,
+                    pointRadius: 0,
+                    pointHoverRadius: 4,
+                }
+            ]
+        },
+        options: {
+            animation: false,
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: { color: '#d1d5db', font: { size: 10 }, boxWidth: 10, usePointStyle: true, pointStyle: 'circle' }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(17, 24, 39, 0.95)',
+                    padding: 8,
+                    callbacks: {
+                        title: (items) => `経過年数: ${items[0].label}`,
+                        label: (context) => `${context.dataset.label}: ${fmtYen(context.raw)}`
+                    }
+                }
+            },
+            scales: {
+                x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#9ca3af', font: { size: 10 } } },
+                y: {
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                    ticks: {
+                        color: '#9ca3af',
+                        font: { size: 10 },
+                        callback: (val) => {
+                            if (val >= 100000000) return (val / 100000000).toFixed(1) + '億';
+                            if (val >= 10000) return (val / 10000).toLocaleString() + '万';
+                            return val;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function renderDrawdownLineChart(labels, dataInvest, dataCash) {
+    const canvas = document.getElementById('simChart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
+    // すでに取崩折れ線（2本データ）が存在する場合は、数値だけを上書き更新
+    if (chartInstance && chartInstance.config.type === 'line' && chartInstance.data.datasets.length === 2) {
+        chartInstance.data.labels = labels;
+        chartInstance.data.datasets[0].data = dataInvest;
+        chartInstance.data.datasets[1].data = dataCash;
+        chartInstance.update('none');
+        return;
+    }
+
+    if (chartInstance) chartInstance.destroy();
+
+    chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: '運用取崩残高',
+                    data: dataInvest,
+                    borderColor: '#34d399',
+                    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                    borderWidth: 1.8,
+                    fill: true,
+                    pointRadius: 0,
+                    pointHoverRadius: 4,
+                },
+                {
+                    label: '現金のみ残高',
+                    data: dataCash,
+                    borderColor: '#ef4444',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    borderWidth: 1.2,
+                    borderDash: [3, 3],
+                    fill: true,
+                    pointRadius: 0,
+                    pointHoverRadius: 4,
+                }
+            ]
+        },
+        options: {
+            animation: false,
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: { color: '#d1d5db', font: { size: 10 }, boxWidth: 10, usePointStyle: true, pointStyle: 'circle' }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(17, 24, 39, 0.95)',
+                    padding: 8,
+                    callbacks: {
+                        title: (items) => `経過年数: ${items[0].label}`,
+                        label: (context) => `${context.dataset.label}: ${fmtYen(context.raw)}`
+                    }
+                }
+            },
+            scales: {
+                x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#9ca3af', font: { size: 10 } } },
+                y: {
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                    ticks: {
+                        color: '#9ca3af',
+                        font: { size: 10 },
+                        callback: (val) => {
+                            if (val >= 100000000) return (val / 100000000).toFixed(1) + '億';
+                            if (val >= 10000) return (val / 10000).toLocaleString() + '万';
+                            return val;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function renderRadarChart(labels, stats) {
+    const ctx = document.getElementById('simChart').getContext('2d');
+    if (chartInstance) chartInstance.destroy();
+
+    chartInstance = new Chart(ctx, {
+        type: 'radar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: '能力値ビルド',
+                data: stats,
+                backgroundColor: 'rgba(168, 85, 247, 0.35)',
+                borderColor: '#c084fc',
+                borderWidth: 2,
+                pointBackgroundColor: '#fbbf24',
+                pointBorderColor: '#fff',
+                pointRadius: 3.5
+            }]
+        },
+        options: {
+            animation: false, /* ← ここに追加 */
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                r: {
+                    min: 0,
+                    max: 100,
+                    beginAtZero: true,
+                    angleLines: { color: 'rgba(255, 255, 255, 0.12)' },
+                    grid: { color: 'rgba(255, 255, 255, 0.08)' },
+                    pointLabels: { color: '#cbd5e1', font: { size: 10.5, weight: 'bold' } },
+                    ticks: {
+                        display: false,
+                        stepSize: 20
+                    }
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: (context) => `能力値: ${context.raw} / 100`
+                    }
+                }
+            }
+        }
+    });
+}
+
 
 function runDrawdownSim() {
   document.getElementById('annualCapAlert').style.display = 'none';
@@ -1158,290 +1506,296 @@ function runDrawdownSim() {
   document.getElementById('tableBody').innerHTML = tableRows.join('');
 }
 
-function renderDrawdownLineChart(labels, dataInvest, dataCash) {
-  const ctx = document.getElementById('simChart').getContext('2d');
-  if (chartInstance) chartInstance.destroy();
+function renderGrowthLineChart(labels, dataPrincipal, dataTotal, dataGains, dataTaxable) {
+    const canvas = document.getElementById('simChart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
 
-  chartInstance = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: labels,
-      datasets: [
-        {
-          label: '運用取崩残高',
-          data: dataInvest,
-          borderColor: '#34d399',
-          backgroundColor: 'rgba(16, 185, 129, 0.2)',
-          borderWidth: 1.8,
-          fill: true,
-          pointRadius: 0,
-          pointHoverRadius: 4,
-        },
-        {
-          label: '現金のみ残高',
-          data: dataCash,
-          borderColor: '#ef4444',
-          backgroundColor: 'rgba(239, 68, 68, 0.1)',
-          borderWidth: 1.2,
-          borderDash: [3, 3],
-          fill: true,
-          pointRadius: 0,
-          pointHoverRadius: 4,
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
-      plugins: {
-        legend: {
-          position: 'top',
-          labels: { color: '#d1d5db', font: { size: 10 }, boxWidth: 10, usePointStyle: true, pointStyle: 'circle' }
-        },
-        tooltip: {
-          backgroundColor: 'rgba(17, 24, 39, 0.95)',
-          padding: 8,
-          callbacks: {
-            title: (items) => `経過年数: ${items[0].label}`,
-            label: (context) => `${context.dataset.label}: ${fmtYen(context.raw)}`
-          }
-        }
-      },
-      scales: {
-        x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#9ca3af', font: { size: 10 } } },
-        y: {
-          grid: { color: 'rgba(255, 255, 255, 0.05)' },
-          ticks: {
-            color: '#9ca3af',
-            font: { size: 10 },
-            callback: (val) => {
-              if (val >= 100000000) return (val / 100000000).toFixed(1) + '億';
-              if (val >= 10000) return (val / 10000).toLocaleString() + '万';
-              return val;
-            }
-          }
-        }
-      }
+    // すでに折れ線グラフ（3本データ）が存在する場合は、数値だけを上書き更新して滑らかに変形
+    if (chartInstance && chartInstance.config.type === 'line' && chartInstance.data.datasets.length === 3) {
+        chartInstance.data.labels = labels;
+        chartInstance.data.datasets[0].data = dataTotal;
+        chartInstance.data.datasets[1].data = dataPrincipal;
+        chartInstance.data.datasets[2].data = dataTaxable;
+        chartInstance.update('none');
+        return;
     }
-  });
+
+    if (chartInstance) chartInstance.destroy();
+
+    chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: '総資産額',
+                    data: dataTotal,
+                    backgroundColor: 'rgba(16, 185, 129, 0.65)',
+                    borderColor: '#10b981',
+                    borderWidth: 1.5,
+                    fill: 1,
+                    pointRadius: 0,
+                    pointHoverRadius: 4,
+                },
+                {
+                    label: '投資元本',
+                    data: dataPrincipal,
+                    backgroundColor: 'rgba(59, 130, 246, 0.85)',
+                    borderColor: '#3b82f6',
+                    borderWidth: 1.5,
+                    fill: 'origin',
+                    pointRadius: 0,
+                    pointHoverRadius: 4,
+                },
+                {
+                    label: '課税手取り比較',
+                    data: dataTaxable,
+                    borderColor: '#f59e0b',
+                    borderWidth: 1.5,
+                    borderDash: [3, 3],
+                    fill: false,
+                    pointRadius: 0,
+                    pointHoverRadius: 4,
+                }
+            ]
+        },
+        options: {
+            animation: false,
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: { color: '#d1d5db', font: { size: 10 }, boxWidth: 10, usePointStyle: true, pointStyle: 'circle' }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(17, 24, 39, 0.95)',
+                    padding: 8,
+                    titleFont: { size: 11 },
+                    bodyFont: { size: 10.5 },
+                    callbacks: {
+                        title: (items) => `運用年数: ${items[0].label}`,
+                        beforeBody: (items) => {
+                            const idx = items[0].dataIndex;
+                            const g = dataGains[idx];
+                            const gainsLabel = g >= 0
+                                ? `運用益: +${fmtYen(g)}`
+                                : `運用益: ${fmtYen(g)}（含み損）`;
+                            return [
+                                `投資元本: ${fmtYen(dataPrincipal[idx])}`,
+                                gainsLabel,
+                                `課税手取り: ${fmtYen(dataTaxable[idx])}`,
+                                `-------------------`,
+                                `総資産額: ${fmtYen(dataTotal[idx])}`
+                            ];
+                        },
+                        label: () => null
+                    }
+                }
+            },
+            scales: {
+                x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#9ca3af', font: { size: 10 } } },
+                y: {
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                    ticks: {
+                        color: '#9ca3af',
+                        font: { size: 10 },
+                        callback: (val) => {
+                            if (val >= 100000000) return (val / 100000000).toFixed(1) + '億';
+                            if (val >= 10000) return (val / 10000).toLocaleString() + '万';
+                            return val;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function renderRadarChart(labels, stats) {
+    const canvas = document.getElementById('simChart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
+    // すでにレーダーチャートが存在する場合は、頂点データだけを上書き更新
+    if (chartInstance && chartInstance.config.type === 'radar') {
+        chartInstance.data.labels = labels;
+        chartInstance.data.datasets[0].data = stats;
+        chartInstance.update('none');
+        return;
+    }
+
+    if (chartInstance) chartInstance.destroy();
+
+    chartInstance = new Chart(ctx, {
+        type: 'radar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: '能力値ビルド',
+                data: stats,
+                backgroundColor: 'rgba(168, 85, 247, 0.35)',
+                borderColor: '#c084fc',
+                borderWidth: 2,
+                pointBackgroundColor: '#fbbf24',
+                pointBorderColor: '#fff',
+                pointRadius: 3.5
+            }]
+        },
+        options: {
+            animation: false,
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                r: {
+                    min: 0,
+                    max: 100,
+                    beginAtZero: true,
+                    angleLines: { color: 'rgba(255, 255, 255, 0.12)' },
+                    grid: { color: 'rgba(255, 255, 255, 0.08)' },
+                    pointLabels: { color: '#cbd5e1', font: { size: 10.5, weight: 'bold' } },
+                    ticks: {
+                        display: false,
+                        stepSize: 20
+                    }
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: (context) => `能力値: ${context.raw} / 100`
+                    }
+                }
+            }
+        }
+    });
+}
+
+function renderDrawdownLineChart(labels, dataInvest, dataCash) {
+    const canvas = document.getElementById('simChart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
+    // すでに取崩折れ線（2本データ）が存在する場合は、数値だけを上書き更新
+    if (chartInstance && chartInstance.config.type === 'line' && chartInstance.data.datasets.length === 2) {
+        chartInstance.data.labels = labels;
+        chartInstance.data.datasets[0].data = dataInvest;
+        chartInstance.data.datasets[1].data = dataCash;
+        chartInstance.update('none');
+        return;
+    }
+
+    if (chartInstance) chartInstance.destroy();
+
+    chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: '運用取崩残高',
+                    data: dataInvest,
+                    borderColor: '#34d399',
+                    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                    borderWidth: 1.8,
+                    fill: true,
+                    pointRadius: 0,
+                    pointHoverRadius: 4,
+                },
+                {
+                    label: '現金のみ残高',
+                    data: dataCash,
+                    borderColor: '#ef4444',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    borderWidth: 1.2,
+                    borderDash: [3, 3],
+                    fill: true,
+                    pointRadius: 0,
+                    pointHoverRadius: 4,
+                }
+            ]
+        },
+        options: {
+            animation: false,
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: { color: '#d1d5db', font: { size: 10 }, boxWidth: 10, usePointStyle: true, pointStyle: 'circle' }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(17, 24, 39, 0.95)',
+                    padding: 8,
+                    callbacks: {
+                        title: (items) => `経過年数: ${items[0].label}`,
+                        label: (context) => `${context.dataset.label}: ${fmtYen(context.raw)}`
+                    }
+                }
+            },
+            scales: {
+                x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#9ca3af', font: { size: 10 } } },
+                y: {
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                    ticks: {
+                        color: '#9ca3af',
+                        font: { size: 10 },
+                        callback: (val) => {
+                            if (val >= 100000000) return (val / 100000000).toFixed(1) + '億';
+                            if (val >= 10000) return (val / 10000).toLocaleString() + '万';
+                            return val;
+                        }
+                    }
+                }
+            }
+        }
+    });
 }
 
 function updateDiagnosis(mode, total, monthly, initial, returnRate, horizon, depletedYear = null, drawRate = null) {
-  let title = '';
-  let level = '';
-  let tags = [];
-  let carteHtml = '';
-  let rxButtonHtml = '';
-  let statusBadgeText = 'カルテ作成完了';
+    if (typeof window.generateDiagnosis !== 'function') return;
 
-  if (mode === 'growth') {
-    if (monthly === 0 && initial === 0) {
-      title = '👀 観客席の傍観者（ノーポジ待機）';
-      level = 'RANK 0';
-      tags = ['#ノーポジション', '#まずは少額から', '#時間の損失注意'];
-      carteHtml = `
-        <div class="carte-block"><span class="carte-heading">【現状分析】</span><span class="carte-text">投資元本が0円の無風状態です。インデックス投資における最大のリスクは「市場に資金を置いていない時間」そのものです。</span></div>
-        <div class="carte-block"><span class="carte-heading">【未来予測】</span><span class="carte-text">年2%のインフレが進むと、現金の購買力は20年で約33%目減りします。</span></div>
-        <div class="carte-block"><span class="carte-heading">【実践戦略】</span><span class="carte-text">生活費の半年分を手元に残した上で、月3,000円〜3万円の少額積立から雪だるま作りを始めましょう。</span></div>
-      `;
-      rxButtonHtml = `<button class="btn-rx-action" onclick="setPreset('monthly', 30000)">⚡ 処方箋: 月3万円で積立開始</button>`;
-    }
-    else if (currentStress !== 'none' && horizon < 15) {
-      title = '💥 暴落直撃・メンタル耐久テスト級';
-      level = 'WARNING';
-      tags = ['#暴落耐久中', '#ドルコスト効果', '#狼狽売り厳禁'];
-      statusBadgeText = '⚠️ 回復待ち';
-      carteHtml = `
-        <div class="carte-block"><span class="carte-heading">【現状分析】</span><span class="carte-text">${STRESS_CONFIG[currentStress].short}により一時的に資産が急減。期間が${horizon}年と短いため、底値からの回復カーブを十分に取り込めていません。</span></div>
-        <div class="carte-block"><span class="carte-heading">【歴史的教訓】</span><span class="carte-text">過去すべての歴史的暴落（リーマン・ITバブル等）は、15〜20年保有し続けた場合プラスに回帰しています。暴落時こそ「安く多く口数を仕込む好機」です。</span></div>
-        <div class="carte-block"><span class="carte-heading">【実践戦略】</span><span class="carte-text">相場から絶対に退場せず、運用期間を「20年以上」に設定して複利回復を確認してください。</span></div>
-      `;
-      rxButtonHtml = `<button class="btn-rx-action" onclick="setPreset('horizon', 20)">⚡ 処方箋: 期間を20年に延長（回復確認）</button>`;
-    }
-    else if (returnRate >= 10) {
-      title = '🎰 レバナス戦士・ハイレバドリーム級';
-      level = 'HIGH RISK';
-      tags = ['#ハイリスク強気', '#ドローダウン警戒', '#過信注意'];
-      statusBadgeText = '⚠️ 高リスク';
-      carteHtml = `
-        <div class="carte-block"><span class="carte-heading">【現状分析】</span><span class="carte-text">想定利回り${returnRate}%は魅力的な数字ですが、レバレッジ投信やハイテク集中投資など、資産が一時的に50〜70%削られるリスクを背負う水準です。</span></div>
-        <div class="carte-block"><span class="carte-heading">【未来予測】</span><span class="carte-text">上昇相場では爆発的に増えますが、リタイア直前に暴落を被弾すると計画が根底から崩壊します。</span></div>
-        <div class="carte-block"><span class="carte-heading">【実践戦略】</span><span class="carte-text">長期の資産形成プランは、歴史的平均（全世界株5%、S&P500 7%）をベースに堅牢に組むのが定石です。</span></div>
-      `;
-      rxButtonHtml = `<button class="btn-rx-action" onclick="setPreset('return', 7.0)">⚡ 処方箋: 年利7%（王道S&P500）に補正</button>`;
-    }
-    else if (horizon <= 5) {
-      title = '⏱️ 短期決戦・複利スリーパー級';
-      level = 'SHORT TERM';
-      tags = ['#短期運用', '#複利待機中', '#元本割れリスク'];
-      statusBadgeText = '💡 期間見直し推奨';
-      carteHtml = `
-        <div class="carte-block"><span class="carte-heading">【現状分析】</span><span class="carte-text">運用年数${horizon}年は投資信託において短期です。複利の真骨頂である「後半の二次曲線的な伸び」が発動する前に終了してしまいます。</span></div>
-        <div class="carte-block"><span class="carte-heading">【資金の色分け】</span><span class="carte-text">5年以内に使う予定の資金（学費・住宅頭金等）は定期預金等で守り、投資は10年超の長期資金で行うのが原則です。</span></div>
-        <div class="carte-block"><span class="carte-heading">【実践戦略】</span><span class="carte-text">使わない余裕資金であれば、期間を15〜20年に延ばして複利の恩恵を最大化しましょう。</span></div>
-      `;
-      rxButtonHtml = `<button class="btn-rx-action" onclick="setPreset('horizon', 20)">⚡ 処方箋: 複利が効く20年に設定</button>`;
-    }
-    else if (total >= 300000000) {
-      title = '🪐 超富裕層・石油王・FIRE神';
-      level = 'RANK GOD';
-      tags = ['#資産3億円超', '#超富裕層', '#資産承継ステージ'];
-      carteHtml = `
-        <div class="carte-block"><span class="carte-heading">【現状分析】</span><span class="carte-text">最終資産【${fmtYen(total)}】到達。個人の生活費やFIREの次元を完全に超越した圧倒的な資産規模です。</span></div>
-        <div class="carte-block"><span class="carte-heading">【未来像】</span><span class="carte-text">年3%の配当・取り崩しでも年間900万円以上。インフレリスクも完全に克服しています。</span></div>
-        <div class="carte-block"><span class="carte-heading">【実践戦略】</span><span class="carte-text">今後は資産防衛に加え、プライベートカンパニー（資産管理法人）の設立や、生前贈与・相続税対策が主眼となります。</span></div>
-      `;
-    }
-    else if (total >= 100000000) {
-      title = '👑 億り人・完全FIRE級 (Fat FIRE)';
-      level = 'RANK SSS';
-      tags = ['#億り人', '#完全FIRE達成', '#経済的自由'];
-      carteHtml = `
-        <div class="carte-block"><span class="carte-heading">【現状分析】</span><span class="carte-text">資産1億円突破。非課税枠1,800万円の複利最大化に成功したトップクラスの資産家ポートフォリオです。</span></div>
-        <div class="carte-block"><span class="carte-heading">【未来像】</span><span class="carte-text">4%ルール適用で年間400万円（月33万円）の不労所得。労働から完全に解放される経済的自由が確立されます。</span></div>
-        <div class="carte-block"><span class="carte-heading">【実践戦略】</span><span class="carte-text">完全リタイア時は、生活防衛資金として2〜3年分の生活費（600〜900万円）を現金で別管理し、暴落時の投げ売りを防ぎましょう。</span></div>
-      `;
-    }
-    else if (total >= 50000000) {
-      title = '🏝️ サイドFIRE・準富裕層クラス';
-      level = 'RANK S';
-      tags = ['#準富裕層', '#サイドFIRE', '#選択的労働'];
-      carteHtml = `
-        <div class="carte-block"><span class="carte-heading">【現状分析】</span><span class="carte-text">資産5,000万円を突破し「準富裕層」の仲間入りです。元本と運用益が1:1以上に育ち、複利が加速する理想的な状態です。</span></div>
-        <div class="carte-block"><span class="carte-heading">【未来像】</span><span class="carte-text">年間4%（月16.6万円）の取り崩し＋好きな副業や週3日労働（月10〜15万）で、ストレスのないセミリタイア生活が実現します。</span></div>
-        <div class="carte-block"><span class="carte-heading">【実践戦略】</span><span class="carte-text">出口タブで「定額・定率取り崩し」のシミュレーションを行い、理想の引き出しペースを検証してみましょう。</span></div>
-      `;
-    }
-    else if (total >= 30000000) {
-      title = '🛡️ アッパーマス層・安心老後級';
-      level = 'RANK A';
-      tags = ['#アッパーマス層', '#老後安泰', '#上位20%'];
-      carteHtml = `
-        <div class="carte-block"><span class="carte-heading">【現状分析】</span><span class="carte-text">資産3,000万円以上。日本の全世帯上位20%に到達し、老後2,000万円問題を完全クリアしています。</span></div>
-        <div class="carte-block"><span class="carte-heading">【未来像】</span><span class="carte-text">公的年金に加えて月10万円前後の資産取り崩しが可能となり、旅行や趣味を楽しめるゆとりある老後が約束されます。</span></div>
-        <div class="carte-block"><span class="carte-heading">【実践戦略】</span><span class="carte-text">家計の破綻リスクは極めて低いため、教育費や住宅ローンとのバランスを取りつつ、無理のないペースで枠を埋め続けましょう。</span></div>
-      `;
-    }
-    else if (total >= 15000000) {
-      title = '🌱 安定投資家タイプ';
-      level = 'RANK B';
-      tags = ['#堅実投資', '#ライフプラン万全', '#枠の再利用'];
-      carteHtml = `
-        <div class="carte-block"><span class="carte-heading">【現状分析】</span><span class="carte-text">まとまった資産【${fmtYen(total)}】を構築。新NISAの非課税メリット（節税約${fmtYen(finalTaxSaved)}）が強力に効いています。</span></div>
-        <div class="carte-block"><span class="carte-heading">【制度の強み】</span><span class="carte-text">新NISAは売却しても「翌年に非課税枠が再利用可能（簿価ベース）」です。人生の途中でお金が必要になっても柔軟に対応できます。</span></div>
-        <div class="carte-block"><span class="carte-heading">【実践戦略】</span><span class="carte-text">継続は力なり。市場の短期的な上下に一喜一憂せず、自動積立を淡々と継続することが3,000万突破の最短ルートです。</span></div>
-      `;
-    }
-    else {
-      title = '🚀 コツコツ投資家・スタート級';
-      level = 'RANK C';
-      tags = ['#コツコツ積立', '#長期インデックス', '#複利の種まき'];
-      carteHtml = `
-        <div class="carte-block"><span class="carte-heading">【現状分析】</span><span class="carte-text">着実に資産形成の土台作りを進めています。初期段階は元本の積み上げがメインですが、10年目以降から運用の力（利益）が加速します。</span></div>
-        <div class="carte-block"><span class="carte-heading">【インフレ対策】</span><span class="carte-text">銀行預金だけでは物価上昇に負けてしまいます。低コスト全世界株やS&P500を毎月積み立てることが最大の購買力防衛になります。</span></div>
-        <div class="carte-block"><span class="carte-heading">【実践戦略】</span><span class="carte-text">昇給や固定費削減ができたら、月1万円でも積立額をアップさせると最終資産が大きく跳ね上がります。</span></div>
-      `;
-    }
+    const monthlyDraw = parseInt(document.getElementById('numDrawMonthly')?.value) || 0;
+    const drawReturn = parseFloat(document.getElementById('numDrawReturn')?.value) || 0;
+    const principal = Math.max(0, parseInt(document.getElementById('numMonthly')?.value || 0) * 12 * horizon + parseInt(document.getElementById('numInitial')?.value || 0));
+    const finalTaxSaved = Math.max(0, total - principal) * 0.20315;
 
-    if (monthly >= 300000) tags.push('🏎️ #新NISA_RTA');
-    else if (monthly >= 100000) tags.push('🚀 #ハイペース入金');
-    if (initial > 0 && monthly === 0) tags.push('🧘 #寝かせ仙人');
-    if (horizon >= 40) tags.push('🐢 #超長寿インデックス');
+    const diag = window.generateDiagnosis({
+        mode,
+        total,
+        monthly,
+        initial,
+        returnRate,
+        drawReturn,
+        horizon,
+        depletedYear,
+        drawRate,
+        currentStress,
+        stressConfig: STRESS_CONFIG,
+        monthlyDraw,
+        principal,
+        finalTaxSaved
+    });
 
-  } else if (mode === 'drawdown') {
-    if (total === 0) {
-      title = '📭 金庫空っぽ・取り崩し不可';
-      level = 'NO DATA';
-      tags = ['#元本ゼロ'];
-      carteHtml = `
-        <div class="carte-block"><span class="carte-heading">【現状分析】</span><span class="carte-text">開始資産が0円です。まずは「資産形成」タブで元本を育ててから出口戦略をシミュレーションしましょう。</span></div>
-      `;
-    } else if (depletedYear && depletedYear < 15) {
-      title = '🔥 豪遊炎上・超特急枯渇モード';
-      level = 'DANGER';
-      tags = ['#超速枯渇', '#支出過多', '#順序リスク直撃'];
-      statusBadgeText = '🚨 早期破綻リスク';
-      const safe4Amt = Math.round((total * 0.04) / 12);
-      carteHtml = `
-        <div class="carte-block"><span class="carte-heading">【リスク診断】</span><span class="carte-text">わずか【${depletedYear.toFixed(1)}年】で資産が底をつきます。引き出しペースが運用益を大幅にオーバーしています。</span></div>
-        <div class="carte-block"><span class="carte-heading">【順序リスク】</span><span class="carte-text">リタイア初期に暴落が起きると、元本が急激に削られ二度と回復できなくなります（収益率の順序リスク）。</span></div>
-        <div class="carte-block"><span class="carte-heading">【実践戦略】</span><span class="carte-text">安全域である「年4%以内（月${(safe4Amt/10000).toFixed(1)}万円）」に引き下げて資産延命を図ることを強く推奨します。</span></div>
-      `;
-      rxButtonHtml = `<button class="btn-rx-action" onclick="applyPercentMonthly(0.04)">⚡ 処方箋: 安全な4%（月${(safe4Amt/10000).toFixed(1)}万）に補正</button>`;
-    } else if (!depletedYear) {
-      title = '♾️ 永久機関・資産増殖型リタイア';
-      level = 'RANK INFINITY';
-      tags = ['#永久機関', '#不労所得生活', '#減らない資産'];
-      carteHtml = `
-        <div class="carte-block"><span class="carte-heading">【現状分析】</span><span class="carte-text">取り崩し額よりも年間の運用益が上回り、資産寿命は理論上無限大。使っても資産が増え続ける無敵状態です。</span></div>
-        <div class="carte-block"><span class="carte-heading">【DIE WITH ZERO視点】</span><span class="carte-text">「死ぬときに一番お金持ち」を避け、人生の充実にお金を使いたい場合は、年5〜7%に引き上げる選択肢もあります。</span></div>
-        <div class="carte-block"><span class="carte-heading">【実践戦略】</span><span class="carte-text">生活水準を上げるか、家族への贈与・旅行など有意義な支出に回すプランも検討してみましょう。</span></div>
-      `;
-      rxButtonHtml = `<button class="btn-rx-action" onclick="applyPercentMonthly(0.05)">⚡ 処方箋: 計画消費型（年5%）を試す</button>`;
+    currentDiagTitle = diag.title;
+    document.getElementById('diagTitle').innerText = diag.title;
+    document.getElementById('diagLevelTag').innerText = diag.level;
+    document.getElementById('diagTags').innerHTML = diag.tags.map(t => `<span class="style-tag">${t}</span>`).join('');
+    document.getElementById('carteContentArea').innerHTML = diag.carteHtml;
+    document.getElementById('fpStatusBadge').innerText = diag.statusBadgeText;
+
+    const rxBox = document.getElementById('prescriptionBox');
+    if (diag.rxButtonHtml) {
+        rxBox.innerHTML = diag.rxButtonHtml;
+        rxBox.style.display = 'block';
     } else {
-      title = '🌿 スマート・バランス取崩ライフ';
-      level = 'EXIT RANK A';
-      tags = ['#バランス取崩', '#資産延命成功', '#キャッシュクッション'];
-      carteHtml = `
-        <div class="carte-block"><span class="carte-heading">【現状分析】</span><span class="carte-text">運用を継続しながら取り崩すことで、資産寿命を【${depletedYear.toFixed(1)}年】まで延命できています。</span></div>
-        <div class="carte-block"><span class="carte-heading">【暴落防衛策】</span><span class="carte-text">下落相場の年は投信売却を一時停止できるよう、生活費2〜3年分を普通預金（キャッシュクッション）に確保しておくと盤石です。</span></div>
-        <div class="carte-block"><span class="carte-heading">【実践戦略】</span><span class="carte-text">公的年金の受給開始後は取り崩し額を減らせるため、実質的な資産寿命はさらに伸びます。</span></div>
-      `;
+        rxBox.style.display = 'none';
+        rxBox.innerHTML = '';
     }
-  } else {
-    if (total === 0) {
-      title = '📭 金庫空っぽ・取り崩し不可';
-      level = 'NO DATA';
-      tags = ['#元本ゼロ'];
-      carteHtml = `<div class="carte-block"><span class="carte-heading">【現状分析】</span><span class="carte-text">まずは資産形成シミュレーションから始めましょう。</span></div>`;
-    } else if (drawRate <= 0.04) {
-      title = '👑 黄金律・4%ルール実践マスター';
-      level = 'EXIT MASTER';
-      tags = ['#4%ルール', '#トリニティスタディ', '#枯渇リスク極小'];
-      carteHtml = `
-        <div class="carte-block"><span class="carte-heading">【理論的裏付け】</span><span class="carte-text">米トリニティ大学の研究でも実証された、資産枯渇リスクが極小の黄金ルールです。</span></div>
-        <div class="carte-block"><span class="carte-heading">【自律調整機能】</span><span class="carte-text">相場下落時は自動的に受取額が減り、好況時は増えるため、元本が枯渇することなく半永久的に資産を維持できます。</span></div>
-        <div class="carte-block"><span class="carte-heading">【実践戦略】</span><span class="carte-text">下落年の受取額減少に備え、生活費の基礎部分は年金や現金で賄えるよう設計しておくのがプロの定石です。</span></div>
-      `;
-    } else if (drawRate >= 0.07) {
-      title = '⚡ 急速消費・計画的使い切りスタイル';
-      level = 'EXIT RANK B';
-      tags = ['#急速消費', '#相場追従型', '#年金併用確認'];
-      statusBadgeText = '💡 計画的使い切り';
-      carteHtml = `
-        <div class="carte-block"><span class="carte-heading">【現状分析】</span><span class="carte-text">年7%以上の定率取り崩しは、初期に多額の生活費を得られる反面、後半にかけて受取額が急速に小さくなります。</span></div>
-        <div class="carte-block"><span class="carte-heading">【未来予測】</span><span class="carte-text">資産残高が早く減るため、80代以降の取り崩し額は初期の半分以下になる可能性があります。</span></div>
-        <div class="carte-block"><span class="carte-heading">【実践戦略】</span><span class="carte-text">公的年金と合算して、高齢期の最低生活費が不足しないか確認した上で活用しましょう。</span></div>
-      `;
-      rxButtonHtml = `<button class="btn-rx-action" onclick="setPreset('drawRate', 4.0)">⚡ 処方箋: 黄金律4%ルールに戻す</button>`;
-    } else {
-      title = '🌿 バランス定率取崩しスタイル';
-      level = 'EXIT RANK A';
-      tags = ['#バランス定率', '#相場追従型', '#積極消費'];
-      carteHtml = `
-        <div class="carte-block"><span class="carte-heading">【現状分析】</span><span class="carte-text">年5%前後の積極消費型プラン。相場好調時は贅沢に使い、不調時は支出を抑える柔軟な家計管理に適しています。</span></div>
-        <div class="carte-block"><span class="carte-heading">【メリット】</span><span class="carte-text">定額取り崩しと違って理論上資産が尽きることがなく、元本を有効活用できます。</span></div>
-        <div class="carte-block"><span class="carte-heading">【実践戦略】</span><span class="carte-text">固定費を抑え、変動費（旅行・趣味）の割合を高めておくと相場変動に柔軟に対応できます。</span></div>
-      `;
-    }
-  }
-
-  currentDiagTitle = title;
-  document.getElementById('diagTitle').innerText = title;
-  document.getElementById('diagLevelTag').innerText = level;
-  document.getElementById('diagTags').innerHTML = tags.map(t => `<span class="style-tag">${t}</span>`).join('');
-  document.getElementById('carteContentArea').innerHTML = carteHtml;
-  document.getElementById('fpStatusBadge').innerText = statusBadgeText;
-
-  const rxBox = document.getElementById('prescriptionBox');
-  if (rxButtonHtml) {
-    rxBox.innerHTML = rxButtonHtml;
-    rxBox.style.display = 'block';
-  } else {
-    rxBox.style.display = 'none';
-    rxBox.innerHTML = '';
-  }
 }
 
 function shareOnX() {

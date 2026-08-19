@@ -104,12 +104,15 @@
                                 <span class="input-unit-suffix">%</span>
                             </div>
                         </div>
+                        <!-- スライダーは扱いやすい15%上限を維持 -->
                         <input type="range" id="rangeReturn" min="0.1" max="15.0" step="0.1" value="5.0" oninput="syncInputs('return', 'range')">
                         <div class="preset-container">
                             <button class="preset-btn" onclick="setPreset('return', 3.0)">3%</button>
                             <button class="preset-btn" onclick="setPreset('return', 5.0)">5%(全世界)</button>
                             <button class="preset-btn" onclick="setPreset('return', 7.0)">7%(S&P500)</button>
                             <button class="preset-btn" onclick="setPreset('return', 12.0)">12%(強気)</button>
+                            <button class="preset-btn danger" onclick="setPreset('return', 20.0)">20%(暗号資産)</button>
+                            <button class="preset-btn danger" onclick="setPreset('return', 30.0)">30%(カジノ)</button>
                         </div>
                     </div>
 
@@ -180,9 +183,11 @@
                         </div>
                         <input type="range" id="rangeDrawStart" min="0" max="100000000" step="1000000" value="40000000" oninput="syncInputs('drawStart', 'range')">
                         <div class="preset-container">
+                            <button class="preset-btn danger" onclick="setPreset('drawStart', 5000000)">500万(無謀)</button>
                             <button class="preset-btn" onclick="setPreset('drawStart', 20000000)">2,000万</button>
                             <button class="preset-btn" onclick="setPreset('drawStart', 30000000)">3,000万</button>
                             <button class="preset-btn" onclick="setPreset('drawStart', 50000000)">5,000万</button>
+                            <button class="preset-btn highlight" onclick="setPreset('drawStart', 100000000)">1億(富豪)</button>
                             <button class="preset-btn highlight" onclick="importFromGrowthResult()">形成結果代入</button>
                         </div>
                     </div>
@@ -196,14 +201,15 @@
                                     <input type="number" class="num-input" id="numDrawMonthly" value="150000" min="0" max="3000000" step="5000" oninput="syncInputs('drawMonthly', 'num')">
                                 </div>
                             </div>
-                            <input type="range" id="rangeDrawMonthly" min="10000" max="500000" step="10000" value="150000" oninput="syncInputs('drawMonthly', 'range')">
+                            <input type="range" id="rangeDrawMonthly" min="10000" max="1000000" step="10000" value="150000" oninput="syncInputs('drawMonthly', 'range')">
                             <div class="preset-container">
+                                <button class="preset-btn" onclick="setPreset('drawMonthly', 30000)">3万(仙人)</button>
                                 <button class="preset-btn" onclick="setPreset('drawMonthly', 100000)">10万</button>
                                 <button class="preset-btn" onclick="setPreset('drawMonthly', 150000)">15万</button>
-                                <button class="preset-btn" onclick="setPreset('drawMonthly', 200000)">20万</button>
                                 <button class="preset-btn highlight" onclick="applyPercentMonthly(0.04)">4%相当</button>
-                                <button class="preset-btn amber" onclick="applyPercentMonthly(0.05)">5%相当</button>
-                                <button class="preset-btn danger" onclick="applyPercentMonthly(0.07)">7%相当</button>
+                                <button class="preset-btn amber" onclick="setPreset('drawMonthly', 300000)">30万(贅沢)</button>
+                                <button class="preset-btn danger" onclick="setPreset('drawMonthly', 500000)">50万(豪遊)</button>
+                                <button class="preset-btn danger" onclick="setPreset('drawMonthly', 1000000)">100万(破滅)</button>
                             </div>
                         </div>
                     </div>
@@ -213,16 +219,18 @@
                             <div class="control-label">
                                 <span>年間取り崩し率</span>
                                 <div class="input-box-wrapper">
-                                    <input type="number" class="num-input" id="numDrawRate" value="4.0" min="0.5" max="15.0" step="0.1" style="width: 55px;" oninput="syncInputs('drawRate', 'num')">
+                                    <input type="number" class="num-input" id="numDrawRate" value="4.0" min="0.5" max="25.0" step="0.1" style="width: 55px;" oninput="syncInputs('drawRate', 'num')">
                                     <span class="input-unit-suffix">%</span>
                                 </div>
                             </div>
-                            <input type="range" id="rangeDrawRate" min="1.0" max="10.0" step="0.1" value="4.0" oninput="syncInputs('drawRate', 'range')">
+                            <input type="range" id="rangeDrawRate" min="0.5" max="20.0" step="0.1" value="4.0" oninput="syncInputs('drawRate', 'range')">
                             <div class="preset-container">
+                                <button class="preset-btn" onclick="setPreset('drawRate', 1.0)">1%(超ケチ)</button>
                                 <button class="preset-btn" onclick="setPreset('drawRate', 3.0)">3%(超堅実)</button>
                                 <button class="preset-btn highlight" onclick="setPreset('drawRate', 4.0)">4%(黄金則)</button>
-                                <button class="preset-btn amber" onclick="setPreset('drawRate', 5.0)">5%(計画消費)</button>
-                                <button class="preset-btn danger" onclick="setPreset('drawRate', 7.0)">7%(急減注意)</button>
+                                <button class="preset-btn amber" onclick="setPreset('drawRate', 7.0)">7%(急速消費)</button>
+                                <button class="preset-btn danger" onclick="setPreset('drawRate', 10.0)">10%(超加速)</button>
+                                <button class="preset-btn danger" onclick="setPreset('drawRate', 15.0)">15%(資産爆破)</button>
                             </div>
                         </div>
                     </div>
@@ -231,16 +239,18 @@
                         <div class="control-label">
                             <span>取り崩し期間の想定利回り</span>
                             <div class="input-box-wrapper">
-                                <input type="number" class="num-input" id="numDrawReturn" value="3.0" min="0" max="20.0" step="0.1" style="width: 55px;" oninput="syncInputs('drawReturn', 'num')">
+                                <input type="number" class="num-input" id="numDrawReturn" value="3.0" min="0" max="30.0" step="0.1" style="width: 55px;" oninput="syncInputs('drawReturn', 'num')">
                                 <span class="input-unit-suffix">%</span>
                             </div>
                         </div>
-                        <input type="range" id="rangeDrawReturn" min="0.0" max="10.0" step="0.1" value="3.0" oninput="syncInputs('drawReturn', 'range')">
+                        <input type="range" id="rangeDrawReturn" min="0.0" max="15.0" step="0.1" value="3.0" oninput="syncInputs('drawReturn', 'range')">
                         <div class="preset-container">
+                            <button class="preset-btn danger" onclick="setPreset('drawReturn', 0.0)">0%(現金放置)</button>
                             <button class="preset-btn" onclick="setPreset('drawReturn', 1.0)">1%(低リスク)</button>
                             <button class="preset-btn" onclick="setPreset('drawReturn', 3.0)">3%(バランス)</button>
                             <button class="preset-btn highlight" onclick="setPreset('drawReturn', 5.0)">5%(オルカン)</button>
                             <button class="preset-btn amber" onclick="setPreset('drawReturn', 7.0)">7%(S&P500)</button>
+                            <button class="preset-btn danger" onclick="setPreset('drawReturn', 15.0)">15%(カジノ)</button>
                         </div>
                     </div>
                 </div>
@@ -356,6 +366,7 @@
     <div id="toast">設定を保存しました！</div>
 
     <script src="nav.js"></script>
+    <script src="diagnosisData.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
