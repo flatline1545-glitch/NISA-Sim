@@ -1505,3 +1505,60 @@ function loadFromUrlParams() {
   }
 }
 
+// --- 身近な出費の未来価値換算関数 ---
+window.applyWastePreset = function (itemName, amount) {
+    // 1. 積立額スライダーと数値をセット
+    const numMonthly = document.getElementById('numMonthly');
+    const rangeMonthly = document.getElementById('rangeMonthly');
+    if (numMonthly && rangeMonthly) {
+        numMonthly.value = amount;
+        rangeMonthly.value = amount;
+    }
+
+    // 2. 現在の運用年数と利回りを取得して計算
+    const rateAnnual = (parseFloat(document.getElementById('numReturn').value) || 5.0) / 100;
+    const years = parseInt(document.getElementById('numHorizon').value) || 30;
+    const rateMonthly = rateAnnual / 12;
+    const totalMonths = years * 12;
+
+    // 複利計算（元利合計）
+    let totalFutureValue = 0;
+    if (rateMonthly > 0) {
+        totalFutureValue = amount * ((Math.pow(1 + rateMonthly, totalMonths) - 1) / rateMonthly);
+    } else {
+        totalFutureValue = amount * totalMonths;
+    }
+
+    const principal = amount * totalMonths;
+    const profit = Math.max(0, totalFutureValue - principal);
+
+    // 3. 未来価値結果カードを表示
+    const resultCard = document.getElementById('wasteResultCard');
+    if (resultCard) {
+        const fmt = (v) => '¥' + Math.round(v).toLocaleString();
+        resultCard.style.display = 'block';
+        resultCard.innerHTML = `
+      💡 <b>【${itemName}（月${(amount / 10000).toFixed(1).replace('.0', '')}万円）】</b> を${years}年間（年利${(rateAnnual * 100).toFixed(1)}%）運用すると…<br>
+      将来 <span class="waste-result-highlight">${fmt(totalFutureValue)}</span> に化けます！<br>
+      <span style="color:#94a3b8; font-size: 0.9em;">（投資元本: ${fmt(principal)} ➔ 運用利益: +${fmt(profit)}）</span>
+    `;
+    }
+
+    // 4. シミュレーション全体を再計算
+    if (typeof saveAndRun === 'function') {
+        saveAndRun();
+    }
+};
+
+// --- ページ読み込み時の初期起動処理（確実に実行される安全版） ---
+function initApp() {
+    loadSlot(1);
+    loadFromUrlParams();
+    updateAll();
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initApp);
+} else {
+    initApp();
+}

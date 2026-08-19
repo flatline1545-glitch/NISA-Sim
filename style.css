@@ -1085,3 +1085,69 @@ tr:nth-child(even) {
         transform: translateX(-50%) translateY(0);
         opacity: 1;
     }
+
+/* --- 身近な出費の未来価値換算スタイル --- */
+.waste-calc-box {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px dashed rgba(59, 130, 246, 0.4);
+    border-radius: 8px;
+    padding: 8px 10px;
+    margin-bottom: 10px;
+}
+
+.waste-calc-title {
+    font-size: calc(var(--font-base) * 0.88);
+    font-weight: 800;
+    color: #93c5fd;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.waste-btn-group {
+    margin-top: 0;
+    margin-bottom: 4px;
+}
+
+.waste-btn {
+    background: rgba(59, 130, 246, 0.1);
+    border-color: rgba(59, 130, 246, 0.3);
+    color: #cbd5e1;
+    font-weight: 600;
+}
+
+    .waste-btn:hover {
+        background: var(--accent-blue);
+        color: #fff;
+    }
+
+.waste-result-card {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(6, 182, 212, 0.15));
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    border-radius: 6px;
+    padding: 6px 10px;
+    margin-top: 6px;
+    font-size: calc(var(--font-base) * 0.88);
+    line-height: 1.45;
+    color: #e2e8f0;
+    animation: fadeIn 0.25s ease-out;
+}
+
+.waste-result-highlight {
+    font-size: calc(var(--font-base) * 1.08);
+    font-weight: 900;
+    color: #34d399;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

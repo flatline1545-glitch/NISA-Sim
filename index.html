@@ -1,363 +1,361 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  
-  <title>新NISA 資産形成・戦闘力シミュレーター | 出口戦略・中立FPカルテ</title>
-  <meta name="description" content="新NISAの非課税枠1,800万円自動ストップ対応シミュレーター。資産形成から定額・定率取り崩し（出口戦略）、歴史的暴落ストレステスト、独立系FPによる資産カルテ診断、投資戦闘力測定まで完全無料・登録不要で試算できます。">
-  <meta name="keywords" content="新NISA,シミュレーター,資産形成,出口戦略,4%ルール,取り崩し,FIRE,投資戦闘力">
-  <meta name="robots" content="index, follow">
-  
-  <meta property="og:type" content="website">
-  <meta property="og:title" content="新NISA 資産形成・戦闘力シミュレーター">
-  <meta property="og:description" content="1,800万円自動ストップ ＆ RPG戦闘力レーダー・中立FP資産カルテ付き新NISAシミュレーター">
-  <meta name="twitter:card" content="summary_large_image">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-  <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>新NISA 資産形成・戦闘力シミュレーター | 出口戦略・中立FPカルテ</title>
+    <meta name="description" content="新NISAの非課税枠1,800万円自動ストップ対応シミュレーター。資産形成から定額・定率取り崩し（出口戦略）、歴史的暴落ストレステスト、独立系FPによる資産カルテ診断、投資戦闘力測定まで完全無料・登録不要で試算できます。">
+    <meta name="keywords" content="新NISA,シミュレーター,資産形成,出口戦略,4%ルール,取り崩し,FIRE,投資戦闘力">
+    <meta name="robots" content="index, follow">
+
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="新NISA 資産形成・戦闘力シミュレーター">
+    <meta property="og:description" content="1,800万円自動ストップ ＆ RPG戦闘力レーダー・中立FP資産カルテ付き新NISAシミュレーター">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
-<!-- メニューは nav.js が自動生成します -->
-<nav class="global-nav"></nav>
+    <nav class="global-nav"></nav>
 
-<div class="container">
-  <header>
-    <h1>新NISA 資産形成・戦闘力シミュレーター</h1>
-    <p>1,800万円自動ストップ ＆ RPG戦闘力レーダー・資産カルテ</p>
-  </header>
+    <div class="container">
+        <header>
+            <h1>新NISA 資産形成・戦闘力シミュレーター</h1>
+            <p>1,800万円自動ストップ ＆ RPG戦闘力レーダー・資産カルテ</p>
+        </header>
 
-  <div class="top-bar">
-    <div class="save-slots">
-      <span class="save-slots-label">💾 保存:</span>
-      <button class="slot-btn active" id="slotBtn1" onclick="switchSlot(1)">① 現在値</button>
-      <button class="slot-btn" id="slotBtn2" onclick="switchSlot(2)">② 理想型</button>
-      <button class="slot-btn" id="slotBtn3" onclick="switchSlot(3)">③ 攻め型</button>
+        <div class="top-bar">
+            <div class="save-slots">
+                <span class="save-slots-label">💾 保存:</span>
+                <button class="slot-btn active" id="slotBtn1" onclick="switchSlot(1)">① 現在値</button>
+                <button class="slot-btn" id="slotBtn2" onclick="switchSlot(2)">② 理想型</button>
+                <button class="slot-btn" id="slotBtn3" onclick="switchSlot(3)">③ 攻め型</button>
+            </div>
+
+            <div class="tab-container">
+                <button class="tab-btn active" id="tabGrowth" onclick="switchTab('growth')">資産形成</button>
+                <button class="tab-btn" id="tabDrawdown" onclick="switchTab('drawdown')">出口・取り崩し</button>
+            </div>
+        </div>
+
+        <div class="scenario-banner">
+            <span class="scenario-label">⚡ シナリオ:</span>
+            <button class="scenario-btn" id="scBtn_standard" onclick="applyScenario('standard')">🌱 王道オルカン積立</button>
+            <button class="scenario-btn" id="scBtn_sp500_growth" onclick="applyScenario('sp500_growth')">🚀 S&P500積極形成</button>
+            <button class="scenario-btn" id="scBtn_fast_rta" onclick="applyScenario('fast_rta')">🏎️ 最短5年カンスト</button>
+            <button class="scenario-btn" id="scBtn_crash_survival" onclick="applyScenario('crash_survival')">💥 暴落耐久テスト</button>
+            <button class="scenario-btn" id="scBtn_fire_exit" onclick="applyScenario('fire_exit')">🏝️ 4%サイドFIRE</button>
+        </div>
+
+        <div class="main-grid">
+            <div class="panel panel-controls">
+                <div class="panel-title">
+                    <div class="panel-title-left" id="ctrlTitle">シミュレーション条件設定</div>
+                    <button id="btnImportFromGrowth" class="sync-badge-btn" style="display: none;" onclick="importFromGrowthResult()">
+                        ⚡ 形成結果を反映
+                    </button>
+                </div>
+
+                <div id="growthControls">
+                    <div class="control-group">
+                        <div class="control-label">
+                            <span>毎月の積立額</span>
+                            <div class="input-box-wrapper">
+                                <span class="input-unit-prefix">¥</span>
+                                <input type="number" class="num-input" id="numMonthly" value="50000" min="0" max="3000000" step="1000" oninput="syncInputs('monthly', 'num')">
+                            </div>
+                        </div>
+                        <input type="range" id="rangeMonthly" min="0" max="300000" step="5000" value="50000" oninput="syncInputs('monthly', 'range')">
+                        <div class="preset-container">
+                            <button class="preset-btn" onclick="setPreset('monthly', 0)">0円</button>
+                            <button class="preset-btn" onclick="setPreset('monthly', 30000)">3万</button>
+                            <button class="preset-btn" onclick="setPreset('monthly', 50000)">5万</button>
+                            <button class="preset-btn" onclick="setPreset('monthly', 100000)">10万</button>
+                            <button class="preset-btn" onclick="setPreset('monthly', 300000)">30万(上限)</button>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <div class="control-label">
+                            <span>初期投資額（一括）</span>
+                            <div class="input-box-wrapper">
+                                <span class="input-unit-prefix">¥</span>
+                                <input type="number" class="num-input" id="numInitial" value="0" min="0" max="18000000" step="10000" oninput="syncInputs('initial', 'num')">
+                            </div>
+                        </div>
+                        <input type="range" id="rangeInitial" min="0" max="18000000" step="100000" value="0" oninput="syncInputs('initial', 'range')">
+                        <div class="preset-container">
+                            <button class="preset-btn" onclick="setPreset('initial', 0)">0円</button>
+                            <button class="preset-btn" onclick="setPreset('initial', 1000000)">100万</button>
+                            <button class="preset-btn" onclick="setPreset('initial', 2400000)">240万(成長枠)</button>
+                            <button class="preset-btn highlight" onclick="setPreset('initial', 3600000)">360万(年上限)</button>
+                            <button class="preset-btn" onclick="setPreset('initial', 5000000)">500万(既存)</button>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <div class="control-label">
+                            <span>想定年利回り</span>
+                            <div class="input-box-wrapper">
+                                <input type="number" class="num-input" id="numReturn" value="5.0" min="0" max="30.0" step="0.1" style="width: 55px;" oninput="syncInputs('return', 'num')">
+                                <span class="input-unit-suffix">%</span>
+                            </div>
+                        </div>
+                        <input type="range" id="rangeReturn" min="0.1" max="15.0" step="0.1" value="5.0" oninput="syncInputs('return', 'range')">
+                        <div class="preset-container">
+                            <button class="preset-btn" onclick="setPreset('return', 3.0)">3%</button>
+                            <button class="preset-btn" onclick="setPreset('return', 5.0)">5%(全世界)</button>
+                            <button class="preset-btn" onclick="setPreset('return', 7.0)">7%(S&P500)</button>
+                            <button class="preset-btn" onclick="setPreset('return', 12.0)">12%(強気)</button>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <div class="control-label">
+                            <span>運用年数</span>
+                            <div class="input-box-wrapper">
+                                <input type="number" class="num-input" id="numHorizon" value="30" min="1" max="60" step="1" style="width: 45px;" oninput="syncInputs('horizon', 'num')">
+                                <span class="input-unit-suffix">年</span>
+                            </div>
+                        </div>
+                        <input type="range" id="rangeHorizon" min="1" max="50" step="1" value="30" oninput="syncInputs('horizon', 'range')">
+                        <div class="preset-container">
+                            <button class="preset-btn" onclick="setPreset('horizon', 10)">10年</button>
+                            <button class="preset-btn" onclick="setPreset('horizon', 20)">20年</button>
+                            <button class="preset-btn" onclick="setPreset('horizon', 30)">30年</button>
+                            <button class="preset-btn" onclick="setPreset('horizon', 50)">50年</button>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <div class="control-label">
+                            <span>歴史的暴落ストレステスト</span>
+                        </div>
+                        <div class="preset-container" id="stressButtons">
+                            <button class="preset-btn highlight" id="stressBtnNone" onclick="setStress('none')">通常</button>
+                            <button class="preset-btn danger" id="stressBtnLehman" onclick="setStress('lehman')">リーマン級(-50%)</button>
+                            <button class="preset-btn danger" id="stressBtnCorona" onclick="setStress('corona')">コロナ級(-35%)</button>
+                            <button class="preset-btn danger" id="stressBtnDotcom" onclick="setStress('dotcom')">ドットコム級(-45%)</button>
+                        </div>
+                        <div id="stressInfo" class="stress-info-text">
+                            暴落なし（通常の右肩上がりシミュレーション）
+                        </div>
+                    </div>
+
+                    <div class="toggle-group">
+                        <span style="font-size:calc(var(--font-base)*0.95); font-weight:500;">1,800万円上限で積立ストップ</span>
+                        <label class="switch">
+                            <input type="checkbox" id="inputCapToggle" checked onchange="saveAndRun()">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div id="annualCapAlert" class="annual-alert-box">
+                        <div class="alert-header">
+                            <span id="alertHeaderTitle">⚠️ 年間投資枠（360万円）を超過</span>
+                        </div>
+                        <div id="alertBodyText"></div>
+                        <button id="btnAutoAdjustCap" class="btn-auto-adjust" onclick="autoAdjustToAnnualCap()">
+                            ⚡ 年360万以内に自動調整 (月<span id="targetMonthlyText">0</span>万に設定)
+                        </button>
+                    </div>
+                </div>
+
+                <div id="drawdownControls" style="display: none;">
+                    <div class="sub-tab-container">
+                        <button class="sub-tab-btn active" id="subTabFixed" onclick="switchDrawdownMode('fixed')">定額取崩 (毎月○万)</button>
+                        <button class="sub-tab-btn" id="subTabPercent" onclick="switchDrawdownMode('percent')">定率取崩 (年○%ルール)</button>
+                    </div>
+
+                    <div class="control-group">
+                        <div class="control-label">
+                            <span>開始時 資産総額</span>
+                            <div class="input-box-wrapper">
+                                <span class="input-unit-prefix">¥</span>
+                                <input type="number" class="num-input" id="numDrawStart" value="40000000" min="0" max="500000000" step="100000" oninput="syncInputs('drawStart', 'num')">
+                            </div>
+                        </div>
+                        <input type="range" id="rangeDrawStart" min="0" max="100000000" step="1000000" value="40000000" oninput="syncInputs('drawStart', 'range')">
+                        <div class="preset-container">
+                            <button class="preset-btn" onclick="setPreset('drawStart', 20000000)">2,000万</button>
+                            <button class="preset-btn" onclick="setPreset('drawStart', 30000000)">3,000万</button>
+                            <button class="preset-btn" onclick="setPreset('drawStart', 50000000)">5,000万</button>
+                            <button class="preset-btn highlight" onclick="importFromGrowthResult()">形成結果代入</button>
+                        </div>
+                    </div>
+
+                    <div id="drawControlFixed">
+                        <div class="control-group">
+                            <div class="control-label">
+                                <span>毎月の取り崩し額</span>
+                                <div class="input-box-wrapper">
+                                    <span class="input-unit-prefix">¥</span>
+                                    <input type="number" class="num-input" id="numDrawMonthly" value="150000" min="0" max="3000000" step="5000" oninput="syncInputs('drawMonthly', 'num')">
+                                </div>
+                            </div>
+                            <input type="range" id="rangeDrawMonthly" min="10000" max="500000" step="10000" value="150000" oninput="syncInputs('drawMonthly', 'range')">
+                            <div class="preset-container">
+                                <button class="preset-btn" onclick="setPreset('drawMonthly', 100000)">10万</button>
+                                <button class="preset-btn" onclick="setPreset('drawMonthly', 150000)">15万</button>
+                                <button class="preset-btn" onclick="setPreset('drawMonthly', 200000)">20万</button>
+                                <button class="preset-btn highlight" onclick="applyPercentMonthly(0.04)">4%相当</button>
+                                <button class="preset-btn amber" onclick="applyPercentMonthly(0.05)">5%相当</button>
+                                <button class="preset-btn danger" onclick="applyPercentMonthly(0.07)">7%相当</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="drawControlPercent" style="display: none;">
+                        <div class="control-group">
+                            <div class="control-label">
+                                <span>年間取り崩し率</span>
+                                <div class="input-box-wrapper">
+                                    <input type="number" class="num-input" id="numDrawRate" value="4.0" min="0.5" max="15.0" step="0.1" style="width: 55px;" oninput="syncInputs('drawRate', 'num')">
+                                    <span class="input-unit-suffix">%</span>
+                                </div>
+                            </div>
+                            <input type="range" id="rangeDrawRate" min="1.0" max="10.0" step="0.1" value="4.0" oninput="syncInputs('drawRate', 'range')">
+                            <div class="preset-container">
+                                <button class="preset-btn" onclick="setPreset('drawRate', 3.0)">3%(超堅実)</button>
+                                <button class="preset-btn highlight" onclick="setPreset('drawRate', 4.0)">4%(黄金則)</button>
+                                <button class="preset-btn amber" onclick="setPreset('drawRate', 5.0)">5%(計画消費)</button>
+                                <button class="preset-btn danger" onclick="setPreset('drawRate', 7.0)">7%(急減注意)</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <div class="control-label">
+                            <span>取り崩し期間の想定利回り</span>
+                            <div class="input-box-wrapper">
+                                <input type="number" class="num-input" id="numDrawReturn" value="3.0" min="0" max="20.0" step="0.1" style="width: 55px;" oninput="syncInputs('drawReturn', 'num')">
+                                <span class="input-unit-suffix">%</span>
+                            </div>
+                        </div>
+                        <input type="range" id="rangeDrawReturn" min="0.0" max="10.0" step="0.1" value="3.0" oninput="syncInputs('drawReturn', 'range')">
+                        <div class="preset-container">
+                            <button class="preset-btn" onclick="setPreset('drawReturn', 1.0)">1%(低リスク)</button>
+                            <button class="preset-btn" onclick="setPreset('drawReturn', 3.0)">3%(バランス)</button>
+                            <button class="preset-btn highlight" onclick="setPreset('drawReturn', 5.0)">5%(オルカン)</button>
+                            <button class="preset-btn amber" onclick="setPreset('drawReturn', 7.0)">7%(S&P500)</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel panel-results">
+                <div class="compact-header-card">
+                    <div class="header-stat-box">
+                        <div class="header-stat-label">⚡ 投資戦闘力 (BP)</div>
+                        <div class="header-stat-val" id="bpValue">0</div>
+                    </div>
+                    <div class="header-stat-box" style="text-align: right;">
+                        <div class="header-stat-label" id="mainStatHeaderLabel" style="justify-content: flex-end;">最終資産総額</div>
+                        <div class="header-stat-val primary" id="mainStatHeaderValue">¥0</div>
+                    </div>
+                </div>
+
+                <div class="sub-stats-row" id="rowGrowthStats">
+                    <div class="sub-stat-chip">
+                        <div class="chip-label">投資元本</div>
+                        <div class="chip-val principal" id="chipPrincipal">¥0</div>
+                    </div>
+                    <div class="sub-stat-chip">
+                        <div class="chip-label">運用益(利益)</div>
+                        <div class="chip-val gains" id="chipGains">¥0</div>
+                    </div>
+                    <div class="sub-stat-chip">
+                        <div class="chip-label">節税バリア</div>
+                        <div class="chip-val tax" id="chipTax">¥0</div>
+                    </div>
+                </div>
+
+                <div class="sub-stats-row" id="rowDrawdownStats" style="display: none;">
+                    <div class="sub-stat-chip">
+                        <div class="chip-label" id="chipDrawAnnualLabel">年間取崩額</div>
+                        <div class="chip-val principal" id="chipDrawAnnual">¥0</div>
+                    </div>
+                    <div class="sub-stat-chip">
+                        <div class="chip-label">受取累計額</div>
+                        <div class="chip-val gains" id="chipDrawTotal">¥0</div>
+                    </div>
+                    <div class="sub-stat-chip">
+                        <div class="chip-label">延命効果</div>
+                        <div class="chip-val tax" id="chipDrawDiff">--</div>
+                    </div>
+                </div>
+
+                <div class="view-switcher-bar">
+                    <button class="view-tab-btn active" id="btnViewLine" onclick="switchDisplayView('line')">
+                        📈 資産推移
+                    </button>
+                    <button class="view-tab-btn" id="btnViewRadar" onclick="switchDisplayView('radar')">
+                        📊 レーダー
+                    </button>
+                    <button class="view-tab-btn gold" id="btnViewDiag" onclick="switchDisplayView('diag')">
+                        🎯 称号・資産カルテ
+                    </button>
+                </div>
+
+                <div class="unified-display-box">
+                    <canvas id="simChart"></canvas>
+
+                    <div class="diagnosis-view-content" id="diagnosisViewBox">
+                        <div class="diag-title-row">
+                            <div class="diag-main-title" id="diagTitle">--</div>
+                            <div class="diag-rank-tag" id="diagLevelTag">RANK</div>
+                        </div>
+                        <div class="diag-tags-row" id="diagTags"></div>
+
+                        <div class="fp-carte-container">
+                            <div class="fp-carte-header">
+                                <span>📋 中立FPの資産カルテ</span>
+                                <span id="fpStatusBadge">診断完了</span>
+                            </div>
+                            <div id="carteContentArea"></div>
+                            <div class="prescription-btn-wrap" id="prescriptionBox" style="display: none;"></div>
+                        </div>
+
+                        <div class="carte-action-btn-group">
+                            <button class="action-btn x-btn" onclick="shareOnX()">𝕏 ポスト</button>
+                            <button class="action-btn url-btn" onclick="copySimulationUrl()">🔗 URL共有</button>
+                            <button class="action-btn img-btn" onclick="exportChartImage()">📸 画像保存</button>
+                            <button class="action-btn csv-btn" onclick="exportCsvReport()">📄 CSV出力</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bottom-full-section">
+            <div class="details-section" id="tableSection">
+                <button class="collapse-btn" onclick="toggleTable()">
+                    <span id="collapseIcon">▼</span> 年次推移の詳細表を見る
+                </button>
+                <div class="table-wrapper" id="tableWrapper">
+                    <table id="dataTable">
+                        <thead id="tableHeader"></thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="bottom-action-btn-group">
+                <button class="action-btn x-btn" onclick="shareOnX()">𝕏 ポスト</button>
+                <button class="action-btn url-btn" onclick="copySimulationUrl()">🔗 URL共有</button>
+                <button class="action-btn img-btn" onclick="exportChartImage()">📸 グラフ画像保存</button>
+                <button class="action-btn csv-btn" onclick="exportCsvReport()">📄 CSV出力</button>
+            </div>
+        </div>
+
     </div>
 
-    <div class="tab-container">
-      <button class="tab-btn active" id="tabGrowth" onclick="switchTab('growth')">資産形成</button>
-      <button class="tab-btn" id="tabDrawdown" onclick="switchTab('drawdown')">出口・取り崩し</button>
-    </div>
-  </div>
+    <div id="toast">設定を保存しました！</div>
 
-  <div class="scenario-banner">
-    <span class="scenario-label">⚡ シナリオ:</span>
-    <button class="scenario-btn" id="scBtn_standard" onclick="applyScenario('standard')">🌱 王道オルカン積立</button>
-    <button class="scenario-btn" id="scBtn_sp500_growth" onclick="applyScenario('sp500_growth')">🚀 S&P500積極形成</button>
-    <button class="scenario-btn" id="scBtn_fast_rta" onclick="applyScenario('fast_rta')">🏎️ 最短5年カンスト</button>
-    <button class="scenario-btn" id="scBtn_crash_survival" onclick="applyScenario('crash_survival')">💥 暴落耐久テスト</button>
-    <button class="scenario-btn" id="scBtn_fire_exit" onclick="applyScenario('fire_exit')">🏝️ 4%サイドFIRE</button>
-  </div>
-
-  <div class="main-grid">
-    <div class="panel panel-controls">
-      <div class="panel-title">
-        <div class="panel-title-left" id="ctrlTitle">シミュレーション条件設定</div>
-        <button id="btnImportFromGrowth" class="sync-badge-btn" style="display: none;" onclick="importFromGrowthResult()">
-          ⚡ 形成結果を反映
-        </button>
-      </div>
-
-      <div id="growthControls">
-        <div class="control-group">
-          <div class="control-label">
-            <span>毎月の積立額</span>
-            <div class="input-box-wrapper">
-              <span class="input-unit-prefix">¥</span>
-              <input type="number" class="num-input" id="numMonthly" value="50000" min="0" max="3000000" step="1000" oninput="syncInputs('monthly', 'num')">
-            </div>
-          </div>
-          <input type="range" id="rangeMonthly" min="0" max="300000" step="5000" value="50000" oninput="syncInputs('monthly', 'range')">
-          <div class="preset-container">
-            <button class="preset-btn" onclick="setPreset('monthly', 0)">0円</button>
-            <button class="preset-btn" onclick="setPreset('monthly', 30000)">3万</button>
-            <button class="preset-btn" onclick="setPreset('monthly', 50000)">5万</button>
-            <button class="preset-btn" onclick="setPreset('monthly', 100000)">10万</button>
-            <button class="preset-btn" onclick="setPreset('monthly', 300000)">30万(上限)</button>
-          </div>
-        </div>
-
-        <div class="control-group">
-          <div class="control-label">
-            <span>初期投資額（一括）</span>
-            <div class="input-box-wrapper">
-              <span class="input-unit-prefix">¥</span>
-              <input type="number" class="num-input" id="numInitial" value="0" min="0" max="18000000" step="10000" oninput="syncInputs('initial', 'num')">
-            </div>
-          </div>
-          <input type="range" id="rangeInitial" min="0" max="18000000" step="100000" value="0" oninput="syncInputs('initial', 'range')">
-          <div class="preset-container">
-            <button class="preset-btn" onclick="setPreset('initial', 0)">0円</button>
-            <button class="preset-btn" onclick="setPreset('initial', 1000000)">100万</button>
-            <button class="preset-btn" onclick="setPreset('initial', 2400000)">240万(成長枠)</button>
-            <button class="preset-btn highlight" onclick="setPreset('initial', 3600000)">360万(年上限)</button>
-            <button class="preset-btn" onclick="setPreset('initial', 5000000)">500万(既存)</button>
-          </div>
-        </div>
-
-        <div class="control-group">
-          <div class="control-label">
-            <span>想定年利回り</span>
-            <div class="input-box-wrapper">
-              <input type="number" class="num-input" id="numReturn" value="5.0" min="0" max="30.0" step="0.1" style="width: 55px;" oninput="syncInputs('return', 'num')">
-              <span class="input-unit-suffix">%</span>
-            </div>
-          </div>
-          <input type="range" id="rangeReturn" min="0.1" max="15.0" step="0.1" value="5.0" oninput="syncInputs('return', 'range')">
-          <div class="preset-container">
-            <button class="preset-btn" onclick="setPreset('return', 3.0)">3%</button>
-            <button class="preset-btn" onclick="setPreset('return', 5.0)">5%(全世界)</button>
-            <button class="preset-btn" onclick="setPreset('return', 7.0)">7%(S&P500)</button>
-            <button class="preset-btn" onclick="setPreset('return', 12.0)">12%(強気)</button>
-          </div>
-        </div>
-
-        <div class="control-group">
-          <div class="control-label">
-            <span>運用年数</span>
-            <div class="input-box-wrapper">
-              <input type="number" class="num-input" id="numHorizon" value="30" min="1" max="60" step="1" style="width: 45px;" oninput="syncInputs('horizon', 'num')">
-              <span class="input-unit-suffix">年</span>
-            </div>
-          </div>
-          <input type="range" id="rangeHorizon" min="1" max="50" step="1" value="30" oninput="syncInputs('horizon', 'range')">
-          <div class="preset-container">
-            <button class="preset-btn" onclick="setPreset('horizon', 10)">10年</button>
-            <button class="preset-btn" onclick="setPreset('horizon', 20)">20年</button>
-            <button class="preset-btn" onclick="setPreset('horizon', 30)">30年</button>
-            <button class="preset-btn" onclick="setPreset('horizon', 50)">50年</button>
-          </div>
-        </div>
-
-        <div class="control-group">
-          <div class="control-label">
-            <span>歴史的暴落ストレステスト</span>
-          </div>
-          <div class="preset-container" id="stressButtons">
-            <button class="preset-btn highlight" id="stressBtnNone" onclick="setStress('none')">通常</button>
-            <button class="preset-btn danger" id="stressBtnLehman" onclick="setStress('lehman')">リーマン級(-50%)</button>
-            <button class="preset-btn danger" id="stressBtnCorona" onclick="setStress('corona')">コロナ級(-35%)</button>
-            <button class="preset-btn danger" id="stressBtnDotcom" onclick="setStress('dotcom')">ドットコム級(-45%)</button>
-          </div>
-          <div id="stressInfo" class="stress-info-text">
-            暴落なし（通常の右肩上がりシミュレーション）
-          </div>
-        </div>
-
-        <div class="toggle-group">
-          <span style="font-size:calc(var(--font-base)*0.95); font-weight:500;">1,800万円上限で積立ストップ</span>
-          <label class="switch">
-            <input type="checkbox" id="inputCapToggle" checked onchange="saveAndRun()">
-            <span class="slider"></span>
-          </label>
-        </div>
-
-        <div id="annualCapAlert" class="annual-alert-box">
-          <div class="alert-header">
-            <span id="alertHeaderTitle">⚠️ 年間投資枠（360万円）を超過</span>
-          </div>
-          <div id="alertBodyText"></div>
-          <button id="btnAutoAdjustCap" class="btn-auto-adjust" onclick="autoAdjustToAnnualCap()">
-            ⚡ 年360万以内に自動調整 (月<span id="targetMonthlyText">0</span>万に設定)
-          </button>
-        </div>
-      </div>
-
-      <div id="drawdownControls" style="display: none;">
-        <div class="sub-tab-container">
-          <button class="sub-tab-btn active" id="subTabFixed" onclick="switchDrawdownMode('fixed')">定額取崩 (毎月○万)</button>
-          <button class="sub-tab-btn" id="subTabPercent" onclick="switchDrawdownMode('percent')">定率取崩 (年○%ルール)</button>
-        </div>
-
-        <div class="control-group">
-          <div class="control-label">
-            <span>開始時 資産総額</span>
-            <div class="input-box-wrapper">
-              <span class="input-unit-prefix">¥</span>
-              <input type="number" class="num-input" id="numDrawStart" value="40000000" min="0" max="500000000" step="100000" oninput="syncInputs('drawStart', 'num')">
-            </div>
-          </div>
-          <input type="range" id="rangeDrawStart" min="0" max="100000000" step="1000000" value="40000000" oninput="syncInputs('drawStart', 'range')">
-          <div class="preset-container">
-            <button class="preset-btn" onclick="setPreset('drawStart', 20000000)">2,000万</button>
-            <button class="preset-btn" onclick="setPreset('drawStart', 30000000)">3,000万</button>
-            <button class="preset-btn" onclick="setPreset('drawStart', 50000000)">5,000万</button>
-            <button class="preset-btn highlight" onclick="importFromGrowthResult()">形成結果代入</button>
-          </div>
-        </div>
-
-        <div id="drawControlFixed">
-          <div class="control-group">
-            <div class="control-label">
-              <span>毎月の取り崩し額</span>
-              <div class="input-box-wrapper">
-                <span class="input-unit-prefix">¥</span>
-                <input type="number" class="num-input" id="numDrawMonthly" value="150000" min="0" max="3000000" step="5000" oninput="syncInputs('drawMonthly', 'num')">
-              </div>
-            </div>
-            <input type="range" id="rangeDrawMonthly" min="10000" max="500000" step="10000" value="150000" oninput="syncInputs('drawMonthly', 'range')">
-            <div class="preset-container">
-              <button class="preset-btn" onclick="setPreset('drawMonthly', 100000)">10万</button>
-              <button class="preset-btn" onclick="setPreset('drawMonthly', 150000)">15万</button>
-              <button class="preset-btn" onclick="setPreset('drawMonthly', 200000)">20万</button>
-              <button class="preset-btn highlight" onclick="applyPercentMonthly(0.04)">4%相当</button>
-              <button class="preset-btn amber" onclick="applyPercentMonthly(0.05)">5%相当</button>
-              <button class="preset-btn danger" onclick="applyPercentMonthly(0.07)">7%相当</button>
-            </div>
-          </div>
-        </div>
-
-        <div id="drawControlPercent" style="display: none;">
-          <div class="control-group">
-            <div class="control-label">
-              <span>年間取り崩し率</span>
-              <div class="input-box-wrapper">
-                <input type="number" class="num-input" id="numDrawRate" value="4.0" min="0.5" max="15.0" step="0.1" style="width: 55px;" oninput="syncInputs('drawRate', 'num')">
-                <span class="input-unit-suffix">%</span>
-              </div>
-            </div>
-            <input type="range" id="rangeDrawRate" min="1.0" max="10.0" step="0.1" value="4.0" oninput="syncInputs('drawRate', 'range')">
-            <div class="preset-container">
-              <button class="preset-btn" onclick="setPreset('drawRate', 3.0)">3%(超堅実)</button>
-              <button class="preset-btn highlight" onclick="setPreset('drawRate', 4.0)">4%(黄金則)</button>
-              <button class="preset-btn amber" onclick="setPreset('drawRate', 5.0)">5%(計画消費)</button>
-              <button class="preset-btn danger" onclick="setPreset('drawRate', 7.0)">7%(急減注意)</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="control-group">
-          <div class="control-label">
-            <span>取り崩し期間の想定利回り</span>
-            <div class="input-box-wrapper">
-              <input type="number" class="num-input" id="numDrawReturn" value="3.0" min="0" max="20.0" step="0.1" style="width: 55px;" oninput="syncInputs('drawReturn', 'num')">
-              <span class="input-unit-suffix">%</span>
-            </div>
-          </div>
-          <input type="range" id="rangeDrawReturn" min="0.0" max="10.0" step="0.1" value="3.0" oninput="syncInputs('drawReturn', 'range')">
-          <div class="preset-container">
-            <button class="preset-btn" onclick="setPreset('drawReturn', 1.0)">1%(低リスク)</button>
-            <button class="preset-btn" onclick="setPreset('drawReturn', 3.0)">3%(バランス)</button>
-            <button class="preset-btn highlight" onclick="setPreset('drawReturn', 5.0)">5%(オルカン)</button>
-            <button class="preset-btn amber" onclick="setPreset('drawReturn', 7.0)">7%(S&P500)</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="panel panel-results">
-      <div class="compact-header-card">
-        <div class="header-stat-box">
-          <div class="header-stat-label">⚡ 投資戦闘力 (BP)</div>
-          <div class="header-stat-val" id="bpValue">0</div>
-        </div>
-        <div class="header-stat-box" style="text-align: right;">
-          <div class="header-stat-label" id="mainStatHeaderLabel" style="justify-content: flex-end;">最終資産総額</div>
-          <div class="header-stat-val primary" id="mainStatHeaderValue">¥0</div>
-        </div>
-      </div>
-
-      <div class="sub-stats-row" id="rowGrowthStats">
-        <div class="sub-stat-chip">
-          <div class="chip-label">投資元本</div>
-          <div class="chip-val principal" id="chipPrincipal">¥0</div>
-        </div>
-        <div class="sub-stat-chip">
-          <div class="chip-label">運用益(利益)</div>
-          <div class="chip-val gains" id="chipGains">¥0</div>
-        </div>
-        <div class="sub-stat-chip">
-          <div class="chip-label">節税バリア</div>
-          <div class="chip-val tax" id="chipTax">¥0</div>
-        </div>
-      </div>
-
-      <div class="sub-stats-row" id="rowDrawdownStats" style="display: none;">
-        <div class="sub-stat-chip">
-          <div class="chip-label" id="chipDrawAnnualLabel">年間取崩額</div>
-          <div class="chip-val principal" id="chipDrawAnnual">¥0</div>
-        </div>
-        <div class="sub-stat-chip">
-          <div class="chip-label">受取累計額</div>
-          <div class="chip-val gains" id="chipDrawTotal">¥0</div>
-        </div>
-        <div class="sub-stat-chip">
-          <div class="chip-label">延命効果</div>
-          <div class="chip-val tax" id="chipDrawDiff">--</div>
-        </div>
-      </div>
-
-      <div class="view-switcher-bar">
-        <button class="view-tab-btn active" id="btnViewLine" onclick="switchDisplayView('line')">
-          📈 資産推移
-        </button>
-        <button class="view-tab-btn" id="btnViewRadar" onclick="switchDisplayView('radar')">
-          📊 レーダー
-        </button>
-        <button class="view-tab-btn gold" id="btnViewDiag" onclick="switchDisplayView('diag')">
-          🎯 称号・資産カルテ
-        </button>
-      </div>
-
-      <div class="unified-display-box">
-        <canvas id="simChart"></canvas>
-
-        <div class="diagnosis-view-content" id="diagnosisViewBox">
-          <div class="diag-title-row">
-            <div class="diag-main-title" id="diagTitle">--</div>
-            <div class="diag-rank-tag" id="diagLevelTag">RANK</div>
-          </div>
-          <div class="diag-tags-row" id="diagTags"></div>
-          
-          <div class="fp-carte-container">
-            <div class="fp-carte-header">
-              <span>📋 中立FPの資産カルテ</span>
-              <span id="fpStatusBadge">診断完了</span>
-            </div>
-            <div id="carteContentArea"></div>
-            <div class="prescription-btn-wrap" id="prescriptionBox" style="display: none;"></div>
-          </div>
-
-          <div class="carte-action-btn-group">
-            <button class="action-btn x-btn" onclick="shareOnX()">𝕏 ポスト</button>
-            <button class="action-btn url-btn" onclick="copySimulationUrl()">🔗 URL共有</button>
-            <button class="action-btn img-btn" onclick="exportChartImage()">📸 画像保存</button>
-            <button class="action-btn csv-btn" onclick="exportCsvReport()">📄 CSV出力</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="bottom-full-section">
-    <div class="details-section" id="tableSection">
-      <button class="collapse-btn" onclick="toggleTable()">
-        <span id="collapseIcon">▼</span> 年次推移の詳細表を見る
-      </button>
-      <div class="table-wrapper" id="tableWrapper">
-        <table id="dataTable">
-          <thead id="tableHeader"></thead>
-          <tbody id="tableBody"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="bottom-action-btn-group">
-      <button class="action-btn x-btn" onclick="shareOnX()">𝕏 ポスト</button>
-      <button class="action-btn url-btn" onclick="copySimulationUrl()">🔗 URL共有</button>
-      <button class="action-btn img-btn" onclick="exportChartImage()">📸 グラフ画像保存</button>
-      <button class="action-btn csv-btn" onclick="exportCsvReport()">📄 CSV出力</button>
-    </div>
-  </div>
-
-</div>
-
-<div id="toast">設定を保存しました！</div>
-
-<!-- 共通メニュー自動生成 ＆ メインスクリプト -->
-<script src="nav.js"></script>
-<script src="app.js"></script>
+    <script src="nav.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>

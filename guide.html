@@ -134,11 +134,49 @@
                 color: #93c5fd;
                 font-weight: 800;
             }
+        /* ガイド内の出費換算スタイル */
+        .guide-waste-box {
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px dashed rgba(59, 130, 246, 0.4);
+            border-radius: 8px;
+            padding: 12px;
+            margin: 12px 0;
+        }
+
+        .guide-waste-title {
+            font-size: 12px;
+            font-weight: 800;
+            color: #93c5fd;
+            margin-bottom: 8px;
+        }
+
+        .guide-waste-btns {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .guide-waste-btn {
+            background: rgba(59, 130, 246, 0.12);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: #cbd5e1;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 5px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+            .guide-waste-btn:hover {
+                background: var(--accent-blue);
+                color: #fff;
+            }
     </style>
 </head>
 <body>
 
-    <!-- メニューは nav.js が自動生成します -->
     <nav class="global-nav"></nav>
 
     <div class="container article-container">
@@ -164,22 +202,42 @@
             </p>
         </article>
 
-        <!-- 第2章 -->
+        <!-- 第2章（出費換算機を組み込み） -->
         <article class="article-card">
-            <h2 class="article-title">2. もし月1回の飲み会代（3万円）を積立していたら？</h2>
+            <h2 class="article-title">2. 日常のムダ遣いをNISAに回したら将来いくらになる？</h2>
             <p class="article-lead">
-                まとまった大金は不要です。少額からでも「複利の雪だるま」は強力に機能します。
+                まとまった大金は不要です。何気なく使っている日常の出費を少し投資に回すだけで、「複利の雪だるま」が威力を発揮します。気になる項目をタップして将来の価値を確かめてみてください。
             </p>
-            <div class="callout-box success">
-                💡 <b>月3万円を年利5%（全世界株平均）で運用した場合</b><br>
-                ・ 10年後: 投資元本 360万円 ➔ <b>約 465万円</b>（+105万円）<br>
-                ・ 20年後: 投資元本 720万円 ➔ <b>約 1,233万円</b>（+513万円）<br>
-                ・ 30年後: 投資元本 1,080万円 ➔ <b>約 2,496万円</b>（+1,416万円・元本の2.3倍！）
+
+            <!-- インタラクティブ出費換算ギミック -->
+            <div class="guide-waste-box">
+                <div class="guide-waste-title">👇 気になる節約項目をタップして計算（30年間・年利5%運用）</div>
+                <div class="guide-waste-btns">
+                    <button type="button" class="guide-waste-btn" onclick="calcGuideWaste('🥤 毎日の自販機・ペットボトル', 4000)">🥤 自販機 (4千円)</button>
+                    <button type="button" class="guide-waste-btn" onclick="calcGuideWaste('🎬 不要なサブスク2社', 2500)">🎬 サブスク (2.5千円)</button>
+                    <button type="button" class="guide-waste-btn" onclick="calcGuideWaste('🍺 飲み会1回我慢', 5000)">🍺 飲み会 (5千円)</button>
+                    <button type="button" class="guide-waste-btn" onclick="calcGuideWaste('📱 格安SIMへ乗換', 8000)">📱 格安SIM (8千円)</button>
+                    <button type="button" class="guide-waste-btn" onclick="calcGuideWaste('🛵 デリバリーの自粛', 10000)">🛵 デリバリー (1万)</button>
+                    <button type="button" class="guide-waste-btn" onclick="calcGuideWaste('🍱 平日ランチの自炊化', 12000)">🍱 ランチ自炊 (1.2万)</button>
+                    <button type="button" class="guide-waste-btn" onclick="calcGuideWaste('☕ 毎日のカフェ・スタバ代', 15000)">☕ カフェ代 (1.5万)</button>
+                    <button type="button" class="guide-waste-btn" onclick="calcGuideWaste('🚬 禁煙・タバコ代', 18000)">🚬 タバコ代 (1.8万)</button>
+                    <button type="button" class="guide-waste-btn" onclick="calcGuideWaste('🎮 ソシャゲ課金節約', 30000)">🎮 ガチャ代 (3万)</button>
+                    <button type="button" class="guide-waste-btn" onclick="calcGuideWaste('🚗 車の維持費削減', 40000)">🚗 マイカー見直し (4万)</button>
+                </div>
+
+                <div id="guideWasteResult" class="callout-box success" style="margin-top: 8px;">
+                    💡 <b>【🍺 飲み会1回我慢（月5千円）】</b> を30年間（年利5.0%）運用すると…<br>
+                    将来 <b style="color: #34d399; font-size: 1.2em;">約 ¥4,161,000</b> に化けます！<br>
+                    <span style="color:#94a3b8;">（投資元本: ¥1,800,000 ➔ 運用利益: +¥2,361,000・元本の2.3倍！）</span>
+                </div>
+                <div id="guideWasteLinkWrap" style="margin-top: 8px;">
+                    <a id="guideSimBtn" href="index.html?m=5000&r=5&y=30" class="sim-link-btn">⚡ この条件（月5千円）でシミュレーターを開く</a>
+                </div>
             </div>
+
             <p class="article-lead">
                 投資の利益がさらに利益を生む「複利効果」は、時間が経つほど急激に加速します。早く始めた人ほど圧倒的に有利になります。
             </p>
-            <a href="index.html?m=30000&r=5&y=30" class="sim-link-btn">⚡ 月3万円の30年推移をシミュレーターで試す</a>
         </article>
 
         <!-- 第3章 -->
@@ -273,5 +331,29 @@
     </div>
 
     <script src="nav.js"></script>
+    <script>
+        function calcGuideWaste(itemName, amount) {
+            const years = 30;
+            const rateAnnual = 0.05;
+            const rateMonthly = rateAnnual / 12;
+            const totalMonths = years * 12;
+            const totalFuture = amount * ((Math.pow(1 + rateMonthly, totalMonths) - 1) / rateMonthly);
+            const principal = amount * totalMonths;
+            const profit = totalFuture - principal;
+
+            const fmt = (v) => '¥' + Math.round(v).toLocaleString('ja-JP');
+            const resultBox = document.getElementById('guideWasteResult');
+            const simBtn = document.getElementById('guideSimBtn');
+
+            resultBox.innerHTML = `
+          💡 <b>【${itemName}（月${(amount / 10000).toFixed(1).replace('.0', '')}万円）】</b> を30年間（年利5.0%）運用すると…<br>
+          将来 <b style="color: #34d399; font-size: 1.2em;">約 ${fmt(totalFuture)}</b> に化けます！<br>
+          <span style="color:#94a3b8;">（投資元本: ${fmt(principal)} ➔ 運用利益: +${fmt(profit)}・元本の${(totalFuture / principal).toFixed(1)}倍！）</span>
+        `;
+
+            simBtn.href = `index.html?m=${amount}&r=5&y=30`;
+            simBtn.innerHTML = `⚡ この条件（月${(amount / 10000).toFixed(1).replace('.0', '')}万円）でシミュレーターを開く`;
+        }
+    </script>
 </body>
 </html>
