@@ -1,197 +1,277 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>サルでもわかる新NISA入門 ＆ 失敗しない資産防衛ガイド | NISA-Sim</title>
-  <meta name="description" content="投資未経験・初心者向けに新NISAの仕組みをわかりやすく解説。「銀行預金のインフレリスク」「初心者がやりがちな大爆死パターン」「4%ルールの真実」まで、忖度ゼロで役立つ知識をまとめたガイドページです。">
-  <meta name="keywords" content="新NISA,初心者,投資入門,インデックス投資,オルカン,FIRE,資産形成,4%ルール">
-  <meta name="robots" content="index, follow">
-  
-  <meta property="og:type" content="article">
-  <meta property="og:title" content="サルでもわかる新NISA入門 ＆ 失敗しない資産防衛ガイド">
-  <meta property="og:description" content="投資未経験・初心者向けに新NISAの仕組みと失敗回避策をわかりやすく解説。">
-  <meta name="twitter:card" content="summary_large_image">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>新NISA ＆ iDeCo 失敗しない資産防衛ガイド | NISA-Sim</title>
+    <meta name="description" content="投資未経験・初心者向けに新NISAとiDeCoの仕組みをわかりやすく解説。「銀行預金のインフレリスク」「初心者がやりがちな自爆パターン」「新NISAとiDeCoの優先順位」まで、忖度ゼロで役立つ知識をまとめたガイドページです。">
+    <meta name="keywords" content="新NISA,iDeCo,初心者,投資入門,インデックス投資,オルカン,FIRE,資産形成,節税">
+    <meta name="robots" content="index, follow">
 
-  <link rel="stylesheet" href="style.css">
-  <style>
-    .article-container {
-      max-width: 820px;
-      margin: 0 auto;
-      padding: 10px 4px 40px 4px;
-    }
-    .article-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 18px 20px;
-      margin-bottom: 16px;
-      line-height: 1.7;
-    }
-    .article-title {
-      font-size: 17px;
-      font-weight: 800;
-      color: #60a5fa;
-      margin-bottom: 10px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .article-title::before {
-      content: "";
-      display: inline-block;
-      width: 4px;
-      height: 16px;
-      background: var(--accent-blue);
-      border-radius: 2px;
-    }
-    .article-lead {
-      font-size: 12px;
-      color: #e2e8f0;
-      margin-bottom: 10px;
-    }
-    .callout-box {
-      background: rgba(59, 130, 246, 0.1);
-      border-left: 3px solid #3b82f6;
-      padding: 10px 12px;
-      border-radius: 6px;
-      margin: 10px 0;
-      font-size: 11px;
-      color: #cbd5e1;
-    }
-    .callout-box.warning {
-      background: rgba(239, 68, 68, 0.1);
-      border-left-color: #ef4444;
-      color: #fecaca;
-    }
-    .callout-box.success {
-      background: rgba(16, 185, 129, 0.1);
-      border-left-color: #10b981;
-      color: #a7f3d0;
-    }
-    .sim-link-btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      background: linear-gradient(135deg, #2563eb, #1d4ed8);
-      color: #fff;
-      text-decoration: none;
-      font-size: 12px;
-      font-weight: 800;
-      padding: 8px 16px;
-      border-radius: 8px;
-      margin-top: 10px;
-      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
-      transition: all 0.15s;
-    }
-    .sim-link-btn:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.6);
-    }
-  </style>
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="新NISA ＆ iDeCo 失敗しない資産防衛ガイド">
+    <meta property="og:description" content="投資未経験・初心者向けに新NISAとiDeCoの仕組みと使い分けをわかりやすく解説。">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .article-container {
+            max-width: 820px;
+            margin: 0 auto;
+            padding: 10px 4px 40px 4px;
+        }
+
+        .article-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 18px 20px;
+            margin-bottom: 16px;
+            line-height: 1.7;
+        }
+
+        .article-title {
+            font-size: 17px;
+            font-weight: 800;
+            color: #60a5fa;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+            .article-title::before {
+                content: "";
+                display: inline-block;
+                width: 4px;
+                height: 16px;
+                background: var(--accent-blue);
+                border-radius: 2px;
+            }
+
+        .article-lead {
+            font-size: 12px;
+            color: #e2e8f0;
+            margin-bottom: 10px;
+        }
+
+        .callout-box {
+            background: rgba(59, 130, 246, 0.1);
+            border-left: 3px solid #3b82f6;
+            padding: 10px 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-size: 11px;
+            color: #cbd5e1;
+        }
+
+            .callout-box.warning {
+                background: rgba(239, 68, 68, 0.1);
+                border-left-color: #ef4444;
+                color: #fecaca;
+            }
+
+            .callout-box.success {
+                background: rgba(16, 185, 129, 0.1);
+                border-left-color: #10b981;
+                color: #a7f3d0;
+            }
+
+            .callout-box.purple {
+                background: rgba(139, 92, 246, 0.1);
+                border-left-color: #8b5cf6;
+                color: #ddd6fe;
+            }
+
+        .sim-btn-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .sim-link-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: #fff;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 800;
+            padding: 8px 16px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
+            transition: all 0.15s;
+        }
+
+            .sim-link-btn.purple {
+                background: linear-gradient(135deg, #7c3aed, #6d28d9);
+                box-shadow: 0 2px 8px rgba(124, 58, 237, 0.4);
+            }
+
+            .sim-link-btn:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            }
+
+        .guide-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            margin: 10px 0;
+            text-align: left;
+        }
+
+            .guide-table th, .guide-table td {
+                padding: 8px 10px;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            .guide-table th {
+                background: #182234;
+                color: #93c5fd;
+                font-weight: 800;
+            }
+    </style>
 </head>
 <body>
 
-<nav class="global-nav">
-  <div class="nav-inner">
-    <a href="index.html" class="nav-logo">⚡ NISA-Sim</a>
-    <button class="nav-toggle" id="navToggle" aria-label="メニュー開閉">☰</button>
-    <div class="nav-menu" id="navMenu">
-      <a href="index.html" class="nav-item">📈 シミュレーター</a>
-      <a href="guide.html" class="nav-item active">📚 初心者ガイド</a>
+    <!-- メニューは nav.js が自動生成します -->
+    <nav class="global-nav"></nav>
+
+    <div class="container article-container">
+        <header>
+            <h1>新NISA ＆ iDeCo 完全攻略ガイド</h1>
+            <p>「どっちから始めるべき？」を完全解消！ 損しないための鉄則と資産防衛術</p>
+        </header>
+
+        <!-- 第1章 -->
+        <article class="article-card">
+            <h2 class="article-title">1. 「銀行預金＝絶対安全」という最大の勘違い</h2>
+            <p class="article-lead">
+                「投資は損するから銀行に置いておくのが一番安心」と考えていませんか？<br>
+                実は、今の日本において<b>「何もしないで普通預金に全額置いておくこと」こそが最大のリスク</b>になりつつあります。
+            </p>
+            <div class="callout-box warning">
+                ⚠️ <b>インフレ（物価上昇）による静かな目減り</b><br>
+                モノの値段が年2%上がると、いま100円で買えるパンが20年後には約148円になります。<br>
+                銀行預金の金利が0.1%程度の場合、通帳の数字は減りませんが、<b>買えるモノの量（実質購買力）は約33%も消滅</b>してしまいます。
+            </div>
+            <p class="article-lead">
+                日本円の価値が下がるスピードに対抗するためには、世界経済の成長に合わせて増えていく資産（全世界株・S&P500など）を一部持っておくことが必須の防衛策です。
+            </p>
+        </article>
+
+        <!-- 第2章 -->
+        <article class="article-card">
+            <h2 class="article-title">2. もし月1回の飲み会代（3万円）を積立していたら？</h2>
+            <p class="article-lead">
+                まとまった大金は不要です。少額からでも「複利の雪だるま」は強力に機能します。
+            </p>
+            <div class="callout-box success">
+                💡 <b>月3万円を年利5%（全世界株平均）で運用した場合</b><br>
+                ・ 10年後: 投資元本 360万円 ➔ <b>約 465万円</b>（+105万円）<br>
+                ・ 20年後: 投資元本 720万円 ➔ <b>約 1,233万円</b>（+513万円）<br>
+                ・ 30年後: 投資元本 1,080万円 ➔ <b>約 2,496万円</b>（+1,416万円・元本の2.3倍！）
+            </div>
+            <p class="article-lead">
+                投資の利益がさらに利益を生む「複利効果」は、時間が経つほど急激に加速します。早く始めた人ほど圧倒的に有利になります。
+            </p>
+            <a href="index.html?m=30000&r=5&y=30" class="sim-link-btn">⚡ 月3万円の30年推移をシミュレーターで試す</a>
+        </article>
+
+        <!-- 第3章 -->
+        <article class="article-card">
+            <h2 class="article-title">3. 投資初心者がやりがちな「3大自爆パターン」</h2>
+            <p class="article-lead">
+                失敗するパターンの9割は共通しています。以下の3つさえ避ければ、勝率は飛躍的に高まります。
+            </p>
+
+            <div class="callout-box warning">
+                <b>① 銀行や対面窓口で相談して買ってしまう</b><br>
+                金融機関の窓口は「手数料の高いおすすめ商品」を提案されるケースがあります。ネット証券（SBI証券や楽天証券）で手数料最安のインデックス投信（オルカン等）を自分で選ぶのが鉄則です。
+            </div>
+
+            <div class="callout-box warning">
+                <b>② 暴落が起きた瞬間に怖くなって売却（狼狽売り）してしまう</b><br>
+                相場が急落したときは「安く多く仕込める好機」です。市場から退場せず保有し続けた人だけが、その後の急回復の恩恵を受けられます。
+            </div>
+
+            <div class="callout-box warning">
+                <b>③ 生活防衛資金（現金）を残さずに全力投資してしまう</b><br>
+                急な出費で生活費が足りなくなり、暴落時に泣く泣く投信を切り崩すのが最悪の展開です。生活費の半年〜1年分は必ず普通預金に残しましょう。
+            </div>
+        </article>
+
+        <!-- 第4章 -->
+        <article class="article-card">
+            <h2 class="article-title">4. 結論：迷ったら「まず新NISA一択」でOK</h2>
+            <p class="article-lead">
+                新NISAは生涯非課税枠が1,800万円あり、<b>「いつでも引き出し可能（売却した枠は翌年復活）」</b>という抜群の使いやすさがあります。<br>
+                結婚、住宅購入、教育費など、途中でまとまったお金が必要になる可能性がある人は、まず新NISAから始めるのが最も安全です。
+            </p>
+            <div class="callout-box success">
+                ✨ <b>新NISAが最強である理由</b><br>
+                ・ 途中で売却しても、使った非課税枠が翌年に自動復活する<br>
+                ・ 非課税期間が無期限なので、一生涯お金を増やし続けられる
+            </div>
+            <a href="index.html" class="sim-link-btn">📈 新NISAシミュレーターへ</a>
+        </article>
+
+        <!-- 第5章 -->
+        <article class="article-card">
+            <h2 class="article-title">5. 【ステップアップ】手取りを今すぐ増やす「iDeCo」の裏ワザ</h2>
+            <p class="article-lead">
+                「新NISAに加えてさらに節税したい」「毎年引かれる税金を安くしたい」という方には、<b>iDeCo（個人型確定拠出年金）</b>が強力な味方になります。
+            </p>
+
+            <div class="callout-box purple">
+                🛡️ <b>iDeCo最大の武器：毎年の所得税・住民税が安くなる</b><br>
+                毎月の掛金が「全額所得控除」になるため、<b>年末調整や確定申告で数万〜十数万円の税金が現金で戻ってきます</b>。<br>
+                例：年収500万円の会社員が月2.3万円積み立てると ➔ <b>毎年 約¥55,200 の手取り増（30年で約165万円の節税）！</b>
+            </div>
+
+            <table class="guide-table">
+                <thead>
+                    <tr>
+                        <th>項目</th>
+                        <th>新NISA</th>
+                        <th>iDeCo（イデコ）</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><b>最大の強み</b></td>
+                        <td>運用益がずっと非課税</td>
+                        <td><b>今年の税金が今すぐ安くなる</b></td>
+                    </tr>
+                    <tr>
+                        <td><b>資金の引出</b></td>
+                        <td><b>いつでも可能</b></td>
+                        <td>原則60歳まで不可（資金ロック）</td>
+                    </tr>
+                    <tr>
+                        <td><b>おすすめな人</b></td>
+                        <td>全員・途中で使う予定がある人</td>
+                        <td>会社員・公務員・自営業で節税したい人</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="callout-box warning">
+                ⚠️ <b>iDeCo唯一の注意点</b><br>
+                原則60歳まで解約・引き出しができません。「60歳まで絶対に手をつけない老後資金」として割り切って使える余剰資金で活用しましょう。
+            </div>
+
+            <div class="sim-btn-group">
+                <a href="ideco.html" class="sim-link-btn purple">🛡️ iDeCoの節税額をシミュレーターで計算</a>
+                <a href="index.html" class="sim-link-btn">📈 新NISAシミュレーター</a>
+            </div>
+        </article>
     </div>
-  </div>
-</nav>
 
-<div class="container article-container">
-  <header>
-    <h1>新NISA 完全初心者攻略ガイド</h1>
-    <p>「難しそう・損しそう」を完全解消！ 損しないための鉄則と資産防衛術</p>
-  </header>
-
-  <!-- 第1章 -->
-  <article class="article-card">
-    <h2 class="article-title">1. 「銀行預金＝絶対安全」という最大の勘違い</h2>
-    <p class="article-lead">
-      「投資は損するから銀行に置いておくのが一番安心」と考えていませんか？<br>
-      実は、今の日本において<b>「何もしないで普通預金に全額置いておくこと」こそが最大のリスク</b>になりつつあります。
-    </p>
-    <div class="callout-box warning">
-      ⚠️ <b>インフレ（物価上昇）による静かな目減り</b><br>
-      モノの値段が年2%上がると、いま100円で買えるパンが20年後には約148円になります。<br>
-      銀行預金の金利が0.1%程度の場合、通帳の数字は減りませんが、<b>買えるモノの量（実質購買力）は約33%も消滅</b>してしまいます。
-    </div>
-    <p class="article-lead">
-      日本円の価値が下がるスピードに対抗するためには、世界経済の成長（年4〜7%）に合わせて増えていく資産（世界株式など）を一部持っておくことが必須の防衛策です。
-    </p>
-  </article>
-
-  <!-- 第2章 -->
-  <article class="article-card">
-    <h2 class="article-title">2. もし10年前に「月1回の飲み会代」を積立していたら？</h2>
-    <p class="article-lead">
-      まとまった大金は不要です。月1〜3万円の少額からでも「複利の雪だるま」は強力に機能します。
-    </p>
-    <div class="callout-box success">
-      💡 <b>月3万円を年利5%（全世界株平均）で運用した場合</b><br>
-      ・ 10年後: 投資元本 360万円 ➔ <b>約 465万円</b>（+105万円）<br>
-      ・ 20年後: 投資元本 720万円 ➔ <b>約 1,233万円</b>（+513万円）<br>
-      ・ 30年後: 投資元本 1,080万円 ➔ <b>約 2,496万円</b>（+1,416万円・元本の2.3倍！）
-    </div>
-    <p class="article-lead">
-      投資の利益がさらに利益を生む「複利効果」は、時間が経つほど急激に加速します。早く始めた人ほど圧倒的に有利になるのが投資の世界です。
-    </p>
-    <a href="index.html?m=30000&r=5&y=30" class="sim-link-btn">⚡ 月3万円の30年推移をシミュレーターで試す</a>
-  </article>
-
-  <!-- 第3章 -->
-  <article class="article-card">
-    <h2 class="article-title">3. 投資初心者がやりがちな「3大自爆パターン」</h2>
-    <p class="article-lead">
-      新NISAで失敗するパターンの9割は共通しています。以下の3つさえ避ければ、勝率は飛躍的に高まります。
-    </p>
-    
-    <div class="callout-box warning">
-      <b>① 銀行や対面窓口で相談して買ってしまう</b><br>
-      金融機関の窓口は「手数料の高い自社おすすめ商品」を売る営業の場です。ネット証券（SBI証券や楽天証券）で手数料が最安のインデックス投信（オルカン等）を自分で選ぶのが鉄則です。
-    </div>
-
-    <div class="callout-box warning">
-      <b>② 暴落が起きた瞬間に怖くなって売却（狼狽売り）してしまう</b><br>
-      相場が急落したときは「バーゲンセールで安く多く買えるチャンス」です。過去100年の歴史上、市場に居残り続けた人だけがその後の急回復を総取りできています。
-    </div>
-
-    <div class="callout-box warning">
-      <b>③ 生活防衛資金（現金）を残さずに全力投資してしまう</b><br>
-      急な病気や失業、家電の故障で生活費が足りなくなり、暴落時に泣く泣く投信を切り崩すのが最悪の展開です。生活費の半年〜1年分は必ず普通預金に残しましょう。
-    </div>
-  </article>
-
-  <!-- 第4章 -->
-  <article class="article-card">
-    <h2 class="article-title">4. 新NISAは「途中で売っても枠が復活する」神仕様</h2>
-    <p class="article-lead">
-      新NISAは生涯非課税枠が1,800万円ありますが、「一度買ったら60歳まで引き出せない（iDeCoのような拘束）」はありません。
-    </p>
-    <div class="callout-box success">
-      ✨ <b>翌年に「簿価（買った時の値段）」で枠が再利用可能！</b><br>
-      結婚、住宅頭金、子どもの大学進学などで500万円分を売却した場合、翌年以降にその500万円分の非課税投資枠が自動で復活します。<br>
-      人生のライフイベントに合わせて柔軟にお金を出し入れできるのが新NISAの最大の魅力です。
-    </div>
-    <a href="index.html" class="sim-link-btn">📈 メインシミュレーターへ戻る</a>
-  </article>
-</div>
-
-<script>
-  // ナビゲーションメニュー開閉
-  const navToggle = document.getElementById('navToggle');
-  const navMenu = document.getElementById('navMenu');
-  if (navToggle && navMenu) {
-    navToggle.addEventListener('click', () => {
-      navMenu.classList.toggle('open');
-    });
-  }
-</script>
+    <script src="nav.js"></script>
 </body>
 </html>
