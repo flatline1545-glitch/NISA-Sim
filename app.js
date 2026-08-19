@@ -1505,23 +1505,3 @@ function loadFromUrlParams() {
   }
 }
 
-// ナビゲーションメニュー開閉
-window.addEventListener('DOMContentLoaded', () => {
-  const navToggle = document.getElementById('navToggle');
-  const navMenu = document.getElementById('navMenu');
-  if (navToggle && navMenu) {
-    navToggle.addEventListener('click', () => {
-      navMenu.classList.toggle('open');
-    });
-  }
-});
-
-window.onload = () => {
-  if (window.location.search) {
-    loadFromUrlParams();
-  } else {
-    loadSlot(1);
-  }
-  setStress(currentStress, false);
-  updateAll();
-};

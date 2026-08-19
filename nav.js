@@ -1,5 +1,16 @@
+// グローバル開閉関数（重複発火を防止）
+window.toggleNavMenu = function(e) {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  const menuEl = document.getElementById('navMenu');
+  if (menuEl) {
+    menuEl.classList.toggle('open');
+  }
+};
+
 (function() {
-  // メニュー項目一覧（増やしたい時はここに追加するだけ）
   const NAV_ITEMS = [
     { name: '📈 新NISA', href: 'index.html' },
     { name: '🛡️ iDeCo', href: 'ideco.html' },
@@ -10,7 +21,6 @@
     const nav = document.querySelector('.global-nav');
     if (!nav) return;
 
-    // 現在のファイル名を取得してアクティブ判定
     let currentPath = window.location.pathname.split('/').pop() || 'index.html';
     if (!currentPath.endsWith('.html')) currentPath = 'index.html';
 
@@ -22,19 +32,12 @@
     nav.innerHTML = `
       <div class="nav-inner">
         <a href="index.html" class="nav-logo">⚡ NISA-Sim</a>
-        <button class="nav-toggle" id="navToggle" aria-label="メニュー開閉">☰</button>
+        <button class="nav-toggle" id="navToggle" onclick="window.toggleNavMenu(event)" aria-label="メニュー開閉">☰</button>
         <div class="nav-menu" id="navMenu">
           ${menuHtml}
         </div>
       </div>
     `;
-
-    // スマホ用ハンバーガーメニューの開閉イベント
-    const toggleBtn = document.getElementById('navToggle');
-    const menuEl = document.getElementById('navMenu');
-    if (toggleBtn && menuEl) {
-      toggleBtn.onclick = () => menuEl.classList.toggle('open');
-    }
   }
 
   if (document.readyState === 'loading') {
