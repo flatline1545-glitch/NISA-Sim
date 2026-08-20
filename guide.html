@@ -13,7 +13,7 @@
     <meta property="og:description" content="投資未経験・初心者向けに新NISAとiDeCoの仕組みと使い分けをわかりやすく解説。">
     <meta name="twitter:card" content="summary_large_image">
 
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/style.css">
     <style>
         .article-container {
             max-width: 820px;
@@ -330,7 +330,7 @@
         </article>
     </div>
 
-    <script src="nav.js"></script>
+    <script src="js/common/nav.js"></script>
     <script>
         function calcGuideWaste(itemName, amount) {
             const years = 30;
@@ -346,10 +346,10 @@
             const simBtn = document.getElementById('guideSimBtn');
 
             resultBox.innerHTML = `
-          💡 <b>【${itemName}（月${(amount / 10000).toFixed(1).replace('.0', '')}万円）】</b> を30年間（年利5.0%）運用すると…<br>
-          将来 <b style="color: #34d399; font-size: 1.2em;">約 ${fmt(totalFuture)}</b> に化けます！<br>
-          <span style="color:#94a3b8;">（投資元本: ${fmt(principal)} ➔ 運用利益: +${fmt(profit)}・元本の${(totalFuture / principal).toFixed(1)}倍！）</span>
-        `;
+              💡 <b>【${itemName}（月${(amount / 10000).toFixed(1).replace('.0', '')}万円）】</b> を30年間（年利5.0%）運用すると…<br>
+              将来 <b style="color: #34d399; font-size: 1.2em;">約 ${fmt(totalFuture)}</b> に化けます！<br>
+              <span style="color:#94a3b8;">（投資元本: ${fmt(principal)} ➔ 運用利益: +${fmt(profit)}・元本の${(totalFuture / principal).toFixed(1)}倍！）</span>
+            `;
 
             simBtn.href = `index.html?m=${amount}&r=5&y=30`;
             simBtn.innerHTML = `⚡ この条件（月${(amount / 10000).toFixed(1).replace('.0', '')}万円）でシミュレーターを開く`;

@@ -14,7 +14,7 @@
     <meta property="og:description" content="1,800万円自動ストップ ＆ RPG戦闘力レーダー・中立FP資産カルテ付き新NISAシミュレーター">
     <meta name="twitter:card" content="summary_large_image">
 
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -314,11 +314,12 @@
                     <canvas id="simChart"></canvas>
 
                     <div class="diagnosis-view-content" id="diagnosisViewBox">
-                        <div class="diag-title-row">
-                            <div class="diag-main-title" id="diagTitle">--</div>
-                            <div class="diag-rank-tag" id="diagLevelTag">RANK</div>
+                        <!-- RANKバッジとタグを1行目にまとめ、称号に横幅を100%解放 -->
+                        <div class="diag-header-bar">
+                            <span class="diag-rank-tag" id="diagLevelTag">RANK</span>
+                            <div class="diag-tags-row" id="diagTags"></div>
                         </div>
-                        <div class="diag-tags-row" id="diagTags"></div>
+                        <div class="diag-main-title" id="diagTitle">--</div>
 
                         <div class="fp-carte-container">
                             <div class="fp-carte-header">
@@ -339,34 +340,35 @@
                 </div>
             </div>
         </div>
+    </div>
 
-        <div class="bottom-full-section">
-            <div class="details-section" id="tableSection">
-                <button class="collapse-btn" onclick="toggleTable()">
-                    <span id="collapseIcon">▼</span> 年次推移の詳細表を見る
-                </button>
-                <div class="table-wrapper" id="tableWrapper">
-                    <table id="dataTable">
-                        <thead id="tableHeader"></thead>
-                        <tbody id="tableBody"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="bottom-action-btn-group">
-                <button class="action-btn x-btn" onclick="shareOnX()">𝕏 ポスト</button>
-                <button class="action-btn url-btn" onclick="copySimulationUrl()">🔗 URL共有</button>
-                <button class="action-btn img-btn" onclick="exportChartImage()">📸 グラフ画像保存</button>
-                <button class="action-btn csv-btn" onclick="exportCsvReport()">📄 CSV出力</button>
+    <div class="bottom-full-section">
+        <div class="details-section" id="tableSection">
+            <button class="collapse-btn" onclick="toggleTable()">
+                <span id="collapseIcon">▼</span> 年次推移の詳細表を見る
+            </button>
+            <div class="table-wrapper" id="tableWrapper">
+                <table id="dataTable">
+                    <thead id="tableHeader"></thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
             </div>
         </div>
+
+        <div class="bottom-action-btn-group">
+            <button class="action-btn x-btn" onclick="shareOnX()">𝕏 ポスト</button>
+            <button class="action-btn url-btn" onclick="copySimulationUrl()">🔗 URL共有</button>
+            <button class="action-btn img-btn" onclick="exportChartImage()">📸 グラフ画像保存</button>
+            <button class="action-btn csv-btn" onclick="exportCsvReport()">📄 CSV出力</button>
+        </div>
+    </div>
 
     </div>
 
     <div id="toast">設定を保存しました！</div>
 
-    <script src="nav.js"></script>
-    <script src="diagnosisData.js"></script>
-    <script src="app.js"></script>
+    <script src="js/common/nav.js"></script>
+    <script src="js/nisa/diagnosisData.js"></script>
+    <script src="js/nisa/app.js"></script>
 </body>
 </html>
