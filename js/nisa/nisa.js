@@ -1,6 +1,6 @@
 /**
  * 新NISA 資産形成・戦闘力シミュレーター コアエンジン (nisa.js)
- * 資産形成(課税手取り線付き) / 出口取崩(現金放置比較線付き) / 暴落テスト / 3スロット / 画像出力
+ * 資産形成(課税手取り線付き) / 出口取崩(現金放置残高を赤点線・受取累計デフォルト非表示) / 暴落テスト / 3スロット / 高解像度画像出力
  */
 
 let currentTab = 'growth'; // 'growth' | 'drawdown'
@@ -90,6 +90,11 @@ function loadSlotData(slotNum) {
 // タブ切り替え（資産形成 vs 取り崩し）
 function switchTab(tab) {
     currentTab = tab;
+    if (chartInstance) {
+        chartInstance.destroy();
+        chartInstance = null;
+    }
+
     document.getElementById('tabGrowth')?.classList.toggle('active', tab === 'growth');
     document.getElementById('tabDrawdown')?.classList.toggle('active', tab === 'drawdown');
 
@@ -567,20 +572,25 @@ function animateBpCounter(targetBp) {
     el.innerText = targetBp.toLocaleString();
 }
 
-/* 3本ライン（青エリア・緑エリア・黄色点線）の汎用描画 */
+/* 3本ライン（青エリア・緑エリア・点線）の汎用描画 */
 function renderNisaTriLineChart(labels, data1, data2, dataDashed, l1, l2, l3) {
     const canvas = document.getElementById('simChart');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
 
+    const isDrawdown = (currentTab === 'drawdown');
+    const dashedColor = isDrawdown ? '#ef4444' : '#fbbf24'; // 出口モードは赤点線、形成モードは黄点線
+
     if (chartInstance && chartInstance.config.type === 'line') {
         chartInstance.data.labels = labels;
         chartInstance.data.datasets[0].label = l1;
         chartInstance.data.datasets[0].data = data1;
+        chartInstance.data.datasets[0].hidden = isDrawdown;
         chartInstance.data.datasets[1].label = l2;
         chartInstance.data.datasets[1].data = data2;
         chartInstance.data.datasets[2].label = l3;
         chartInstance.data.datasets[2].data = dataDashed;
+        chartInstance.data.datasets[2].borderColor = dashedColor;
         chartInstance.update('none');
         return;
     }
@@ -598,10 +608,11 @@ function renderNisaTriLineChart(labels, data1, data2, dataDashed, l1, l2, l3) {
                     borderColor: '#3b82f6',
                     backgroundColor: 'rgba(59, 130, 246, 0.75)',
                     borderWidth: 1.5,
-                    fill: 'origin',
+                    fill: isDrawdown ? false : 'origin',
                     pointStyle: 'circle',
                     pointRadius: 0,
                     pointHoverRadius: 4,
+                    hidden: isDrawdown, // 出口モード時はデフォルト非表示
                     order: 3
                 },
                 {
@@ -610,7 +621,7 @@ function renderNisaTriLineChart(labels, data1, data2, dataDashed, l1, l2, l3) {
                     borderColor: '#10b981',
                     backgroundColor: 'rgba(16, 185, 129, 0.45)',
                     borderWidth: 1.8,
-                    fill: 0,
+                    fill: isDrawdown ? 'origin' : 0,
                     pointStyle: 'circle',
                     pointRadius: 0,
                     pointHoverRadius: 4,
@@ -619,7 +630,7 @@ function renderNisaTriLineChart(labels, data1, data2, dataDashed, l1, l2, l3) {
                 {
                     label: l3,
                     data: dataDashed,
-                    borderColor: '#fbbf24',
+                    borderColor: dashedColor, // 出口モードは赤(#ef4444)、形成は黄(#fbbf24)
                     borderWidth: 2,
                     borderDash: [5, 4],
                     fill: false,
