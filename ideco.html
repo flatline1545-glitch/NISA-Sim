@@ -57,6 +57,20 @@
                     <div class="panel-title-left">iDeCo試算条件設定</div>
                 </div>
 
+                <!-- 専業主婦・主夫 選択時の緊急警告バナー -->
+                <div id="homemakerAlert" class="annual-alert-box warning" style="display: none; margin-bottom: 15px;">
+                    <div class="alert-header">
+                        <span>🚨 専業主婦・主夫のiDeCo利用注意</span>
+                    </div>
+                    <div style="font-size: 13px; line-height: 1.5; margin: 6px 0 10px 0;">
+                        ご本人の所得税・住民税が発生していないため、毎年の税金還付は<b>【0円】</b>になります。<br>
+                        60歳まで資金拘束されるデメリットが大きいため、いつでも引き出せる<b>「新NISA」</b>の優先利用を強く推奨します。
+                    </div>
+                    <a href="index.html" class="btn-auto-adjust" style="text-decoration: none; justify-content: center;">
+                        📈 新NISAシミュレーターへ移動
+                    </a>
+                </div>
+
                 <!-- 年収設定 -->
                 <div class="control-group">
                     <div class="control-label">
@@ -173,6 +187,9 @@
                     <button class="view-tab-btn active" id="btnViewLine" onclick="switchIdecoDisplay('line')">
                         📈 資産・節税推移
                     </button>
+                    <button class="view-tab-btn" id="btnViewRadar" onclick="switchIdecoDisplay('radar')">
+                        📊 節税レーダー
+                    </button>
                     <button class="view-tab-btn gold" id="btnViewDiag" onclick="switchIdecoDisplay('diag')">
                         🎯 iDeCo診断カルテ
                     </button>
@@ -200,6 +217,7 @@
                         <div class="carte-action-btn-group">
                             <button class="action-btn x-btn" onclick="shareIdecoOnX()">𝕏 ポスト</button>
                             <button class="action-btn url-btn" onclick="copyIdecoUrl()">🔗 URL共有</button>
+                            <button class="action-btn img-btn" onclick="exportIdecoChartImage()">📸 画像保存</button>
                             <button class="action-btn csv-btn" onclick="exportIdecoCsv()">📄 CSV出力</button>
                         </div>
                     </div>
@@ -234,6 +252,7 @@
             <div class="bottom-action-btn-group">
                 <button class="action-btn x-btn" onclick="shareIdecoOnX()">𝕏 ポスト</button>
                 <button class="action-btn url-btn" onclick="copyIdecoUrl()">🔗 URL共有</button>
+                <button class="action-btn img-btn" onclick="exportIdecoChartImage()">📸 画像保存</button>
                 <button class="action-btn csv-btn" onclick="exportIdecoCsv()">📄 CSV出力</button>
                 <a href="index.html" class="action-btn img-btn" style="text-decoration:none;">📈 新NISAシミュレーターへ</a>
             </div>

@@ -1,22 +1,27 @@
-let currentTab = 'growth';
-let drawdownMode = 'fixed';
-let displayView = 'line';
+/**
+ * 新NISA 資産形成・戦闘力シミュレーター コアエンジン (nisa.js)
+ * 資産形成 / 定額・定率取り崩し / 暴落ストレステスト / 3スロット保存 / 画像出力 完全対応版
+ */
+
+let currentTab = 'growth'; // 'growth' | 'drawdown'
+let drawdownMode = 'fixed'; // 'fixed' | 'percent'
 let currentSlot = 1;
-let chartInstance = null;
-let lastGrowthTotal = 40000000;
-let currentDiagTitle = '';
-let currentBP = 0;
-
-let radarStats = [50, 50, 50, 50, 50];
-let latestTableData = [];
-
-// 歴史的暴落ストレステスト
+let displayView = 'line'; // 'line' | 'radar' | 'diag'
 let currentStress = 'none';
+let chartInstance = null;
+let latestTableData = [];
+let radarStats = [50, 50, 50, 50, 50];
+let currentDiagTitle = '';
+
+const NISA_MAX_LIFETIME_CAP = 18000000; // 生涯上限 1,800万円
+const ANNUAL_MAX_CAP = 3600000;         // 年間上限 360万円
+const TAX_RATE = 0.20315;
+
 const STRESS_CONFIG = {
-    none: { drop: 0.00, label: '通常運用（暴落なし）', short: '通常' },
-    lehman: { drop: 0.50, label: 'リーマン級ショック（約-50%）', short: 'リーマン級' },
-    corona: { drop: 0.35, label: 'コロナショック（約-35%）', short: 'コロナ級' },
-    dotcom: { drop: 0.45, label: 'ドットコムバブル崩壊（約-45%）', short: 'ドットコム級' }
+    none: { name: '通常（暴落なし）', short: '通常', dropRate: 0.0, year: 0, desc: '暴落なし（通常の右肩上がりシミュレーション）' },
+    lehman: { name: 'リーマン級(-50%)', short: 'リーマン級暴落', dropRate: 0.50, year: 5, desc: '5年目に資産が約50%急落し、約5年かけて元の水準へ回復するテスト' },
+    corona: { name: 'コロナ級(-35%)', short: 'コロナ級暴落', dropRate: 0.35, year: 4, desc: '4年目に資産が約35%急落し、約2年で急回復するテスト' },
+    dotcom: { name: 'ドットコム級(-45%)', short: 'ITバブル崩壊級', dropRate: 0.45, year: 3, desc: '3年目に資産が約45%下落し、回復まで約7年を要する長期停滞テスト' }
 };
 
 function fmtYen(num) {
@@ -31,530 +36,244 @@ function showToast(msg) {
     setTimeout(() => t.classList.remove('show'), 2000);
 }
 
-/* シナリオ一発適用 */
-function applyScenario(type) {
-    ['standard', 'sp500_growth', 'fast_rta', 'crash_survival', 'fire_exit'].forEach(t => {
-        const btn = document.getElementById('scBtn_' + t);
-        if (btn) btn.classList.toggle('active', t === type);
-    });
-
-    if (type === 'standard') {
-        switchTab('growth', false);
-        setPresetValues({ monthly: 50000, initial: 0, returnRate: 5.0, horizon: 30, stress: 'none' });
-        showToast('🌱 王道オルカン積立シナリオを適用しました');
-    } else if (type === 'sp500_growth') {
-        switchTab('growth', false);
-        setPresetValues({ monthly: 100000, initial: 1000000, returnRate: 7.0, horizon: 25, stress: 'none' });
-        showToast('🚀 S&P500積極形成シナリオを適用しました');
-    } else if (type === 'fast_rta') {
-        switchTab('growth', false);
-        setPresetValues({ monthly: 300000, initial: 0, returnRate: 7.0, horizon: 20, stress: 'none' });
-        showToast('🏎️ 最短5年カンストRTAシナリオを適用しました');
-    } else if (type === 'crash_survival') {
-        switchTab('growth', false);
-        setPresetValues({ monthly: 50000, initial: 1000000, returnRate: 7.0, horizon: 20, stress: 'lehman' });
-        showToast('💥 リーマン級暴落耐久テストを適用しました');
-    } else if (type === 'fire_exit') {
-        switchTab('drawdown', false);
-        switchDrawdownMode('fixed', false);
-        document.getElementById('numDrawStart').value = 50000000;
-        document.getElementById('rangeDrawStart').value = 50000000;
-        const monthlyAmt = Math.round((50000000 * 0.04) / 12);
-        document.getElementById('numDrawMonthly').value = monthlyAmt;
-        document.getElementById('rangeDrawMonthly').value = Math.min(500000, monthlyAmt);
-        document.getElementById('numDrawReturn').value = 5.0;
-        document.getElementById('rangeDrawReturn').value = 5.0;
-        saveAndRun();
-        showToast('🏝️ 4%サイドFIRE取り崩しシナリオを適用しました');
-    }
-}
-
-/* 複数値を一括セット */
-function setPresetValues(obj) {
-    if (obj.monthly !== undefined) {
-        document.getElementById('numMonthly').value = obj.monthly;
-        document.getElementById('rangeMonthly').value = obj.monthly;
-    }
-    if (obj.initial !== undefined) {
-        document.getElementById('numInitial').value = obj.initial;
-        document.getElementById('rangeInitial').value = obj.initial;
-    }
-    if (obj.returnRate !== undefined) {
-        document.getElementById('numReturn').value = obj.returnRate;
-        document.getElementById('rangeReturn').value = obj.returnRate;
-    }
-    if (obj.horizon !== undefined) {
-        document.getElementById('numHorizon').value = obj.horizon;
-        document.getElementById('rangeHorizon').value = obj.horizon;
-    }
-    if (obj.stress !== undefined) {
-        setStress(obj.stress, false);
-    }
-    saveAndRun();
-}
-
-/* 📸 グラフ画像の強化エクスポート */
-function exportChartImage() {
-    const chartCanvas = document.getElementById('simChart');
-    if (!chartCanvas) {
-        showToast('グラフが生成されていません');
-        return;
-    }
-
-    const prevView = displayView;
-    if (prevView !== 'line') {
-        switchDisplayView('line');
-    }
-
-    setTimeout(() => {
-        try {
-            const outW = 1200;
-            const outH = 780;
-            const offCanvas = document.createElement('canvas');
-            offCanvas.width = outW;
-            offCanvas.height = outH;
-            const ctx = offCanvas.getContext('2d');
-
-            // 1. 背景
-            const bgGrad = ctx.createLinearGradient(0, 0, 0, outH);
-            bgGrad.addColorStop(0, '#0f172a');
-            bgGrad.addColorStop(1, '#090d16');
-            ctx.fillStyle = bgGrad;
-            ctx.fillRect(0, 0, outW, outH);
-
-            ctx.strokeStyle = '#1e293b';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(1, 1, outW - 2, outH - 2);
-
-            // 2. タイトル
-            ctx.fillStyle = '#60a5fa';
-            ctx.font = 'bold 24px sans-serif';
-            ctx.fillText('新NISA 資産形成・戦闘力シミュレーション レポート', 36, 42);
-
-            // 3. サマリーカード
-            const cardX = 36, cardY = 58, cardW = outW - 72, cardH = 135;
-            ctx.fillStyle = '#131c2e';
-            ctx.strokeStyle = '#7c3aed';
-            ctx.lineWidth = 1.5;
-            roundRect(ctx, cardX, cardY, cardW, cardH, 10, true, true);
-
-            const bp = document.getElementById('bpValue').innerText;
-            const mainVal = document.getElementById('mainStatHeaderValue').innerText;
-            const title = currentDiagTitle;
-
-            ctx.fillStyle = '#c4b5fd';
-            ctx.font = 'bold 12px sans-serif';
-            ctx.fillText('⚡ 投資戦闘力', cardX + 20, cardY + 28);
-            ctx.fillStyle = '#fbbf24';
-            ctx.font = '900 24px "Courier New", monospace';
-            ctx.fillText(bp + ' BP', cardX + 20, cardY + 58);
-
-            ctx.fillStyle = '#94a3b8';
-            ctx.font = 'bold 12px sans-serif';
-            ctx.fillText(currentTab === 'growth' ? '💰 最終資産総額' : '⏳ 資産寿命', cardX + 240, cardY + 28);
-            ctx.fillStyle = '#60a5fa';
-            ctx.font = '900 24px sans-serif';
-            ctx.fillText(mainVal, cardX + 240, cardY + 58);
-
-            ctx.fillStyle = '#fef08a';
-            ctx.font = 'bold 14px sans-serif';
-            ctx.fillText(title, cardX + 20, cardY + 92);
-
-            let cond1 = '', cond2 = '';
-            if (currentTab === 'growth') {
-                const m = parseInt(document.getElementById('numMonthly').value) || 0;
-                const init = parseInt(document.getElementById('numInitial').value) || 0;
-                const r = document.getElementById('numReturn').value;
-                const y = document.getElementById('numHorizon').value;
-                const stressLabel = STRESS_CONFIG[currentStress].short;
-                cond1 = `【設定条件】 毎月積立: ¥${m.toLocaleString()}  /  初期投資: ¥${init.toLocaleString()}`;
-                cond2 = `想定年利: ${r}%  /  運用期間: ${y}年  /  ストレステスト: ${stressLabel}`;
-            } else {
-                const start = parseInt(document.getElementById('numDrawStart').value) || 0;
-                const r = document.getElementById('numDrawReturn').value;
-                cond1 = `【設定条件】 開始資産: ¥${start.toLocaleString()}  /  想定利回り: ${r}%`;
-                if (drawdownMode === 'fixed') {
-                    const dm = parseInt(document.getElementById('numDrawMonthly').value) || 0;
-                    cond2 = `取崩方式: 定額 (毎月 ¥${dm.toLocaleString()} / 年 ¥${(dm * 12).toLocaleString()})`;
-                } else {
-                    const dr = document.getElementById('numDrawRate').value;
-                    cond2 = `取崩方式: 定率 (年 ${dr}%)`;
-                }
-            }
-            ctx.fillStyle = '#cbd5e1';
-            ctx.font = '13px sans-serif';
-            ctx.fillText(cond1, cardX + 540, cardY + 38);
-            ctx.fillText(cond2, cardX + 540, cardY + 65);
-
-            // 4. グラフ描画
-            const graphX = 36, graphY = 208, graphW = outW - 72, graphH = 515;
-            ctx.fillStyle = '#0f172a';
-            ctx.strokeStyle = '#1e293b';
-            ctx.lineWidth = 1;
-            roundRect(ctx, graphX, graphY, graphW, graphH, 10, true, true);
-
-            ctx.drawImage(chartCanvas, graphX + 10, graphY + 10, graphW - 20, graphH - 20);
-
-            // 5. フッター
-            ctx.fillStyle = '#64748b';
-            ctx.font = '11px sans-serif';
-            const nowStr = new Date().toLocaleString('ja-JP');
-            ctx.fillText(`作成日時: ${nowStr}  |  新NISA 資産形成・戦闘力シミュレーター`, 40, outH - 18);
-
-            const a = document.createElement('a');
-            const filenamePrefix = currentTab === 'growth' ? '新NISA資産形成' : '新NISA出口戦略';
-            const dateStr = new Date().toISOString().slice(0, 10);
-            a.href = offCanvas.toDataURL('image/png', 1.0);
-            a.download = `${filenamePrefix}_${dateStr}.png`;
-            a.click();
-            showToast('📸 高解像度レポート画像を保存しました！');
-
-        } catch (e) {
-            console.error(e);
-            showToast('画像の生成に失敗しました');
-        } finally {
-            if (prevView !== 'line') {
-                switchDisplayView(prevView);
-            }
-        }
-    }, 100);
-}
-
-function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
-    ctx.beginPath();
-    ctx.moveTo(x + radius, y);
-    ctx.lineTo(x + width - radius, y);
-    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-    ctx.lineTo(x + width, y + height - radius);
-    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-    ctx.lineTo(x + radius, y + height);
-    ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-    ctx.lineTo(x, y + radius);
-    ctx.quadraticCurveTo(x, y, x + radius, y);
-    ctx.closePath();
-    if (fill) ctx.fill();
-    if (stroke) ctx.stroke();
-}
-
-/* 📄 CSVレポートの出力 */
-function exportCsvReport() {
-    if (!latestTableData || latestTableData.length === 0) {
-        showToast('出力可能なデータがありません');
-        return;
-    }
-    const lines = [];
-    const nowStr = new Date().toLocaleString('ja-JP');
-    const dateFileStr = new Date().toISOString().slice(0, 10);
-    let filename = '';
-
-    if (currentTab === 'growth') {
-        const m = parseInt(document.getElementById('numMonthly').value) || 0;
-        const init = parseInt(document.getElementById('numInitial').value) || 0;
-        const r = document.getElementById('numReturn').value;
-        const y = document.getElementById('numHorizon').value;
-        const stress = STRESS_CONFIG[currentStress].label;
-        const finalTot = document.getElementById('mainStatHeaderValue').innerText;
-        const finalPr = document.getElementById('chipPrincipal').innerText;
-        const finalGn = document.getElementById('chipGains').innerText;
-        const finalTx = document.getElementById('chipTax').innerText;
-        const bp = document.getElementById('bpValue').innerText;
-
-        filename = `新NISA_月${Math.round(m / 10000)}万_年${r}％_${y}年_${dateFileStr}.csv`;
-
-        lines.push('# ==========================================');
-        lines.push('# 新NISA 資産形成シミュレーション レポート');
-        lines.push(`# 出力日時: ${nowStr}`);
-        lines.push('# ------------------------------------------');
-        lines.push('# ■ シミュレーション設定条件');
-        lines.push(`# 毎月の積立額, ¥${m.toLocaleString()}`);
-        lines.push(`# 初期投資額, ¥${init.toLocaleString()}`);
-        lines.push(`# 想定年利回り, ${r}%`);
-        lines.push(`# 運用期間, ${y}年`);
-        lines.push(`# ストレステスト, ${stress}`);
-        lines.push('# ------------------------------------------');
-        lines.push('# ■ 試算結果サマリー');
-        lines.push(`# 最終資産総額, ${finalTot}`);
-        lines.push(`# 投資元本合計, ${finalPr}`);
-        lines.push(`# 運用益(利益), ${finalGn}`);
-        lines.push(`# 節税バリア効果, ${finalTx}`);
-        lines.push(`# 投資戦闘力, ${bp} BP`);
-        lines.push(`# 獲得称号, ${currentDiagTitle}`);
-        lines.push('# ==========================================');
-        lines.push('');
-        lines.push('運用年数,投資元本(円),運用益(円),総資産額(円),課税口座手取り(円),非課税節税額(円)');
-
-        latestTableData.forEach(row => {
-            lines.push(`${row.year}年目,${row.principal},${row.gains},${row.balance},${row.taxableNet},${row.taxSaved}`);
-        });
-
-    } else {
-        const start = parseInt(document.getElementById('numDrawStart').value) || 0;
-        const r = document.getElementById('numDrawReturn').value;
-        const life = document.getElementById('mainStatHeaderValue').innerText;
-        const annualDraw = document.getElementById('chipDrawAnnual').innerText;
-        const totalRec = document.getElementById('chipDrawTotal').innerText;
-        const bp = document.getElementById('bpValue').innerText;
-
-        filename = `新NISA出口戦略_${Math.round(start / 10000)}万開始_${dateFileStr}.csv`;
-
-        lines.push('# ==========================================');
-        lines.push('# 新NISA 出口・取り崩しシミュレーション レポート');
-        lines.push(`# 出力日時: ${nowStr}`);
-        lines.push('# ------------------------------------------');
-        lines.push('# ■ 取り崩し設定条件');
-        lines.push(`# 開始時資産総額, ¥${start.toLocaleString()}`);
-        if (drawdownMode === 'fixed') {
-            const dm = parseInt(document.getElementById('numDrawMonthly').value) || 0;
-            lines.push(`# 取崩方式, 定額取り崩し (毎月 ¥${dm.toLocaleString()} / 年間 ¥${(dm * 12).toLocaleString()})`);
-        } else {
-            const dr = document.getElementById('numDrawRate').value;
-            lines.push(`# 取崩方式, 定率取り崩し (年 ${dr}%)`);
-        }
-        lines.push(`# 運用想定利回り, ${r}%`);
-        lines.push('# ------------------------------------------');
-        lines.push('# ■ 試算結果サマリー');
-        lines.push(`# 推定資産寿命, ${life}`);
-        lines.push(`# 年間取崩額(初年), ${annualDraw}`);
-        lines.push(`# 受取累計総額, ${totalRec}`);
-        lines.push(`# 出口耐久戦闘力, ${bp} BP`);
-        lines.push(`# 獲得称号, ${currentDiagTitle}`);
-        lines.push('# ==========================================');
-        lines.push('');
-        lines.push('経過年数,年間受取額(円),運用取崩残高(円),現金のみ残高(円),受取累計額(円)');
-
-        latestTableData.forEach(row => {
-            lines.push(`${row.year}年後,${row.draw},${row.balanceInvest},${row.balanceCash},${row.totalReceived}`);
-        });
-    }
-
-    const csvContent = '\uFEFF' + lines.join('\n') + '\n';
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
-    showToast(`📄 CSVレポート「${filename}」を出力しました！`);
-}
-
+// スロット保存機能
 function switchSlot(slotNum) {
-    saveCurrentSlot();
+    saveSlotData(currentSlot);
     currentSlot = slotNum;
-    [1, 2, 3].forEach(i => {
-        const btn = document.getElementById(`slotBtn${i}`);
-        if (btn) btn.classList.toggle('active', i === slotNum);
+    [1, 2, 3].forEach(n => {
+        const btn = document.getElementById(`slotBtn${n}`);
+        if (btn) btn.classList.toggle('active', n === slotNum);
     });
-    loadSlot(slotNum);
-    showToast(`スロット${slotNum} を読み込みました`);
+    loadSlotData(slotNum);
+    updateAll();
+    showToast(`スロット${slotNum}を読み込みました`);
+}
+
+function saveSlotData(slotNum) {
+    const data = {
+        monthly: document.getElementById('numMonthly')?.value,
+        initial: document.getElementById('numInitial')?.value,
+        returnRate: document.getElementById('numReturn')?.value,
+        horizon: document.getElementById('numHorizon')?.value,
+        capToggle: document.getElementById('inputCapToggle')?.checked,
+        stress: currentStress,
+        drawStart: document.getElementById('numDrawStart')?.value,
+        drawMonthly: document.getElementById('numDrawMonthly')?.value,
+        drawRate: document.getElementById('numDrawRate')?.value,
+        drawReturn: document.getElementById('numDrawReturn')?.value,
+        drawdownMode: drawdownMode
+    };
+    localStorage.setItem(`nisa_slot_${slotNum}`, JSON.stringify(data));
+}
+
+function loadSlotData(slotNum) {
+    const raw = localStorage.getItem(`nisa_slot_${slotNum}`);
+    if (!raw) return;
+    try {
+        const d = JSON.parse(raw);
+        if (d.monthly !== undefined) setPreset('monthly', d.monthly);
+        if (d.initial !== undefined) setPreset('initial', d.initial);
+        if (d.returnRate !== undefined) setPreset('return', d.returnRate);
+        if (d.horizon !== undefined) setPreset('horizon', d.horizon);
+        if (d.capToggle !== undefined && document.getElementById('inputCapToggle')) {
+            document.getElementById('inputCapToggle').checked = d.capToggle;
+        }
+        if (d.stress) setStress(d.stress, false);
+        if (d.drawStart !== undefined) setPreset('drawStart', d.drawStart);
+        if (d.drawMonthly !== undefined) setPreset('drawMonthly', d.drawMonthly);
+        if (d.drawRate !== undefined) setPreset('drawRate', d.drawRate);
+        if (d.drawReturn !== undefined) setPreset('drawReturn', d.drawReturn);
+        if (d.drawdownMode) switchDrawdownMode(d.drawdownMode, false);
+    } catch (e) { console.error(e); }
+}
+
+// タブ切り替え（資産形成 vs 取り崩し）
+function switchTab(tab) {
+    currentTab = tab;
+    document.getElementById('tabGrowth')?.classList.toggle('active', tab === 'growth');
+    document.getElementById('tabDrawdown')?.classList.toggle('active', tab === 'drawdown');
+
+    const growthCtrl = document.getElementById('growthControls');
+    const drawCtrl = document.getElementById('drawdownControls');
+    const rowGrowth = document.getElementById('rowGrowthStats');
+    const rowDraw = document.getElementById('rowDrawdownStats');
+    const btnImport = document.getElementById('btnImportFromGrowth');
+    const ctrlTitle = document.getElementById('ctrlTitle');
+
+    if (tab === 'growth') {
+        if (growthCtrl) growthCtrl.style.display = 'block';
+        if (drawCtrl) drawCtrl.style.display = 'none';
+        if (rowGrowth) rowGrowth.style.display = 'grid';
+        if (rowDraw) rowDraw.style.display = 'none';
+        if (btnImport) btnImport.style.display = 'none';
+        if (ctrlTitle) ctrlTitle.innerText = 'シミュレーション条件設定';
+        document.getElementById('mainStatHeaderLabel').innerText = '最終資産総額';
+    } else {
+        if (growthCtrl) growthCtrl.style.display = 'none';
+        if (drawCtrl) drawCtrl.style.display = 'block';
+        if (rowGrowth) rowGrowth.style.display = 'none';
+        if (rowDraw) rowDraw.style.display = 'grid';
+        if (btnImport) btnImport.style.display = 'inline-flex';
+        if (ctrlTitle) ctrlTitle.innerText = '出口・取り崩し条件設定';
+        document.getElementById('mainStatHeaderLabel').innerText = '資産寿命 / 最終残高';
+    }
     updateAll();
 }
 
-function saveCurrentSlot() {
-    const data = {
-        monthly: document.getElementById('numMonthly').value,
-        initial: document.getElementById('numInitial').value,
-        returnRate: document.getElementById('numReturn').value,
-        horizon: document.getElementById('numHorizon').value,
-        capToggle: document.getElementById('inputCapToggle').checked,
-        stress: currentStress,
-        drawStart: document.getElementById('numDrawStart').value,
-        drawMonthly: document.getElementById('numDrawMonthly').value,
-        drawRate: document.getElementById('numDrawRate').value,
-        drawReturn: document.getElementById('numDrawReturn').value,
-        tab: currentTab,
-        drawMode: drawdownMode
-    };
-    localStorage.setItem(`nisa_sim_slot_${currentSlot}`, JSON.stringify(data));
-}
-
-function loadSlot(slotNum) {
-    const saved = localStorage.getItem(`nisa_sim_slot_${slotNum}`);
-    if (saved) {
-        try {
-            const d = JSON.parse(saved);
-            if (d.monthly !== undefined) document.getElementById('numMonthly').value = d.monthly;
-            if (d.initial !== undefined) document.getElementById('numInitial').value = d.initial;
-            if (d.returnRate !== undefined) document.getElementById('numReturn').value = d.returnRate;
-            if (d.horizon !== undefined) document.getElementById('numHorizon').value = d.horizon;
-            if (d.capToggle !== undefined) document.getElementById('inputCapToggle').checked = d.capToggle;
-            if (d.drawStart !== undefined) document.getElementById('numDrawStart').value = d.drawStart;
-            if (d.drawMonthly !== undefined) document.getElementById('numDrawMonthly').value = d.drawMonthly;
-            if (d.drawRate !== undefined) document.getElementById('numDrawRate').value = d.drawRate;
-            if (d.drawReturn !== undefined) document.getElementById('numDrawReturn').value = d.drawReturn;
-            ['monthly', 'initial', 'return', 'horizon', 'drawStart', 'drawMonthly', 'drawRate', 'drawReturn'].forEach(f => syncInputs(f, 'num', false));
-            if (d.stress) {
-                setStress(d.stress, false);
-            } else {
-                setStress('none', false);
-            }
-        } catch (e) {
-            console.error(e);
-        }
-    }
-}
-
-function switchDisplayView(view) {
-    displayView = view;
-    document.getElementById('btnViewLine').classList.toggle('active', view === 'line');
-    document.getElementById('btnViewRadar').classList.toggle('active', view === 'radar');
-    document.getElementById('btnViewDiag').classList.toggle('active', view === 'diag');
-
-    const canvas = document.getElementById('simChart');
-    const diagBox = document.getElementById('diagnosisViewBox');
-
-    if (view === 'diag') {
-        canvas.style.display = 'none';
-        diagBox.style.display = 'flex';
-    } else {
-        canvas.style.display = 'block';
-        diagBox.style.display = 'none';
-        updateAll();
-    }
-}
-
-function switchTab(tab, shouldRun = true) {
-    currentTab = tab;
-    document.getElementById('tabGrowth').classList.toggle('active', tab === 'growth');
-    document.getElementById('tabDrawdown').classList.toggle('active', tab === 'drawdown');
-
-    document.getElementById('growthControls').style.display = tab === 'growth' ? 'block' : 'none';
-    document.getElementById('drawdownControls').style.display = tab === 'drawdown' ? 'block' : 'none';
-    document.getElementById('rowGrowthStats').style.display = tab === 'growth' ? 'grid' : 'none';
-    document.getElementById('rowDrawdownStats').style.display = tab === 'drawdown' ? 'grid' : 'none';
-    document.getElementById('btnImportFromGrowth').style.display = tab === 'drawdown' ? 'inline-flex' : 'none';
-
-    if (tab === 'drawdown') {
-        document.getElementById('ctrlTitle').innerText = '取り崩し条件設定';
-        document.getElementById('mainStatHeaderLabel').innerText = '資産寿命';
-    } else {
-        document.getElementById('ctrlTitle').innerText = 'シミュレーション条件設定';
-        document.getElementById('mainStatHeaderLabel').innerText = '最終資産総額';
-    }
-    if (shouldRun) saveAndRun();
-}
-
-function switchDrawdownMode(mode, shouldRun = true) {
+function switchDrawdownMode(mode, triggerUpdate = true) {
     drawdownMode = mode;
-    document.getElementById('subTabFixed').classList.toggle('active', mode === 'fixed');
-    document.getElementById('subTabPercent').classList.toggle('active', mode === 'percent');
-    document.getElementById('drawControlFixed').style.display = mode === 'fixed' ? 'block' : 'none';
-    document.getElementById('drawControlPercent').style.display = mode === 'percent' ? 'block' : 'none';
+    document.getElementById('subTabFixed')?.classList.toggle('active', mode === 'fixed');
+    document.getElementById('subTabPercent')?.classList.toggle('active', mode === 'percent');
+
+    const fixedCtrl = document.getElementById('drawControlFixed');
+    const pctCtrl = document.getElementById('drawControlPercent');
 
     if (mode === 'fixed') {
-        document.getElementById('chipDrawAnnualLabel').innerText = '年間取崩額';
+        if (fixedCtrl) fixedCtrl.style.display = 'block';
+        if (pctCtrl) pctCtrl.style.display = 'none';
     } else {
-        document.getElementById('chipDrawAnnualLabel').innerText = '初年取崩額';
+        if (fixedCtrl) fixedCtrl.style.display = 'none';
+        if (pctCtrl) pctCtrl.style.display = 'block';
     }
-    if (shouldRun) saveAndRun();
+    if (triggerUpdate) updateAll();
+}
+
+function applyScenario(key) {
+    document.querySelectorAll('.scenario-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(`scBtn_${key}`)?.classList.add('active');
+
+    if (key === 'standard') {
+        switchTab('growth');
+        setPreset('monthly', 50000);
+        setPreset('initial', 0);
+        setPreset('return', 5.0);
+        setPreset('horizon', 25);
+        setStress('none', false);
+    } else if (key === 'sp500_growth') {
+        switchTab('growth');
+        setPreset('monthly', 100000);
+        setPreset('initial', 0);
+        setPreset('return', 7.0);
+        setPreset('horizon', 20);
+        setStress('none', false);
+    } else if (key === 'fast_rta') {
+        switchTab('growth');
+        setPreset('monthly', 300000);
+        setPreset('initial', 0);
+        setPreset('return', 5.0);
+        setPreset('horizon', 5);
+        setStress('none', false);
+    } else if (key === 'crash_survival') {
+        switchTab('growth');
+        setPreset('monthly', 50000);
+        setPreset('initial', 2400000);
+        setPreset('return', 5.0);
+        setPreset('horizon', 20);
+        setStress('lehman', false);
+    } else if (key === 'fire_exit') {
+        switchTab('drawdown');
+        switchDrawdownMode('fixed', false);
+        setPreset('drawStart', 50000000);
+        setPreset('drawMonthly', 166000);
+        setPreset('drawReturn', 4.0);
+    }
+    updateAll();
+}
+
+function setStress(type, triggerUpdate = true) {
+    currentStress = type;
+    ['none', 'lehman', 'corona', 'dotcom'].forEach(t => {
+        const btn = document.getElementById(`stressBtn${t.charAt(0).toUpperCase() + t.slice(1)}`);
+        if (btn) btn.classList.toggle('highlight', t === type);
+    });
+    const infoEl = document.getElementById('stressInfo');
+    if (infoEl) infoEl.innerText = STRESS_CONFIG[type].desc;
+    if (triggerUpdate) updateAll();
 }
 
 function importFromGrowthResult() {
-    document.getElementById('numDrawStart').value = lastGrowthTotal;
-    document.getElementById('rangeDrawStart').value = Math.min(100000000, lastGrowthTotal);
-    applyPercentMonthly(0.04);
-    saveAndRun();
+    const currentTotalText = document.getElementById('chipPrincipal')?.innerText || '¥0';
+    const numVal = parseInt(currentTotalText.replace(/[^0-9]/g, '')) || 30000000;
+    const growthFinalVal = window.__lastGrowthTotal || numVal;
+    setPreset('drawStart', Math.round(growthFinalVal));
+    showToast('資産形成の結果を取り崩し開始額に代入しました');
+    updateAll();
 }
 
 function applyPercentMonthly(rate) {
-    const startAsset = parseInt(document.getElementById('numDrawStart').value) || 0;
-    const monthlyAmt = Math.round((startAsset * rate) / 12);
-    document.getElementById('numDrawMonthly').value = monthlyAmt;
-    document.getElementById('rangeDrawMonthly').value = Math.min(500000, monthlyAmt);
-    saveAndRun();
+    const startAsset = parseInt(document.getElementById('numDrawStart')?.value) || 0;
+    const monthly = Math.round((startAsset * rate) / 12);
+    setPreset('drawMonthly', monthly);
+    showToast(`開始資産の年${(rate * 100).toFixed(0)}%（月${(monthly / 10000).toFixed(1)}万）に設定しました`);
 }
 
-function setPreset(field, val) {
-    if (field === 'monthly') {
-        document.getElementById('numMonthly').value = val;
-        document.getElementById('rangeMonthly').value = val;
-    } else if (field === 'initial') {
-        document.getElementById('numInitial').value = val;
-        document.getElementById('rangeInitial').value = val;
-    } else if (field === 'return') {
-        document.getElementById('numReturn').value = val;
-        document.getElementById('rangeReturn').value = val;
-    } else if (field === 'horizon') {
-        document.getElementById('numHorizon').value = val;
-        document.getElementById('rangeHorizon').value = val;
-    } else if (field === 'drawStart') {
-        document.getElementById('numDrawStart').value = val;
-        document.getElementById('rangeDrawStart').value = Math.min(100000000, val);
-    } else if (field === 'drawMonthly') {
-        document.getElementById('numDrawMonthly').value = val;
-        document.getElementById('rangeDrawMonthly').value = Math.min(500000, val);
-    } else if (field === 'drawRate') {
-        document.getElementById('numDrawRate').value = val;
-        document.getElementById('rangeDrawRate').value = val;
-    } else if (field === 'drawReturn') {
-        document.getElementById('numDrawReturn').value = val;
-        document.getElementById('rangeDrawReturn').value = val;
-    }
-    saveAndRun();
+function autoAdjustToAnnualCap() {
+    const init = parseInt(document.getElementById('numInitial')?.value) || 0;
+    const remainAnnual = Math.max(0, ANNUAL_MAX_CAP - init);
+    const targetMonthly = Math.floor(remainAnnual / 12);
+    setPreset('monthly', targetMonthly);
+    showToast(`年間枠360万円に収まるよう月${(targetMonthly / 10000).toFixed(1)}万円に自動調整しました`);
 }
 
-function setStress(type, shouldRun = true) {
-    currentStress = type;
-    ['none', 'lehman', 'corona', 'dotcom'].forEach(t => {
-        const btn = document.getElementById('stressBtn' + (t === 'none' ? 'None' : t.charAt(0).toUpperCase() + t.slice(1)));
-        if (!btn) return;
-        btn.classList.remove('stress-active', 'stress-active-none', 'highlight');
-        if (t === type) {
-            if (t === 'none') {
-                btn.classList.add('stress-active-none');
-            } else {
-                btn.classList.add('stress-active');
-            }
-        } else if (t === 'none') {
-            btn.classList.add('highlight');
-        }
-    });
-
-    const info = document.getElementById('stressInfo');
-    const cfg = STRESS_CONFIG[type] || STRESS_CONFIG.none;
-    if (info) {
-        if (type === 'none') {
-            info.innerHTML = '暴落なし（通常の右肩上がりシミュレーション）';
-            info.style.color = 'var(--text-muted)';
-        } else {
-            info.innerHTML = `⚠ ${cfg.label}<br>運用期間の約40%地点で一時的に資産が下落します。積立は継続します。`;
-            info.style.color = '#fca5a5';
-        }
-    }
-    if (shouldRun) saveAndRun();
-}
-
-function syncInputs(field, source, shouldRun = true) {
-    const numEl = document.getElementById(
-        field === 'monthly' ? 'numMonthly' :
-            field === 'initial' ? 'numInitial' :
-                field === 'return' ? 'numReturn' :
-                    field === 'horizon' ? 'numHorizon' :
-                        field === 'drawStart' ? 'numDrawStart' :
-                            field === 'drawMonthly' ? 'numDrawMonthly' :
-                                field === 'drawRate' ? 'numDrawRate' : 'numDrawReturn'
-    );
-    const rangeEl = document.getElementById(
-        field === 'monthly' ? 'rangeMonthly' :
-            field === 'initial' ? 'rangeInitial' :
-                field === 'return' ? 'rangeReturn' :
-                    field === 'horizon' ? 'rangeHorizon' :
-                        field === 'drawStart' ? 'rangeDrawStart' :
-                            field === 'drawMonthly' ? 'rangeDrawMonthly' :
-                                field === 'drawRate' ? 'rangeDrawRate' : 'rangeDrawReturn'
-    );
-
+function syncInputs(field, source) {
+    const map = {
+        monthly: ['numMonthly', 'rangeMonthly'],
+        initial: ['numInitial', 'rangeInitial'],
+        return: ['numReturn', 'rangeReturn'],
+        horizon: ['numHorizon', 'rangeHorizon'],
+        drawStart: ['numDrawStart', 'rangeDrawStart'],
+        drawMonthly: ['numDrawMonthly', 'rangeDrawMonthly'],
+        drawRate: ['numDrawRate', 'rangeDrawRate'],
+        drawReturn: ['numDrawReturn', 'rangeDrawReturn']
+    };
+    const [numId, rangeId] = map[field] || [];
+    const numEl = document.getElementById(numId);
+    const rangeEl = document.getElementById(rangeId);
     if (!numEl || !rangeEl) return;
 
     if (source === 'range') {
         numEl.value = rangeEl.value;
     } else if (source === 'num') {
         let val = parseFloat(numEl.value);
-        if (!isNaN(val)) {
-            rangeEl.value = val;
-        }
+        if (!isNaN(val)) rangeEl.value = val;
     }
-    if (shouldRun) saveAndRun();
+    updateAll();
+}
+
+function setPreset(field, val) {
+    const map = {
+        monthly: ['numMonthly', 'rangeMonthly'],
+        initial: ['numInitial', 'rangeInitial'],
+        return: ['numReturn', 'rangeReturn'],
+        horizon: ['numHorizon', 'rangeHorizon'],
+        drawStart: ['numDrawStart', 'rangeDrawStart'],
+        drawMonthly: ['numDrawMonthly', 'rangeDrawMonthly'],
+        drawRate: ['numDrawRate', 'rangeDrawRate'],
+        drawReturn: ['numDrawReturn', 'rangeDrawReturn']
+    };
+    const [numId, rangeId] = map[field] || [];
+    if (numId && document.getElementById(numId)) document.getElementById(numId).value = val;
+    if (rangeId && document.getElementById(rangeId)) document.getElementById(rangeId).value = val;
+    updateAll();
+}
+
+function switchDisplayView(view) {
+    displayView = view;
+    document.getElementById('btnViewLine')?.classList.toggle('active', view === 'line');
+    document.getElementById('btnViewRadar')?.classList.toggle('active', view === 'radar');
+    document.getElementById('btnViewDiag')?.classList.toggle('active', view === 'diag');
+
+    const canvas = document.getElementById('simChart');
+    const diagBox = document.getElementById('diagnosisViewBox');
+
+    if (view === 'diag') {
+        if (canvas) canvas.style.display = 'none';
+        if (diagBox) diagBox.style.display = 'flex';
+    } else {
+        if (canvas) canvas.style.display = 'block';
+        if (diagBox) diagBox.style.display = 'none';
+        updateAll();
+    }
 }
 
 function toggleTable() {
@@ -566,285 +285,293 @@ function toggleTable() {
 }
 
 function saveAndRun() {
-    saveCurrentSlot();
     updateAll();
 }
 
+// 計算＆描画メインエンジン
 function updateAll() {
     if (currentTab === 'growth') {
-        runGrowthSim();
+        calcGrowthMode();
     } else {
-        runDrawdownSim();
+        calcDrawdownMode();
     }
 }
 
-function animateCounter(target) {
-    const el = document.getElementById('bpValue');
-    if (!el) return;
-    const start = currentBP;
-    currentBP = target;
-    const duration = 200;
-    const startTime = performance.now();
+function calcGrowthMode() {
+    const monthly = Math.max(0, parseInt(document.getElementById('numMonthly')?.value) || 0);
+    const initial = Math.max(0, parseInt(document.getElementById('numInitial')?.value) || 0);
+    const annualReturn = Math.max(0, parseFloat(document.getElementById('numReturn')?.value) || 0);
+    const horizon = Math.max(1, parseInt(document.getElementById('numHorizon')?.value) || 1);
+    const isCapEnabled = document.getElementById('inputCapToggle')?.checked ?? true;
 
-    function update(time) {
-        const elapsed = time - startTime;
-        const progress = Math.min(1, elapsed / duration);
-        const val = Math.round(start + (target - start) * progress);
-        el.innerText = val.toLocaleString();
-        if (progress < 1) requestAnimationFrame(update);
-    }
-    requestAnimationFrame(update);
-}
-
-let optimalMonthlyCap = 0;
-
-function checkAnnualCapAlert(monthly, initial) {
+    // 年間投資枠チェック (月額×12 + 初期投資)
+    const firstYearTotal = monthly * 12 + initial;
     const alertBox = document.getElementById('annualCapAlert');
-    const headerTitle = document.getElementById('alertHeaderTitle');
-    const bodyText = document.getElementById('alertBodyText');
-    const autoBtn = document.getElementById('btnAutoAdjustCap');
-    const targetMonthlyText = document.getElementById('targetMonthlyText');
-
-    if (!alertBox) return;
-    const firstYearTotal = initial + (monthly * 12);
-    const ANNUAL_CAP = 3600000;
-
-    if (firstYearTotal <= ANNUAL_CAP) {
-        alertBox.style.display = 'none';
-        return;
+    if (alertBox) {
+        if (firstYearTotal > ANNUAL_MAX_CAP) {
+            alertBox.style.display = 'block';
+            const overVal = firstYearTotal - ANNUAL_MAX_CAP;
+            document.getElementById('alertBodyText').innerHTML = `初年度の投資予定額が<b>${fmtYen(firstYearTotal)}</b>となり、年間投資枠（360万円）を<b>${fmtYen(overVal)}超過</b>しています。`;
+            const remainAnnual = Math.max(0, ANNUAL_MAX_CAP - initial);
+            document.getElementById('targetMonthlyText').innerText = (remainAnnual / 12 / 10000).toFixed(1);
+        } else {
+            alertBox.style.display = 'none';
+        }
     }
-
-    alertBox.style.display = 'block';
-
-    if (initial > ANNUAL_CAP) {
-        alertBox.className = 'annual-alert-box info';
-        headerTitle.innerText = '💡 既存残高・移行シミュレーション';
-        bodyText.innerHTML = `初期投資額（${fmtYen(initial)}）が新NISAの年間上限（360万円）を超えています。すでに運用中の残高や、特定口座からの順次移行を想定した試算としてそのまま計算しています。`;
-        autoBtn.style.display = 'none';
-    } else {
-        alertBox.className = 'annual-alert-box warning';
-        const overAmount = firstYearTotal - ANNUAL_CAP;
-        const maxMonthly = Math.max(0, Math.floor((ANNUAL_CAP - initial) / 12 / 1000) * 1000);
-        optimalMonthlyCap = maxMonthly;
-
-        headerTitle.innerText = '⚠️ 年間投資枠（360万円）を超過しています';
-        bodyText.innerHTML = `初年度の投資予定額が <b>${fmtYen(firstYearTotal)}</b>（超過: +${fmtYen(overAmount)}）になっています。実際のNISAでは年360万円（つみたて120万＋成長240万）が上限となります。`;
-
-        targetMonthlyText.innerText = (maxMonthly / 10000).toFixed(maxMonthly % 10000 === 0 ? 0 : 1);
-        autoBtn.style.display = 'inline-flex';
-    }
-}
-
-function autoAdjustToAnnualCap() {
-    setPreset('monthly', optimalMonthlyCap);
-    showToast(`毎月の積立額を ¥${optimalMonthlyCap.toLocaleString()} に調整しました`);
-}
-
-function runGrowthSim() {
-    const monthly = Math.max(0, parseInt(document.getElementById('numMonthly').value) || 0);
-    const initial = Math.max(0, parseInt(document.getElementById('numInitial').value) || 0);
-    const annualReturn = Math.max(0, parseFloat(document.getElementById('numReturn').value) || 0);
-    const horizon = Math.max(1, parseInt(document.getElementById('numHorizon').value) || 1);
-    const capEnabled = document.getElementById('inputCapToggle').checked;
-
-    checkAnnualCapAlert(monthly, initial);
 
     const monthlyRate = (annualReturn / 100) / 12;
     const totalMonths = horizon * 12;
-    const CAP_LIMIT = 18000000;
 
-    const stressCfg = STRESS_CONFIG[currentStress] || STRESS_CONFIG.none;
-    const crashMonth = (stressCfg.drop > 0 && totalMonths > 12)
-        ? Math.max(12, Math.floor(totalMonths * 0.4))
-        : -1;
-
-    let principal = initial;
     let balance = initial;
-    let capMonth = null;
-    let crashApplied = false;
+    let principal = initial;
+    let isCapReached = initial >= NISA_MAX_LIFETIME_CAP;
 
-    const labels = [];
-    const dataPrincipal = [];
-    const dataTotal = [];
-    const dataGains = [];
-    const dataTaxable = [];
+    const labels = ['0年'];
+    const dataPrincipal = [initial];
+    const dataTotal = [initial];
     const tableRows = [];
     latestTableData = [];
 
-    labels.push('0年');
-    dataPrincipal.push(initial);
-    dataTotal.push(initial);
-    dataGains.push(0);
-    dataTaxable.push(initial);
+    const stress = STRESS_CONFIG[currentStress];
 
     for (let m = 1; m <= totalMonths; m++) {
-        let add = 0;
-        if (!capEnabled || principal < CAP_LIMIT) {
-            if (capEnabled && (principal + monthly > CAP_LIMIT)) {
-                add = CAP_LIMIT - principal;
-            } else {
-                add = monthly;
+        const curYear = Math.floor((m - 1) / 12) + 1;
+        let add = monthly;
+
+        if (isCapEnabled) {
+            if (principal + add > NISA_MAX_LIFETIME_CAP) {
+                add = Math.max(0, NISA_MAX_LIFETIME_CAP - principal);
+                isCapReached = true;
             }
         }
         principal += add;
-        balance = balance * (1 + monthlyRate) + add;
+        balance = (balance + add) * (1 + monthlyRate);
 
-        if (m === crashMonth && !crashApplied) {
-            balance = balance * (1 - stressCfg.drop);
-            crashApplied = true;
-        }
-
-        if (capEnabled && principal >= CAP_LIMIT && capMonth === null) {
-            capMonth = m;
+        // 暴落テストの適用
+        if (stress.dropRate > 0 && curYear === stress.year && (m % 12 === 0)) {
+            balance = balance * (1 - stress.dropRate);
         }
 
         if (m % 12 === 0) {
-            const year = m / 12;
-            const gains = balance - principal;
-            const taxableNet = principal + Math.max(0, gains) * (1 - 0.20315);
-            const taxSaved = Math.max(0, gains) * 0.20315;
+            const y = m / 12;
+            const gains = Math.max(0, balance - principal);
+            const taxSavings = gains * TAX_RATE;
 
-            labels.push(year + '年');
+            labels.push(y + '年目');
             dataPrincipal.push(Math.round(principal));
             dataTotal.push(Math.round(balance));
-            dataGains.push(Math.round(gains));
-            dataTaxable.push(Math.round(taxableNet));
 
             latestTableData.push({
-                year: year,
+                year: y,
                 principal: Math.round(principal),
-                gains: Math.round(gains),
                 balance: Math.round(balance),
-                taxableNet: Math.round(taxableNet),
-                taxSaved: Math.round(taxSaved)
+                gains: Math.round(gains),
+                taxSavings: Math.round(taxSavings)
             });
-
-            const gainsColor = gains >= 0 ? '#34d399' : '#f87171';
-            const gainsText = (gains >= 0 ? '+' : '') + fmtYen(gains);
-            const taxSavedText = taxSaved > 0 ? '+' + fmtYen(taxSaved) : fmtYen(0);
 
             tableRows.push(`
         <tr>
-          <td>${year}年目</td>
+          <td>${y}年目</td>
           <td>${fmtYen(principal)}</td>
-          <td style="color: ${gainsColor};">${gainsText}</td>
-          <td style="font-weight: 700; color: #60a5fa;">${fmtYen(balance)}</td>
-          <td style="color: #fbbf24;">${fmtYen(taxableNet)}</td>
-          <td style="color: #f472b6;">${taxSavedText}</td>
+          <td style="font-weight:700; color:#60a5fa;">${fmtYen(balance)}</td>
+          <td style="color:#34d399;">+${fmtYen(gains)}</td>
+          <td style="color:#fbbf24; font-weight:700;">+${fmtYen(taxSavings)}</td>
         </tr>
       `);
         }
     }
 
-    lastGrowthTotal = Math.round(balance);
-    const finalTotal = balance;
     const finalPrincipal = principal;
-    const finalGains = finalTotal - finalPrincipal;
-    const finalTaxSaved = Math.max(0, finalGains) * 0.20315;
+    const finalTotal = balance;
+    const finalGains = Math.max(0, finalTotal - finalPrincipal);
+    const finalTaxSavings = finalGains * TAX_RATE;
+    window.__lastGrowthTotal = finalTotal;
+
+    // 投資戦闘力 (BP) 計算
+    const bp = Math.round((finalTotal / 100000) * (1 + annualReturn / 10) * (horizon / 20));
+    animateBpCounter(bp);
 
     document.getElementById('mainStatHeaderValue').innerText = fmtYen(finalTotal);
     document.getElementById('chipPrincipal').innerText = fmtYen(finalPrincipal);
+    document.getElementById('chipGains').innerText = `+${fmtYen(finalGains)}`;
+    document.getElementById('chipTax').innerText = `+${fmtYen(finalTaxSavings)}`;
 
-    const chipGainsEl = document.getElementById('chipGains');
-    chipGainsEl.innerText = (finalGains >= 0 ? '+' : '') + fmtYen(finalGains);
-    chipGainsEl.classList.remove('gains', 'danger');
-    chipGainsEl.classList.add(finalGains >= 0 ? 'gains' : 'danger');
-
-    document.getElementById('chipTax').innerText = fmtYen(finalTaxSaved);
-
+    // テーブルヘッダーと中身
     document.getElementById('tableHeader').innerHTML = `
     <tr>
       <th>年数</th>
-      <th>元本</th>
-      <th>運用益</th>
-      <th>総資産</th>
-      <th>課税手取り</th>
-      <th>節税</th>
+      <th>投資元本</th>
+      <th>運用残高</th>
+      <th>運用益(利益)</th>
+      <th>節税バリア</th>
     </tr>
   `;
     document.getElementById('tableBody').innerHTML = tableRows.join('');
 
-    // 能力値レーダー計算
-    let atkScore = 0;
-    if (monthly === 0 && initial === 0) {
-        atkScore = 0;
-    } else {
-        const monthlyP = monthly <= 100000
-            ? (monthly / 100000) * 80
-            : 80 + ((monthly - 100000) / 200000) * 20;
-        const initialBonus = (initial / 2400000) * 15;
-        atkScore = Math.min(100, Math.round(monthlyP + initialBonus));
-    }
-
-    let defScore = 0;
-    if (horizon <= 10) {
-        defScore = Math.round(15 + (horizon / 10) * 40);
-    } else if (horizon <= 20) {
-        defScore = Math.round(55 + ((horizon - 10) / 10) * 25);
-    } else {
-        defScore = Math.min(100, Math.round(80 + ((horizon - 20) / 10) * 20));
-    }
-
-    let criScore = 0;
-    if (annualReturn <= 0) {
-        criScore = 0;
-    } else if (annualReturn <= 3) {
-        criScore = Math.round((annualReturn / 3) * 45);
-    } else if (annualReturn <= 5) {
-        criScore = Math.round(45 + ((annualReturn - 3) / 2) * 20);
-    } else if (annualReturn <= 7) {
-        criScore = Math.round(65 + ((annualReturn - 5) / 2) * 15);
-    } else {
-        criScore = Math.min(100, Math.round(80 + ((annualReturn - 7) / 3) * 20));
-    }
-
-    let guardScore = 0;
-    if (finalTaxSaved <= 0) {
-        guardScore = 0;
-    } else if (finalTaxSaved <= 3000000) {
-        guardScore = Math.round((finalTaxSaved / 3000000) * 60);
-    } else if (finalTaxSaved <= 6000000) {
-        guardScore = Math.round(60 + ((finalTaxSaved - 3000000) / 3000000) * 20);
-    } else {
-        guardScore = Math.min(100, Math.round(80 + ((finalTaxSaved - 6000000) / 4000000) * 20));
-    }
-
-    let vitScore = 0;
-    if (finalTotal <= 0) {
-        vitScore = 0;
-    } else if (finalTotal <= 20000000) {
-        vitScore = Math.round((finalTotal / 20000000) * 50);
-    } else if (finalTotal <= 50000000) {
-        vitScore = Math.round(50 + ((finalTotal - 20000000) / 30000000) * 30);
-    } else {
-        vitScore = Math.min(100, Math.round(80 + ((finalTotal - 50000000) / 50000000) * 20));
-    }
-
-    radarStats = [atkScore, defScore, criScore, guardScore, vitScore];
-
-    const bp = Math.round(Math.max(0, finalTotal) / 10) + Math.round(finalTaxSaved / 5);
-    animateCounter(bp);
+    // 📊 レーダーパラメータ (0〜100)
+    const atk = Math.min(100, Math.round(monthly <= 30000 ? (monthly / 30000) * 60 : 60 + ((monthly - 30000) / 270000) * 40));
+    const def = Math.min(100, Math.round(horizon <= 10 ? (horizon / 10) * 50 : 50 + ((horizon - 10) / 30) * 50));
+    const cri = annualReturn <= 0 ? 0 : Math.min(100, Math.round((annualReturn / 8.0) * 100));
+    const fill = Math.min(100, Math.round((finalPrincipal / NISA_MAX_LIFETIME_CAP) * 100));
+    const vit = Math.min(100, Math.round(finalTotal <= 10000000 ? (finalTotal / 10000000) * 60 : 60 + ((finalTotal - 10000000) / 40000000) * 40));
+    radarStats = [atk, def, cri, fill, vit];
 
     if (displayView === 'line') {
-        renderGrowthLineChart(labels, dataPrincipal, dataTotal, dataGains, dataTaxable);
+        renderNisaLineChart(labels, dataPrincipal, dataTotal);
     } else if (displayView === 'radar') {
-        renderRadarChart(['入金火力 (ATK)', '複利耐久 (DEF)', '会心利回り (CRI)', '節税障壁 (GUARD)', '資産体力 (VIT)'], radarStats);
+        renderNisaRadarChart(['入金火力 (ATK)', '複利耐久 (DEF)', '会心利回り (CRI)', '枠充填度 (FILL)', '資産体力 (VIT)'], radarStats);
     }
 
-    updateDiagnosis('growth', finalTotal, monthly, initial, annualReturn, horizon);
+    updateNisaDiagnosis({
+        mode: 'growth',
+        monthly,
+        initial,
+        returnRate: annualReturn,
+        horizon,
+        total: finalTotal,
+        principal: finalPrincipal,
+        gains: finalGains,
+        taxSavings: finalTaxSavings,
+        currentStress,
+        stressConfig: STRESS_CONFIG
+    });
 }
 
-/* 📈 資産形成：折れ線グラフ描画 */
-function renderGrowthLineChart(labels, dataPrincipal, dataTotal, dataGains, dataTaxable) {
+function calcDrawdownMode() {
+    const startAsset = Math.max(0, parseInt(document.getElementById('numDrawStart')?.value) || 0);
+    const monthlyDraw = Math.max(0, parseInt(document.getElementById('numDrawMonthly')?.value) || 0);
+    const drawRate = Math.max(0.1, parseFloat(document.getElementById('numDrawRate')?.value) || 4.0) / 100;
+    const drawReturn = Math.max(0, parseFloat(document.getElementById('numDrawReturn')?.value) || 0);
+
+    const monthlyRate = (drawReturn / 100) / 12;
+    const maxYears = 40;
+    const totalMonths = maxYears * 12;
+
+    let balance = startAsset;
+    let totalWithdrawn = 0;
+    let depletedYear = null;
+
+    const labels = ['0年'];
+    const dataTotal = [startAsset];
+    const dataWithdrawn = [0];
+    const tableRows = [];
+    latestTableData = [];
+
+    let annualDrawAccum = 0;
+
+    for (let m = 1; m <= totalMonths; m++) {
+        let curMonthDraw = (drawdownMode === 'fixed') ? monthlyDraw : (balance * (drawRate / 12));
+
+        if (balance <= 0) {
+            curMonthDraw = 0;
+            if (depletedYear === null) depletedYear = m / 12;
+        } else if (balance < curMonthDraw) {
+            curMonthDraw = balance;
+            balance = 0;
+            if (depletedYear === null) depletedYear = m / 12;
+        } else {
+            balance = (balance - curMonthDraw) * (1 + monthlyRate);
+        }
+
+        totalWithdrawn += curMonthDraw;
+        annualDrawAccum += curMonthDraw;
+
+        if (m % 12 === 0) {
+            const y = m / 12;
+            labels.push(y + '年目');
+            dataTotal.push(Math.round(balance));
+            dataWithdrawn.push(Math.round(totalWithdrawn));
+
+            latestTableData.push({
+                year: y,
+                annualDraw: Math.round(annualDrawAccum),
+                totalWithdrawn: Math.round(totalWithdrawn),
+                balance: Math.round(balance)
+            });
+
+            tableRows.push(`
+        <tr>
+          <td>${y}年目</td>
+          <td style="color:#fbbf24;">${fmtYen(annualDrawAccum)}</td>
+          <td style="color:#34d399;">${fmtYen(totalWithdrawn)}</td>
+          <td style="font-weight:700; color:#60a5fa;">${fmtYen(balance)}</td>
+        </tr>
+      `);
+            annualDrawAccum = 0;
+        }
+    }
+
+    // 純粋現金食いつぶしとの延命比較
+    let zeroYieldDeplete = startAsset > 0 && monthlyDraw > 0 ? (startAsset / (monthlyDraw * 12)) : 0;
+    let diffYearsText = '--';
+    if (depletedYear) {
+        const diff = depletedYear - zeroYieldDeplete;
+        diffYearsText = diff > 0 ? `+${diff.toFixed(1)}年延命` : `${depletedYear.toFixed(1)}年で枯渇`;
+    } else {
+        diffYearsText = '永続（減らない）';
+    }
+
+    document.getElementById('mainStatHeaderValue').innerText = depletedYear ? `${depletedYear.toFixed(1)}年で枯渇` : '資産永続（枯渇なし）';
+    document.getElementById('chipDrawAnnualLabel').innerText = drawdownMode === 'fixed' ? '年間取崩額' : '初年取崩額(目安)';
+    document.getElementById('chipDrawAnnual').innerText = drawdownMode === 'fixed' ? fmtYen(monthlyDraw * 12) : fmtYen(startAsset * drawRate);
+    document.getElementById('chipDrawTotal').innerText = fmtYen(totalWithdrawn);
+    document.getElementById('chipDrawDiff').innerText = diffYearsText;
+
+    document.getElementById('bpValue').innerText = 'EXIT';
+
+    document.getElementById('tableHeader').innerHTML = `
+    <tr>
+      <th>年数</th>
+      <th>年間受取額</th>
+      <th>受取累計額</th>
+      <th>資産残高</th>
+    </tr>
+  `;
+    document.getElementById('tableBody').innerHTML = tableRows.join('');
+
+    if (displayView === 'line') {
+        renderNisaLineChart(labels, dataWithdrawn, dataTotal, ['受取累計額', '資産残高']);
+    } else if (displayView === 'radar') {
+        const atk = Math.min(100, Math.round((startAsset / 100000000) * 100));
+        const def = depletedYear ? Math.min(100, Math.round((depletedYear / 30) * 100)) : 100;
+        const cri = Math.min(100, Math.round((drawReturn / 8.0) * 100));
+        const fill = Math.min(100, Math.round((totalWithdrawn / (startAsset || 1)) * 50));
+        const vit = Math.min(100, Math.round((dataTotal[dataTotal.length - 1] / (startAsset || 1)) * 100));
+        radarStats = [atk, def, cri, fill, vit];
+        renderNisaRadarChart(['初期資産 (ATK)', '延命寿命 (DEF)', '運用力 (CRI)', '回収効率 (FILL)', '残存体力 (VIT)'], radarStats);
+    }
+
+    updateNisaDiagnosis({
+        mode: drawdownMode === 'fixed' ? 'drawdown' : 'drawdown_percent',
+        total: startAsset,
+        monthlyDraw,
+        drawRate,
+        drawReturn,
+        depletedYear,
+        totalWithdrawn
+    });
+}
+
+function animateBpCounter(targetBp) {
+    const el = document.getElementById('bpValue');
+    if (!el) return;
+    el.innerText = targetBp.toLocaleString();
+}
+
+function renderNisaLineChart(labels, data1, data2, customLegends) {
     const canvas = document.getElementById('simChart');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
 
-    if (chartInstance && chartInstance.config.type === 'line' && chartInstance.data.datasets.length === 3) {
+    const l1 = customLegends ? customLegends[0] : '元本合計';
+    const l2 = customLegends ? customLegends[1] : '受取資産総額(元本+運用益)';
+
+    if (chartInstance && chartInstance.config.type === 'line') {
         chartInstance.data.labels = labels;
-        chartInstance.data.datasets[0].data = dataPrincipal;
-        chartInstance.data.datasets[1].data = dataTotal;
-        chartInstance.data.datasets[2].data = dataTaxable;
+        chartInstance.data.datasets[0].label = l1;
+        chartInstance.data.datasets[0].data = data1;
+        chartInstance.data.datasets[1].label = l2;
+        chartInstance.data.datasets[1].data = data2;
         chartInstance.update('none');
         return;
     }
@@ -857,39 +584,27 @@ function renderGrowthLineChart(labels, dataPrincipal, dataTotal, dataGains, data
             labels: labels,
             datasets: [
                 {
-                    label: '投資元本',
-                    data: dataPrincipal,
-                    backgroundColor: 'rgba(59, 130, 246, 0.85)',
+                    label: l1,
+                    data: data1,
                     borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.75)',
                     borderWidth: 1.5,
                     fill: 'origin',
                     pointStyle: 'circle',
                     pointRadius: 0,
                     pointHoverRadius: 4,
-                    order: 3
+                    order: 2
                 },
                 {
-                    label: '総資産額',
-                    data: dataTotal,
-                    backgroundColor: 'rgba(16, 185, 129, 0.45)',
+                    label: l2,
+                    data: data2,
                     borderColor: '#10b981',
-                    borderWidth: 1.5,
+                    backgroundColor: 'rgba(16, 185, 129, 0.45)',
+                    borderWidth: 1.8,
                     fill: 0,
                     pointStyle: 'circle',
                     pointRadius: 0,
                     pointHoverRadius: 4,
-                    order: 2
-                },
-                {
-                    label: '課税手取り比較',
-                    data: dataTaxable,
-                    borderColor: '#f97316',
-                    borderWidth: 2.2,
-                    borderDash: [5, 4],
-                    fill: false,
-                    pointStyle: 'line',
-                    pointRadius: 0,
-                    pointHoverRadius: 4,
                     order: 1
                 }
             ]
@@ -902,370 +617,7 @@ function renderGrowthLineChart(labels, dataPrincipal, dataTotal, dataGains, data
             plugins: {
                 legend: {
                     position: 'top',
-                    labels: {
-                        color: '#d1d5db',
-                        font: { size: 10 },
-                        boxWidth: 14,
-                        usePointStyle: true,
-                        sort: (a, b) => a.datasetIndex - b.datasetIndex
-                    }
-                },
-                tooltip: {
-                    backgroundColor: 'rgba(17, 24, 39, 0.95)',
-                    padding: 8,
-                    titleFont: { size: 11 },
-                    bodyFont: { size: 10.5 },
-                    callbacks: {
-                        title: (items) => `運用年数: ${items[0].label}`,
-                        beforeBody: (items) => {
-                            const item = items[0];
-                            const idx = item.dataIndex;
-                            const chart = item.chart;
-
-                            const principal = chart.data.datasets[0].data[idx] ?? 0;
-                            const total = chart.data.datasets[1].data[idx] ?? 0;
-                            const taxable = chart.data.datasets[2].data[idx] ?? 0;
-                            const g = total - principal;
-
-                            const gainsLabel = g >= 0
-                                ? `運用益: +${fmtYen(g)}`
-                                : `運用益: ${fmtYen(g)}（含み損）`;
-
-                            return [
-                                `投資元本: ${fmtYen(principal)}`,
-                                gainsLabel,
-                                `課税手取り: ${fmtYen(taxable)}`,
-                                `-------------------`,
-                                `総資産額: ${fmtYen(total)}`
-                            ];
-                        },
-                        label: () => null
-                    }
-                }
-            },
-            scales: {
-                x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#9ca3af', font: { size: 10 } } },
-                y: {
-                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
-                    ticks: {
-                        color: '#9ca3af',
-                        font: { size: 10 },
-                        callback: (val) => {
-                            if (val >= 100000000) return (val / 100000000).toFixed(1) + '億';
-                            if (val >= 10000) return (val / 10000).toLocaleString() + '万';
-                            return val;
-                        }
-                    }
-                }
-            }
-        }
-    });
-}
-
-function renderRadarChart(labels, stats) {
-    const canvas = document.getElementById('simChart');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-
-    if (chartInstance && chartInstance.config.type === 'radar') {
-        chartInstance.data.labels = labels;
-        chartInstance.data.datasets[0].data = stats;
-        chartInstance.update('none');
-        return;
-    }
-
-    if (chartInstance) chartInstance.destroy();
-
-    chartInstance = new Chart(ctx, {
-        type: 'radar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: '能力値ビルド',
-                data: stats,
-                backgroundColor: 'rgba(168, 85, 247, 0.35)',
-                borderColor: '#c084fc',
-                borderWidth: 2,
-                pointBackgroundColor: '#fbbf24',
-                pointBorderColor: '#fff',
-                pointRadius: 3.5
-            }]
-        },
-        options: {
-            animation: false,
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                r: {
-                    min: 0,
-                    max: 100,
-                    beginAtZero: true,
-                    angleLines: { color: 'rgba(255, 255, 255, 0.12)' },
-                    grid: { color: 'rgba(255, 255, 255, 0.08)' },
-                    pointLabels: { color: '#cbd5e1', font: { size: 10.5, weight: 'bold' } },
-                    ticks: {
-                        display: false,
-                        stepSize: 20
-                    }
-                }
-            },
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    callbacks: {
-                        label: (context) => `能力値: ${context.raw} / 100`
-                    }
-                }
-            }
-        }
-    });
-}
-
-function runDrawdownSim() {
-    document.getElementById('annualCapAlert').style.display = 'none';
-
-    const startAsset = Math.max(0, parseInt(document.getElementById('numDrawStart').value) || 0);
-    const drawReturn = Math.max(0, parseFloat(document.getElementById('numDrawReturn').value) || 0);
-    const monthlyRate = (drawReturn / 100) / 12;
-
-    const maxYears = 45;
-    const labels = [];
-    const dataInvest = [];
-    const dataCash = [];
-    const tableRows = [];
-    latestTableData = [];
-
-    labels.push('0年');
-    dataInvest.push(startAsset);
-    dataCash.push(startAsset);
-
-    let balanceInvest = startAsset;
-    let balanceCash = startAsset;
-    let depletedInvestYear = null;
-    let depletedCashYear = null;
-    let totalReceivedInvest = 0;
-
-    if (drawdownMode === 'fixed') {
-        const monthlyDraw = Math.max(0, parseInt(document.getElementById('numDrawMonthly').value) || 0);
-        const annualDraw = monthlyDraw * 12;
-
-        for (let y = 1; y <= maxYears; y++) {
-            let yearDrawInvest = 0;
-            for (let m = 1; m <= 12; m++) {
-                if (balanceInvest > 0) {
-                    const draw = Math.min(balanceInvest, monthlyDraw);
-                    balanceInvest = (balanceInvest - draw) * (1 + monthlyRate);
-                    yearDrawInvest += draw;
-                    totalReceivedInvest += draw;
-                    if (balanceInvest <= 0 && depletedInvestYear === null) {
-                        depletedInvestYear = (y - 1) + (m / 12);
-                    }
-                }
-
-                if (balanceCash > 0) {
-                    const drawC = Math.min(balanceCash, monthlyDraw);
-                    balanceCash -= drawC;
-                    if (balanceCash <= 0 && depletedCashYear === null) {
-                        depletedCashYear = (y - 1) + (m / 12);
-                    }
-                }
-            }
-
-            labels.push(y + '年後');
-            dataInvest.push(Math.max(0, Math.round(balanceInvest)));
-            dataCash.push(Math.max(0, Math.round(balanceCash)));
-
-            latestTableData.push({
-                year: y,
-                draw: Math.round(yearDrawInvest),
-                balanceInvest: Math.round(balanceInvest),
-                balanceCash: Math.round(balanceCash),
-                totalReceived: Math.round(totalReceivedInvest)
-            });
-
-            tableRows.push(`
-        <tr>
-          <td>${y}年後</td>
-          <td style="color:#34d399;">${fmtYen(yearDrawInvest)}</td>
-          <td style="font-weight:700; color:#60a5fa;">${fmtYen(balanceInvest)}</td>
-          <td style="color:#ef4444;">${fmtYen(balanceCash)}</td>
-          <td style="color:#fbbf24;">${fmtYen(totalReceivedInvest)}</td>
-        </tr>
-      `);
-        }
-
-        const lifeText = startAsset === 0 ? '0年' : (depletedInvestYear ? `${depletedInvestYear.toFixed(1)}年` : '45年以上(永続)');
-        document.getElementById('mainStatHeaderValue').innerText = lifeText;
-        document.getElementById('chipDrawAnnual').innerText = fmtYen(annualDraw);
-        document.getElementById('chipDrawTotal').innerText = fmtYen(totalReceivedInvest);
-
-        const cashLife = depletedCashYear ? depletedCashYear.toFixed(1) : (startAsset / (annualDraw || 1)).toFixed(1);
-        if (startAsset === 0) {
-            document.getElementById('chipDrawDiff').innerText = '元本ゼロ';
-        } else if (depletedInvestYear) {
-            const diff = (depletedInvestYear - parseFloat(cashLife)).toFixed(1);
-            document.getElementById('chipDrawDiff').innerText = diff > 0 ? `+${diff}年 延命` : '差なし';
-        } else {
-            document.getElementById('chipDrawDiff').innerText = '枯渇せず (+∞)';
-        }
-
-        const bp = Math.round(startAsset / 15) + Math.round(totalReceivedInvest / 10);
-        animateCounter(bp);
-
-        const atk = monthlyDraw === 0 ? 0 : (monthlyDraw <= 150000 ? Math.round((monthlyDraw / 150000) * 80) : Math.min(100, Math.round(80 + ((monthlyDraw - 150000) / 150000) * 20)));
-        const def = depletedInvestYear ? Math.min(100, Math.round((depletedInvestYear / 30) * 80)) : 100;
-        const cri = drawReturn <= 0 ? 0 : (drawReturn <= 3 ? Math.round((drawReturn / 3) * 70) : Math.min(100, Math.round(70 + ((drawReturn - 3) / 4) * 30)));
-        const guard = !depletedInvestYear ? 100 : Math.min(100, Math.round((depletedInvestYear / 25) * 80));
-        const vit = startAsset <= 0 ? 0 : (startAsset <= 50000000 ? Math.round((startAsset / 50000000) * 80) : Math.min(100, Math.round(80 + ((startAsset - 50000000) / 50000000) * 20)));
-        radarStats = [atk, def, cri, guard, vit];
-
-        if (displayView === 'line') {
-            renderDrawdownLineChart(labels, dataInvest, dataCash);
-        } else if (displayView === 'radar') {
-            renderRadarChart(['取崩火力 (消費)', '生存耐久 (寿命)', '運用利回り (CRI)', '枯渇耐性 (GUARD)', '元本体力 (VIT)'], radarStats);
-        }
-
-        updateDiagnosis('drawdown', startAsset, monthlyDraw, 0, drawReturn, 0, depletedInvestYear);
-
-    } else {
-        const drawRate = Math.max(0.1, parseFloat(document.getElementById('numDrawRate').value) || 4.0) / 100;
-        const initialAnnual = startAsset * drawRate;
-
-        for (let y = 1; y <= maxYears; y++) {
-            let yearDraw = 0;
-            if (balanceInvest > 0) {
-                yearDraw = balanceInvest * drawRate;
-                totalReceivedInvest += yearDraw;
-                balanceInvest = (balanceInvest - yearDraw) * (1 + (drawReturn / 100));
-            }
-
-            if (balanceCash > 0) {
-                const cashDraw = balanceCash * drawRate;
-                balanceCash -= cashDraw;
-            }
-
-            labels.push(y + '年後');
-            dataInvest.push(Math.max(0, Math.round(balanceInvest)));
-            dataCash.push(Math.max(0, Math.round(balanceCash)));
-
-            latestTableData.push({
-                year: y,
-                draw: Math.round(yearDraw),
-                balanceInvest: Math.round(balanceInvest),
-                balanceCash: Math.round(balanceCash),
-                totalReceived: Math.round(totalReceivedInvest)
-            });
-
-            tableRows.push(`
-        <tr>
-          <td>${y}年後</td>
-          <td style="color:#34d399;">${fmtYen(yearDraw)} (${fmtYen(yearDraw / 12)}/月)</td>
-          <td style="font-weight:700; color:#60a5fa;">${fmtYen(balanceInvest)}</td>
-          <td style="color:#ef4444;">${fmtYen(balanceCash)}</td>
-          <td style="color:#fbbf24;">${fmtYen(totalReceivedInvest)}</td>
-        </tr>
-      `);
-        }
-
-        document.getElementById('mainStatHeaderValue').innerText = startAsset === 0 ? '0年' : '枯渇なし(永続)';
-        document.getElementById('chipDrawAnnual').innerText = `${fmtYen(initialAnnual)}(初年)`;
-        document.getElementById('chipDrawTotal').innerText = fmtYen(totalReceivedInvest);
-        document.getElementById('chipDrawDiff').innerText = startAsset === 0 ? '元本ゼロ' : '残高追従';
-
-        const bp = Math.round(startAsset / 12) + Math.round(totalReceivedInvest / 10);
-        animateCounter(bp);
-
-        const atk = Math.min(100, Math.round((drawRate / 0.04) * 80));
-        const def = 100;
-        const cri = drawReturn <= 0 ? 0 : (drawReturn <= 3 ? Math.round((drawReturn / 3) * 70) : Math.min(100, Math.round(70 + ((drawReturn - 3) / 4) * 30)));
-        const guard = drawRate <= 0.04 ? 100 : Math.max(50, Math.round(100 - (drawRate - 0.04) * 500));
-        const vit = startAsset <= 0 ? 0 : (startAsset <= 50000000 ? Math.round((startAsset / 50000000) * 80) : Math.min(100, Math.round(80 + ((startAsset - 50000000) / 50000000) * 20)));
-        radarStats = [atk, def, cri, guard, vit];
-
-        if (displayView === 'line') {
-            renderDrawdownLineChart(labels, dataInvest, dataCash);
-        } else if (displayView === 'radar') {
-            renderRadarChart(['取崩割合 (RATE)', '永続耐久 (DEF)', '運用利回り (CRI)', '枯渇耐性 (GUARD)', '元本体力 (VIT)'], radarStats);
-        }
-
-        updateDiagnosis('drawdown_percent', startAsset, 0, 0, drawReturn, 0, null, drawRate);
-    }
-
-    document.getElementById('tableHeader').innerHTML = `
-    <tr>
-      <th>経過</th>
-      <th>年間受取額</th>
-      <th>運用残高</th>
-      <th>現金のみ残高</th>
-      <th>受取累計額</th>
-    </tr>
-  `;
-    document.getElementById('tableBody').innerHTML = tableRows.join('');
-}
-
-/* ⏳ 出口戦略：取崩折れ線グラフ描画 */
-function renderDrawdownLineChart(labels, dataInvest, dataCash) {
-    const canvas = document.getElementById('simChart');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-
-    if (chartInstance && chartInstance.config.type === 'line' && chartInstance.data.datasets.length === 2) {
-        chartInstance.data.labels = labels;
-        chartInstance.data.datasets[0].data = dataInvest;
-        chartInstance.data.datasets[1].data = dataCash;
-        chartInstance.update('none');
-        return;
-    }
-
-    if (chartInstance) chartInstance.destroy();
-
-    chartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [
-                {
-                    label: '運用取崩残高',
-                    data: dataInvest,
-                    borderColor: '#34d399',
-                    backgroundColor: 'rgba(16, 185, 129, 0.2)',
-                    borderWidth: 1.8,
-                    fill: true,
-                    pointStyle: 'circle',
-                    pointRadius: 0,
-                    pointHoverRadius: 4,
-                    order: 2
-                },
-                {
-                    label: '現金のみ残高',
-                    data: dataCash,
-                    borderColor: '#ef4444',
-                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                    borderWidth: 1.8,
-                    borderDash: [5, 4],
-                    fill: true,
-                    pointStyle: 'line',
-                    pointRadius: 0,
-                    pointHoverRadius: 4,
-                    order: 1
-                }
-            ]
-        },
-        options: {
-            animation: false,
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: { mode: 'index', intersect: false },
-            plugins: {
-                legend: {
-                    position: 'top',
-                    labels: {
-                        color: '#d1d5db',
-                        font: { size: 10 },
-                        boxWidth: 14,
-                        usePointStyle: true,
-                        sort: (a, b) => a.datasetIndex - b.datasetIndex
-                    }
+                    labels: { color: '#d1d5db', font: { size: 10 }, boxWidth: 14, usePointStyle: true }
                 },
                 tooltip: {
                     backgroundColor: 'rgba(17, 24, 39, 0.95)',
@@ -1295,118 +647,340 @@ function renderDrawdownLineChart(labels, dataInvest, dataCash) {
     });
 }
 
-function updateDiagnosis(mode, total, monthly, initial, returnRate, horizon, depletedYear = null, drawRate = null) {
+function renderNisaRadarChart(labels, stats) {
+    const canvas = document.getElementById('simChart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
+    if (chartInstance && chartInstance.config.type === 'radar') {
+        chartInstance.data.labels = labels;
+        chartInstance.data.datasets[0].data = stats;
+        chartInstance.update('none');
+        return;
+    }
+
+    if (chartInstance) chartInstance.destroy();
+
+    chartInstance = new Chart(ctx, {
+        type: 'radar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'ステータス',
+                data: stats,
+                backgroundColor: 'rgba(16, 185, 129, 0.35)',
+                borderColor: '#34d399',
+                borderWidth: 2,
+                pointBackgroundColor: '#fbbf24',
+                pointBorderColor: '#fff',
+                pointRadius: 3.5
+            }]
+        },
+        options: {
+            animation: false,
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                r: {
+                    min: 0,
+                    max: 100,
+                    beginAtZero: true,
+                    angleLines: { color: 'rgba(255, 255, 255, 0.12)' },
+                    grid: { color: 'rgba(255, 255, 255, 0.08)' },
+                    pointLabels: { color: '#cbd5e1', font: { size: 10.5, weight: 'bold' } },
+                    ticks: { display: false, stepSize: 20 }
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: { label: (c) => `能力スコア: ${c.raw} / 100` } }
+            }
+        }
+    });
+}
+
+function updateNisaDiagnosis(params) {
     if (typeof window.generateDiagnosis !== 'function') return;
 
-    const monthlyDraw = parseInt(document.getElementById('numDrawMonthly')?.value) || 0;
-    const drawReturn = parseFloat(document.getElementById('numDrawReturn')?.value) || 0;
-    const principal = Math.max(0, parseInt(document.getElementById('numMonthly')?.value || 0) * 12 * horizon + parseInt(document.getElementById('numInitial')?.value || 0));
-    const finalTaxSaved = Math.max(0, total - principal) * 0.20315;
-
-    const diag = window.generateDiagnosis({
-        mode,
-        total,
-        monthly,
-        initial,
-        returnRate,
-        drawReturn,
-        horizon,
-        depletedYear,
-        drawRate,
-        currentStress,
-        stressConfig: STRESS_CONFIG,
-        monthlyDraw,
-        principal,
-        finalTaxSaved
-    });
-
+    const diag = window.generateDiagnosis(params);
     currentDiagTitle = diag.title;
-    document.getElementById('diagTitle').innerText = diag.title;
-    document.getElementById('diagLevelTag').innerText = diag.level;
-    document.getElementById('diagTags').innerHTML = diag.tags.map(t => `<span class="style-tag">${t}</span>`).join('');
-    document.getElementById('carteContentArea').innerHTML = diag.carteHtml;
-    document.getElementById('fpStatusBadge').innerText = diag.statusBadgeText;
 
+    const diagTitleEl = document.getElementById('diagTitle');
+    const diagLevelEl = document.getElementById('diagLevelTag');
+    const diagTagsEl = document.getElementById('diagTags');
+    const carteEl = document.getElementById('carteContentArea');
     const rxBox = document.getElementById('prescriptionBox');
-    if (diag.rxButtonHtml) {
-        rxBox.innerHTML = diag.rxButtonHtml;
-        rxBox.style.display = 'block';
-    } else {
-        rxBox.style.display = 'none';
-        rxBox.innerHTML = '';
+    const badgeEl = document.getElementById('fpStatusBadge');
+
+    if (diagTitleEl) diagTitleEl.innerText = diag.title;
+    if (diagLevelEl) diagLevelEl.innerText = diag.level;
+    if (diagTagsEl) diagTagsEl.innerHTML = diag.tags.map(t => `<span class="style-tag">${t}</span>`).join('');
+    if (carteEl) carteEl.innerHTML = diag.carteHtml;
+    if (badgeEl) badgeEl.innerText = diag.statusBadgeText;
+
+    if (rxBox) {
+        if (diag.rxButtonHtml) {
+            rxBox.innerHTML = diag.rxButtonHtml;
+            rxBox.style.display = 'block';
+        } else {
+            rxBox.innerHTML = '';
+            rxBox.style.display = 'none';
+        }
     }
 }
 
-function shareOnX() {
-    let text = '';
-    const siteUrl = window.location.href.split('?')[0];
-    const bpStr = currentBP.toLocaleString();
-    if (currentTab === 'growth') {
-        const total = document.getElementById('mainStatHeaderValue').innerText;
-        text = `【新NISA投資戦闘力】私の戦闘力は… 【 ${bpStr} BP 】！\n称号: ${currentDiagTitle}\n\n💰 最終資産総額: ${total}\n新NISAシミュレーターで能力値レーダー・資産カルテを作成してみました！\n#新NISA #FIRE #投資戦闘力\n`;
-    } else {
-        const life = document.getElementById('mainStatHeaderValue').innerText;
-        text = `【新NISA出口戦略戦闘力】私の耐久力は… 【 ${bpStr} BP 】！\n称号: ${currentDiagTitle}\n\n⏳ 資産寿命: ${life}\n新NISAシミュレーターで取り崩し戦略を試算しました！\n#新NISA #出口戦略 #FIRE\n`;
+/* 📸 NISA 高解像度レポート画像のエクスポート（アスペクト比完全維持・歪み解消版） */
+function exportChartImage() {
+    const chartCanvas = document.getElementById('simChart');
+    if (!chartCanvas) {
+        showToast('グラフが生成されていません');
+        return;
     }
+
+    const prevView = displayView;
+    if (prevView === 'diag') {
+        switchDisplayView('line');
+    }
+
+    setTimeout(() => {
+        try {
+            const outW = 1200;
+            const outH = 800;
+            const offCanvas = document.createElement('canvas');
+            offCanvas.width = outW;
+            offCanvas.height = outH;
+            const ctx = offCanvas.getContext('2d');
+
+            const bgGrad = ctx.createLinearGradient(0, 0, 0, outH);
+            bgGrad.addColorStop(0, '#0f172a');
+            bgGrad.addColorStop(1, '#090d16');
+            ctx.fillStyle = bgGrad;
+            ctx.fillRect(0, 0, outW, outH);
+
+            ctx.strokeStyle = '#1e293b';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(1, 1, outW - 2, outH - 2);
+
+            ctx.fillStyle = '#34d399';
+            ctx.font = 'bold 24px sans-serif';
+            ctx.fillText(currentTab === 'growth' ? '新NISA 資産形成シミュレーション レポート' : '新NISA 出口・取り崩しシミュレーション レポート', 36, 40);
+
+            const cardX = 36, cardY = 55, cardW = outW - 72, cardH = 145;
+            ctx.fillStyle = '#131c2e';
+            ctx.strokeStyle = '#10b981';
+            ctx.lineWidth = 1.5;
+            roundRect(ctx, cardX, cardY, cardW, cardH, 10, true, true);
+
+            const totalVal = document.getElementById('mainStatHeaderValue')?.innerText || '¥0';
+            const prVal = document.getElementById('chipPrincipal')?.innerText || '¥0';
+            const gnVal = document.getElementById('chipGains')?.innerText || '¥0';
+            const taxVal = document.getElementById('chipTax')?.innerText || '¥0';
+            const title = currentDiagTitle || '新NISA資産形成診断';
+
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = 'bold 12px sans-serif';
+            ctx.fillText(currentTab === 'growth' ? '💰 最終到達 資産総額' : '⏳ 資産寿命 / 最終判定', cardX + 20, cardY + 26);
+            ctx.fillStyle = '#60a5fa';
+            ctx.font = 'bold 24px sans-serif';
+            ctx.fillText(totalVal, cardX + 20, cardY + 54);
+
+            if (currentTab === 'growth') {
+                ctx.fillStyle = '#cbd5e1';
+                ctx.font = '12px sans-serif';
+                ctx.fillText(`投資元本: `, cardX + 20, cardY + 85);
+                ctx.fillStyle = '#93c5fd';
+                ctx.font = 'bold 13px sans-serif';
+                ctx.fillText(prVal, cardX + 80, cardY + 85);
+
+                ctx.fillStyle = '#cbd5e1';
+                ctx.font = '12px sans-serif';
+                ctx.fillText(`運用益(非課税): `, cardX + 210, cardY + 85);
+                ctx.fillStyle = '#34d399';
+                ctx.font = 'bold 13px sans-serif';
+                ctx.fillText(gnVal, cardX + 310, cardY + 85);
+
+                ctx.fillStyle = '#cbd5e1';
+                ctx.font = '12px sans-serif';
+                ctx.fillText(`節税効果: `, cardX + 440, cardY + 85);
+                ctx.fillStyle = '#fbbf24';
+                ctx.font = 'bold 13px sans-serif';
+                ctx.fillText(taxVal, cardX + 500, cardY + 85);
+            } else {
+                const dAnn = document.getElementById('chipDrawAnnual')?.innerText || '¥0';
+                const dTot = document.getElementById('chipDrawTotal')?.innerText || '¥0';
+                ctx.fillStyle = '#cbd5e1';
+                ctx.font = '12px sans-serif';
+                ctx.fillText(`年間取崩額: `, cardX + 20, cardY + 85);
+                ctx.fillStyle = '#fbbf24';
+                ctx.font = 'bold 13px sans-serif';
+                ctx.fillText(dAnn, cardX + 90, cardY + 85);
+
+                ctx.fillStyle = '#cbd5e1';
+                ctx.font = '12px sans-serif';
+                ctx.fillText(`受取累計額: `, cardX + 220, cardY + 85);
+                ctx.fillStyle = '#34d399';
+                ctx.font = 'bold 13px sans-serif';
+                ctx.fillText(dTot, cardX + 295, cardY + 85);
+            }
+
+            ctx.fillStyle = '#fef08a';
+            ctx.font = 'bold 14px sans-serif';
+            ctx.fillText(title, cardX + 20, cardY + 122);
+
+            const m = parseInt(document.getElementById('numMonthly')?.value) || 0;
+            const y = document.getElementById('numHorizon')?.value || 0;
+            const r = document.getElementById('numReturn')?.value || 0;
+
+            const cond1 = currentTab === 'growth' ? `【投資枠】 新NISA (つみたて＋成長枠)` : `【出口方式】 ${drawdownMode === 'fixed' ? '定額取り崩し' : '定率取り崩し'}`;
+            const cond2 = currentTab === 'growth' ? `【積立条件】 毎月 ¥${m.toLocaleString()}  /  期間 ${y}年  /  年利 ${r}%` : `【取崩条件】 想定利回り ${document.getElementById('numDrawReturn')?.value}%`;
+
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = '13px sans-serif';
+            ctx.fillText(cond1, cardX + 650, cardY + 45);
+            ctx.fillText(cond2, cardX + 650, cardY + 75);
+
+            const graphX = 36, graphY = 215, graphW = outW - 72, graphH = 540;
+            ctx.fillStyle = '#0f172a';
+            ctx.strokeStyle = '#1e293b';
+            ctx.lineWidth = 1;
+            roundRect(ctx, graphX, graphY, graphW, graphH, 10, true, true);
+
+            const srcW = chartCanvas.width;
+            const srcH = chartCanvas.height;
+            const maxDrawW = graphW - 20;
+            const maxDrawH = graphH - 20;
+
+            const scale = Math.min(maxDrawW / srcW, maxDrawH / srcH);
+            const drawW = srcW * scale;
+            const drawH = srcH * scale;
+            const drawX = graphX + 10 + (maxDrawW - drawW) / 2;
+            const drawY = graphY + 10 + (maxDrawH - drawH) / 2;
+
+            ctx.drawImage(chartCanvas, drawX, drawY, drawW, drawH);
+
+            ctx.fillStyle = '#64748b';
+            ctx.font = '11px sans-serif';
+            const nowStr = new Date().toLocaleString('ja-JP');
+            ctx.fillText(`作成日時: ${nowStr}  |  新NISA 資産形成・戦闘力シミュレーター`, 40, outH - 15);
+
+            const a = document.createElement('a');
+            const dateStr = new Date().toISOString().slice(0, 10);
+            a.href = offCanvas.toDataURL('image/png', 1.0);
+            a.download = `新NISAシミュレーション_${dateStr}.png`;
+            a.click();
+            showToast('📸 高解像度レポート画像を保存しました！');
+
+        } catch (e) {
+            console.error(e);
+            showToast('画像の生成に失敗しました');
+        } finally {
+            if (prevView === 'diag') {
+                switchDisplayView('diag');
+            }
+        }
+    }, 100);
+}
+
+function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + width - radius, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+    ctx.lineTo(x + width, y + height - radius);
+    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+    ctx.lineTo(x + radius, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+    ctx.lineTo(x, y + radius);
+    ctx.quadraticCurveTo(x, y, x + radius, y);
+    ctx.closePath();
+    if (fill) ctx.fill();
+    if (stroke) ctx.stroke();
+}
+
+function shareOnX() {
+    const totStr = document.getElementById('mainStatHeaderValue')?.innerText || '¥0';
+    const bpStr = document.getElementById('bpValue')?.innerText || '0';
+    const siteUrl = window.location.href.split('?')[0];
+
+    const text = `【新NISAシミュレーター】
+私の新NISA投資戦闘力は…【 BP: ${bpStr} 】！
+最終到達資産は 【 ${totStr} 】！
+
+#新NISA #つみたてNISA #FIRE #資産形成
+`;
     const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(siteUrl)}`;
     window.open(shareUrl, '_blank');
 }
 
 function copySimulationUrl() {
     const params = new URLSearchParams();
-    if (currentTab === 'growth') {
-        params.set('tab', 'growth');
-        params.set('m', document.getElementById('numMonthly').value);
-        params.set('init', document.getElementById('numInitial').value);
-        params.set('r', document.getElementById('numReturn').value);
-        params.set('y', document.getElementById('numHorizon').value);
-        if (currentStress && currentStress !== 'none') {
-            params.set('stress', currentStress);
-        }
-    } else {
-        params.set('tab', 'drawdown');
-        params.set('start', document.getElementById('numDrawStart').value);
-        params.set('dm', document.getElementById('numDrawMonthly').value);
-        params.set('dr', document.getElementById('numDrawReturn').value);
-    }
+    params.set('m', document.getElementById('numMonthly')?.value || 50000);
+    params.set('init', document.getElementById('numInitial')?.value || 0);
+    params.set('y', document.getElementById('numHorizon')?.value || 25);
+    params.set('r', document.getElementById('numReturn')?.value || 5.0);
+
     const fullUrl = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
     navigator.clipboard.writeText(fullUrl).then(() => {
-        showToast('設定URLをコピーしました！');
+        showToast('シミュレーション設定URLをコピーしました！');
     }).catch(() => {
         prompt('以下のURLをコピーしてください:', fullUrl);
     });
 }
 
-function loadFromUrlParams() {
-    const params = new URLSearchParams(window.location.search);
-    if (params.has('m')) document.getElementById('numMonthly').value = params.get('m');
-    if (params.has('init')) document.getElementById('numInitial').value = params.get('init');
-    if (params.has('r')) document.getElementById('numReturn').value = params.get('r');
-    if (params.has('y')) document.getElementById('numHorizon').value = params.get('y');
-    if (params.has('stress')) {
-        currentStress = params.get('stress');
+function exportCsvReport() {
+    if (!latestTableData || latestTableData.length === 0) {
+        showToast('出力可能なデータがありません');
+        return;
+    }
+    const lines = [];
+    const nowStr = new Date().toLocaleString('ja-JP');
+    const dateFileStr = new Date().toISOString().slice(0, 10);
+
+    lines.push('# ==========================================');
+    lines.push('# 新NISA 資産形成・戦闘力シミュレーション レポート');
+    lines.push(`# 出力日時: ${nowStr}`);
+    lines.push('# ------------------------------------------');
+    lines.push(`# モード, ${currentTab === 'growth' ? '資産形成' : '出口・取り崩し'}`);
+    lines.push(`# 最終到達, ${document.getElementById('mainStatHeaderValue')?.innerText}`);
+    lines.push('# ==========================================');
+    lines.push('');
+
+    if (currentTab === 'growth') {
+        lines.push('経過年数,投資元本累計(円),運用総額(円),運用益(円),非課税節税額(円)');
+        latestTableData.forEach(row => {
+            lines.push(`${row.year}年目,${row.principal},${row.balance},${row.gains},${row.taxSavings}`);
+        });
+    } else {
+        lines.push('経過年数,年間受取額(円),受取累計額(円),資産残高(円)');
+        latestTableData.forEach(row => {
+            lines.push(`${row.year}年目,${row.annualDraw},${row.totalWithdrawn},${row.balance}`);
+        });
     }
 
-    if (params.has('start')) document.getElementById('numDrawStart').value = params.get('start');
-    if (params.has('dm')) document.getElementById('numDrawMonthly').value = params.get('dm');
-    if (params.has('dr')) document.getElementById('numDrawReturn').value = params.get('dr');
-
-    ['monthly', 'initial', 'return', 'horizon', 'drawStart', 'drawMonthly', 'drawReturn'].forEach(f => syncInputs(f, 'num', false));
-
-    if (params.get('tab') === 'drawdown') {
-        switchTab('drawdown', false);
-    }
+    const csvContent = '\uFEFF' + lines.join('\n') + '\n';
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `新NISAシミュレーション_${dateFileStr}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('📄 CSVレポートを出力しました！');
 }
 
-// ページ読み込み時の初期起動処理
-function initApp() {
-    loadSlot(1);
-    loadFromUrlParams();
+function initNisaApp() {
+    loadSlotData(1);
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('m')) setPreset('monthly', params.get('m'));
+    if (params.has('init')) setPreset('initial', params.get('init'));
+    if (params.has('y')) setPreset('horizon', params.get('y'));
+    if (params.has('r')) setPreset('return', params.get('r'));
+
     updateAll();
 }
 
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initApp);
+    document.addEventListener('DOMContentLoaded', initNisaApp);
 } else {
-    initApp();
+    initNisaApp();
 }

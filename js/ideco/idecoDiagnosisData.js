@@ -1,49 +1,638 @@
-/* 📋 iDeCo 診断カルテ・テキスト生成エンジン */
-window.generateIdecoDiagnosis = function (data) {
-  const { income, monthly, horizon, annualReturn, annualTax, totalTax, gains, total, currentJob } = data;
+/**
+ * iDeCo 資産カルテ・節税称号 判定エンジン (idecoDiagnosisData.js)
+ * 全55種類・職種特化＆ネタ枠完全収録版（現状分析・制度あるある/リスク・実践戦略）
+ */
+(function () {
+  const fmt = (v) => '¥' + Math.round(v).toLocaleString('ja-JP');
 
-  const fmtYen = (num) => '¥' + Math.round(num).toLocaleString('ja-JP');
+  const IDECO_DATABASE = [
+    /* ===================================================
+       【1. 特殊・極端ネタ枠 ＆ イースターエッグ】(Priority 100〜86)
+       =================================================== */
+    {
+      id: 'egg_homemaker_trap',
+      priority: 100,
+      match: (p) => p.currentJob === 'homemaker' && p.income === 0,
+      title: '🏠 資金ロックの自縄自縛・迷い込んだ主婦（夫）',
+      level: 'ZERO TAX SAVE',
+      statusBadge: '🚨 控除ゼロ警告',
+      tags: ['#所得控除ゼロ', '#60歳まで資金凍結', '#新NISAへ緊急退避'],
+      carte: (p) => [
+        ['【辛口警告】', '所得税・住民税が発生していないため、iDeCo最大の武器である「毎年の税金還付」が1円も発生しません。'],
+        ['【制度の罠】', '手に入るのは「運用益非課税」だけなのに、60歳まで1円も引き出せない重い足かせ（資金ロック）だけを背負っています。'],
+        ['【実践戦略】', 'いつでも解約でき、非課税枠が1,800万円ある「新NISA」に全額回すのが100%正解です。']
+      ],
+      rx: { text: '📈 新NISAシミュレーターへ移動する', fn: () => { window.location.href = 'index.html'; } }
+    },
+    {
+      id: 'egg_crazy_return',
+      priority: 99,
+      match: (p) => p.annualReturn >= 20.0,
+      title: '🎰 年金で草コイン勝負・破滅の暗号資産脳',
+      level: 'CRAZY HIGH RISK',
+      statusBadge: '🚨 ハイレバ警告',
+      tags: ['#年利20%超', '#iDeCoでギャンブル', '#退職金消滅リスク'],
+      carte: (p) => [
+        ['【現状分析】', `想定年利【${p.annualReturn}%】は老後年金の計算ではありません。iDeCoの取扱商品（投資信託・定期預金）では物理的に不可能です。`],
+        ['【リスク予測】', '60歳直前に大暴落を食らうと、せっかく節税した元本ごと消し飛んで老後破産します。'],
+        ['【実践戦略】', '正気に戻り、オルカン（年利5%）やS&P500（年利7%）の現実的な複利に設定しましょう。']
+      ],
+      rx: { text: '⚡ 処方箋: 王道オルカン（年利5%）に補正', fn: () => window.setIdecoPreset('return', 5.0) }
+    },
+    {
+      id: 'egg_zero_return',
+      priority: 98,
+      match: (p) => p.annualReturn === 0,
+      title: '🧊 60年タイムカプセル・タンス預金定期便',
+      level: 'ZERO GAIN',
+      statusBadge: '⚠️ インフレ負け',
+      tags: ['#利回り0%', '#元本確保型', '#インフレで実質目減り'],
+      carte: (p) => [
+        ['【現状分析】', '元本確保型（定期預金など）を選択中。毎年の所得控除による節税メリットだけを享受する超保守ビルドです。'],
+        ['【インフレの罠】', '運用益がゼロのため、年2%のインフレが進むと60歳で受け取るお金の「実質的な購買力」は大きく目減りしてしまいます。'],
+        ['【実践戦略】', '節税できた浮いたお金をノーリスクの利益と考え、本体は投資信託（全世界株等）で運用して複利も狙いましょう。']
+      ],
+      rx: { text: '⚡ 処方箋: 投資信託（年利5%）に切り替え', fn: () => window.setIdecoPreset('return', 5.0) }
+    },
+    {
+      id: 'egg_kamakura',
+      priority: 97,
+      match: (p) => p.monthly === 11920 || (p.income === 1192),
+      title: '🏯 鎌倉幕府ファンド（いい国作ろう所得控除）',
+      level: 'HISTORIC',
+      statusBadge: '📜 歴史の刻印',
+      tags: ['#1192年', '#頼朝節税', '#武士の老後対策'],
+      carte: (p) => [
+        ['【現状分析】', '1192（いい国）の語呂合わせで節税の幕府を開いた武士のような投資家です。'],
+        ['【歴史の教訓】', '鎌倉幕府は約140年続きました。iDeCoも60歳まで絶対にブレずに法度（掛金拠出）を守り抜くことが肝要です。'],
+        ['【実践戦略】', '北条氏の如く鉄壁のディフェンスで毎年の税金還付をきっちり回収し続けましょう。']
+      ]
+    },
+    {
+      id: 'egg_777',
+      priority: 96,
+      match: (p) => p.income === 777 || p.totalTax === 777600,
+      title: '🎰 スリーセブン・確変フィーバー節税',
+      level: 'JACKPOT',
+      statusBadge: '✨ 豪運の兆し',
+      tags: ['#777', '#確変突入', '#全額還付ラッシュ'],
+      carte: (p) => [
+        ['【現状分析】', '画面に「7」が美しく揃いました！ 年末調整の還付金という名の合法ビッグボーナスが確定しています。'],
+        ['【未来像】', '運ではなく税法という絶対のルールに基づき、毎年着実に手取り現金が増殖していきます。'],
+        ['【実践戦略】', '還付された税金を浪費せず、新NISAに再投資することで「節税×投資」の無限ループが完成します。']
+      ]
+    },
+    {
+      id: 'egg_tiny_starter',
+      priority: 95,
+      match: (p) => p.monthly === 5000 && p.horizon >= 30,
+      title: '🐜 ちりつもアリの一歩・30年ミニマム戦士',
+      level: 'TINY GIANT',
+      statusBadge: '🌱 最小スタート',
+      tags: ['#最低掛金5000円', '#30年耐久', '#枠拡大の余地あり'],
+      carte: (p) => [
+        ['【現状分析】', 'iDeCoの最低掛金（月5,000円）で30年以上の長期戦に挑む慎重派です。'],
+        ['【もったいない点】', '口座管理手数料（毎月約171円〜）が引かれるため、少額すぎると手数料負けのリスクがわずかに高まります。'],
+        ['【実践戦略】', '家計が許せば月1万円〜上限枠まで引き上げることで、節税効率と資産拡大ペースが跳ね上がります。']
+      ],
+      rx: { text: '⚡ 処方箋: 掛金を月1万円に引き上げ', fn: () => window.setIdecoPreset('monthly', 10000) }
+    },
+    {
+      id: 'egg_too_short',
+      priority: 94,
+      match: (p) => p.horizon <= 2,
+      title: '⚡ 定年目前・ギリギリ駆け込み脱兎',
+      level: 'TOO SHORT',
+      statusBadge: '⏳ 超短期決戦',
+      tags: ['#残り2年以下', '#駆け込み還付', '#複利未発動'],
+      carte: (p) => [
+        ['【現状分析】', '運用期間が2年以下。複利の恩恵はほぼ得られませんが、所得控除による「即効性のある税金還付」だけを狙う短期決戦です。'],
+        ['【出口注意】', '通算加入期間が10年未満の場合、受取開始可能年齢が60歳から最大65歳まで繰り下がる点に注意が必要です。'],
+        ['【実践戦略】', '暴落リスクを避けるため株式比率を抑え、確実な節税メリットを享受して受け取りに備えましょう。']
+      ]
+    },
 
-  let title = '';
-  let level = '';
-  let tags = [];
-  let carteHtml = '';
+    /* ===================================================
+       【2. 🏛️ 公務員（上限1.2万）特化枠】(Priority 85〜76)
+       =================================================== */
+    {
+      id: 'pub_high_income_max',
+      priority: 85,
+      match: (p) => p.currentJob === 'public' && p.income >= 800 && p.monthly >= 12000,
+      title: '🏛️ 枠の限界突破・エリート官僚の節税嘆き節',
+      level: 'CIVIL ELITE',
+      statusBadge: '⚖️ 枠上限到達',
+      tags: ['#公務員上限1.2万', '#高税率区分', '#新NISA併用必須'],
+      carte: (p) => [
+        ['【現状分析】', `年収【${p.income}万円】のエリート公務員。高い所得税率（20〜33%）のため、月1.2万円の極小枠でも毎年【${fmt(p.annualTax)}】をきっちり削り取っています。`],
+        ['【制度の悲哀】', '「共済年金と退職金があるから枠は1.2万で十分でしょ」という国の冷たい縛りプレイに直面しています。'],
+        ['【実践戦略】', '1.2万円は当然フルで埋めた上で、溢れる入金力はすべて新NISA（年360万枠）へ注ぎ込みましょう。']
+      ]
+    },
+    {
+      id: 'pub_young_30y',
+      priority: 84,
+      match: (p) => p.currentJob === 'public' && p.horizon >= 30 && p.monthly >= 12000,
+      title: '🏛️ 鉄壁公務員・30年共済＋iDeCo要塞',
+      level: 'CIVIL FORTRESS',
+      statusBadge: '🛡️ 鉄壁の城',
+      tags: ['#30年勤続', '#共済年金＋iDeCo', '#老後安泰確定'],
+      carte: (p) => [
+        ['【現状分析】', `定年まで30年以上。月1.2万円を満額積み立てることで、通算節税額【${fmt(p.totalTax)}】、資産総額【${fmt(p.total)}】をノーリスクで上乗せします。`],
+        ['【未来像】', '手厚い公的共済年金 ＋ 退職手当 ＋ iDeCo受取金により、老後の経済基盤は日本最強レベルに仕上がります。'],
+        ['【実践戦略】', '若いうちは全世界株（オルカン）100%で強気に攻め、複利の最大化を狙うのがベストです。']
+      ]
+    },
+    {
+      id: 'pub_retirement_clash',
+      priority: 83,
+      match: (p) => p.currentJob === 'public' && p.total >= 10000000 && p.horizon >= 25,
+      title: '⚠️ 公務員退職金クラッシュ・出口課税トラップ警戒級',
+      level: 'TAX TRAP WARN',
+      statusBadge: '🚨 出口注意',
+      tags: ['#公務員退職手当', '#退職所得控除の重複', '#一時金受取注意'],
+      carte: (p) => [
+        ['【現状分析】', `iDeCoの受取資産が【${fmt(p.total)}】まで大成長。非常に喜ばしい反面、出口の税金トラップが浮上します。`],
+        ['【退職金の罠】', '公務員の退職手当（約2,000万円超）で退職所得控除を使い切るため、iDeCoを同じ年に一時金で受け取るとガッツリ課税されます。'],
+        ['【実践戦略】', 'iDeCoを60歳で先に一時金受取し、5年以上空けて定年退職金を受け取るか、年金形式での分散受取を検討しましょう。']
+      ]
+    },
+    {
+      id: 'pub_elderly_rush',
+      priority: 82,
+      match: (p) => p.currentJob === 'public' && p.horizon <= 10 && p.monthly >= 12000,
+      title: '🏛️ 定年カウントダウン・小遣い還付ハンター',
+      level: 'CIVIL RUSH',
+      statusBadge: '⏳ ラストスパート',
+      tags: ['#50代公務員', '#小遣い還付', '#年金定期便確認'],
+      carte: (p) => [
+        ['【現状分析】', `定年まで残り【${p.horizon}年】。月1.2万円の満額拠出で、毎年【${fmt(p.annualTax)}】の税金を年末調整で確実に奪還します。`],
+        ['【手堅いメリット】', '相場の変動に関係なく、拠出した瞬間に年約15〜20%の「確定リターン（節税）」を得ているのと同じです。'],
+        ['【実践戦略】', '定年退職時の受取方法（一時金か年金か）を今からシミュレーションしておきましょう。']
+      ]
+    },
+    {
+      id: 'pub_under_used',
+      priority: 81,
+      match: (p) => p.currentJob === 'public' && p.monthly < 12000,
+      title: '🏛️ 枠放置の奥ゆかしい公務員・1.2万すらケチるな',
+      level: 'CIVIL SLACK',
+      statusBadge: '💡 満額推奨',
+      tags: ['#月1.2万未満', '#枠の無駄遣い', '#満額でも年14万'],
+      carte: (p) => [
+        ['【現状分析】', `ただでさえ狭い月1.2万円の上限に対し、月【${fmt(p.monthly)}】しか使っていません。`],
+        ['【ツッコミ】', '年間14.4万円しか使えない貴重な非課税枠です。これを使い切らないのは道端に落ちている現金を拾わないようなものです。'],
+        ['【実践戦略】', '迷わず上限の「月1.2万円」に設定し、国家公務員・地方公務員の権利をフル行使してください。']
+      ],
+      rx: { text: '⚡ 処方箋: 上限の月1.2万円に設定', fn: () => window.setIdecoPreset('monthly', 12000) }
+    },
+    {
+      id: 'pub_standard',
+      priority: 80,
+      match: (p) => p.currentJob === 'public',
+      title: '🏛️ 堅実公務員・スズメの涙枠フルハック',
+      level: 'CIVIL STANDARD',
+      statusBadge: '🌿 堅実運用',
+      tags: ['#公務員枠上限', '#共済年金補強', '#手堅い還付'],
+      carte: (p) => [
+        ['【現状分析】', `月1.2万円の上限をきっちり運用。通算で【${fmt(p.totalTax)}】の税金を取り戻し、60歳で【${fmt(p.total)}】の資産を形成します。`],
+        ['【制度の強み】', '公務員の安定した給与体系と相性抜群。毎年の年末調整で指定口座に現金が振り込まれます。'],
+        ['【実践戦略】', 'iDeCoは1.2万で固定し、残りのボーナスや余剰資金は新NISAの成長投資枠・つみたて投資枠で運用しましょう。']
+      ]
+    },
 
-  if (income >= 800) {
-    title = '🔥 超高所得・節税ブースト無双級';
-    level = 'TAX SAVER SSS';
-    tags = ['#税率30%超', '#節税効果最強', '#即効手取り増'];
-    carteHtml = `
-      <div class="carte-block"><span class="carte-heading">【節税診断】</span><span class="carte-text">高い税率区分（実効税率約30〜43%）に位置しているため、毎年の節税額【${fmtYen(annualTax)}】と抜群の破壊力を誇ります。</span></div>
-      <div class="carte-block"><span class="carte-heading">【確定利回り】</span><span class="carte-text">拠出した瞬間に約30%以上の確定リターンを得ているのと同等です。新NISAを満額埋めつつ、iDeCoも最優先で枠を使い切るのが鉄則です。</span></div>
-      <div class="carte-block"><span class="carte-heading">【受取時戦略】</span><span class="carte-text">60歳以降の受取時は「退職所得控除」をフル活用できるよう、退職金の一時金受取時期との重複に注意して出口を設計しましょう。</span></div>
-    `;
-  } else if (currentJob === 'self') {
-    title = '🚜 自営業最強・月6.8万フルハック級';
-    level = 'FREELANCE GOD';
-    tags = ['#月6.8万上限', '#年81.6万控除', '#社会保険対策'];
-    carteHtml = `
-      <div class="carte-block"><span class="carte-heading">【節税診断】</span><span class="carte-text">自営業・フリーランス最大の特権である「月6.8万円（年81.6万円）」の全額所得控除を活用。通算で【${fmtYen(totalTax)}】もの税金を手元に残せます。</span></div>
-      <div class="carte-block"><span class="carte-heading">【年金補強】</span><span class="carte-text">国民年金のみで手薄になりがちな老後保障を、強力な私的年金としてカバーできます。小規模企業共済との併用も非常に有効です。</span></div>
-    `;
-  } else if (currentJob === 'homemaker' || income === 0) {
-    title = '🏠 運用益非課税・マイペース形成級';
-    level = 'TAX SAVER B';
-    tags = ['#所得控除なし', '#運用益非課税', '#新NISA優先推奨'];
-    carteHtml = `
-      <div class="carte-block"><span class="carte-heading">【現状分析】</span><span class="carte-text">ご自身の所得税・住民税が発生していない場合、iDeCo最大のメリットである「掛金の所得控除（年末調整還付）」は受けられません。</span></div>
-      <div class="carte-block"><span class="carte-heading">【実践戦略】</span><span class="carte-text">いつでも引き出し可能で非課税枠が1,800万円ある「新NISA」を最優先で活用し、資金ロックのない柔軟な資産形成をおすすめします。</span></div>
-    `;
-  } else {
-    title = '👔 堅実サラリーマン・黄金バランス級';
-    level = 'TAX SAVER A';
-    tags = ['#年末調整で還付', '#複利の雪だるま', '#新NISA併用'];
-    carteHtml = `
-      <div class="carte-block"><span class="carte-heading">【節税診断】</span><span class="carte-text">毎年【${fmtYen(annualTax)}】が年末調整で指定口座に還付されます。通算で【${fmtYen(totalTax)}】の手取りが増加します。</span></div>
-      <div class="carte-block"><span class="carte-heading">【実質利回り】</span><span class="carte-text">相場が横ばい（利回り0%）であっても、税金還付分だけで年約15〜20%の利回りを得ている計算になります。</span></div>
-      <div class="carte-block"><span class="carte-heading">【実践戦略】</span><span class="carte-text">60歳まで使わない強制貯金枠としてiDeCoを運用しつつ、日常の突発費用には新NISAを組み合わせる二刀流が最強です。</span></div>
-    `;
-  }
+    /* ===================================================
+       【3. 🚜 自営業・フリーランス（上限6.8万）特化枠】(Priority 75〜65)
+       =================================================== */
+    {
+      id: 'self_super_god',
+      priority: 75,
+      match: (p) => p.currentJob === 'self' && p.income >= 900 && p.monthly >= 68000,
+      title: '🚜 確定申告粉砕・合法節税の神（月6.8万フルハック）',
+      level: 'FREELANCE GOD',
+      statusBadge: '👑 節税神到達',
+      tags: ['#年81.6万全額控除', '#所得税住民税国保激減', '#自営業の特権'],
+      carte: (p) => [
+        ['【驚異の節税力】', `年間81.6万円の全額所得控除！ 毎年の節税額は【${fmt(p.annualTax)}】、通算でなんと【${fmt(p.totalTax)}】もの税金を消滅させます。`],
+        ['【裏メリット】', '課税所得が81.6万円圧縮されるため、翌年の「国民健康保険料」まで上限近くまで劇的に安くなる三重の節税コンボです。'],
+        ['【実践戦略】', 'さらに「小規模企業共済（月7万）」を組み合わせれば年165.6万円控除。完全無欠の自営業要塞が完成します。']
+      ]
+    },
+    {
+      id: 'self_30y_castle',
+      priority: 74,
+      match: (p) => p.currentJob === 'self' && p.horizon >= 25 && p.monthly >= 68000,
+      title: '🏰 厚生年金撃破・自力構築の私設メガ年金城',
+      level: 'PRIVATE PENSION',
+      statusBadge: '🏰 巨大年金城',
+      tags: ['#月6.8万×長期', '#国民年金の弱点克服', '#億超え射程'],
+      carte: (p) => [
+        ['【現状分析】', `25年以上の長期にわたり月6.8万円を満額投下。60歳時点の資産総額は驚異の【${fmt(p.total)}】に到達します。`],
+        ['【弱点の完全克服】', '「国民年金だけでは老後月6.5万円しか出ない」という自営業最大の弱点を、自力で完全にねじ伏せて大富豪リタイアを確定させました。'],
+        ['【実践戦略】', '退職金がない自営業にとって、この資産受取時に「退職所得控除」を丸々使えるのも最大の税務メリットです。']
+      ]
+    },
+    {
+      id: 'self_sp500_max',
+      priority: 73,
+      match: (p) => p.currentJob === 'self' && p.monthly >= 68000 && p.annualReturn >= 7.0,
+      title: '🚀 爆速資本家フリーランス・年81万×S&P500砲',
+      level: 'AGGRESSIVE FREELANCE',
+      statusBadge: '🚀 攻撃力特化',
+      tags: ['#月6.8万上限', '#年利7%強気', '#資産爆発モード'],
+      carte: (p) => [
+        ['【圧倒的火力】', `毎月6.8万円×想定利回り【${p.annualReturn}%】。運用益【${fmt(p.gains)}】＋節税【${fmt(p.totalTax)}】のダブルエンジンが炸裂しています。`],
+        ['【未来像】', '個人事業で稼いだ利益を非課税マシーンに直結させ、同世代のサラリーマンを遥かに凌駕する資産形成スピードを誇ります。'],
+        ['【実践戦略】', '事業の運転資金（生活防衛費1〜2年分）を普通預金に残した上で、このハイパー積立を継続しましょう。']
+      ]
+    },
+    {
+      id: 'self_danger_low_monthly',
+      priority: 72,
+      match: (p) => p.currentJob === 'self' && p.monthly <= 15000,
+      title: '⚠️ 老後丸腰フリーランス・年81万の宝持ち腐れ級',
+      level: 'HIGH RISK PENSION',
+      statusBadge: '🚨 老後資金警告',
+      tags: ['#国民年金のみの恐怖', '#月6.8万枠放置', '#年金月6万の危機'],
+      carte: (p) => [
+        ['【危機感の共有】', `自営業は厚生年金が出ません。月【${fmt(p.monthly)}】の積立では、60歳以降の年金が国民年金（満額でも月約6.8万円）＋αにしかなりません。`],
+        ['【宝の持ち腐れ】', '国が用意してくれた年81.6万円のチート控除枠を大半余らせています。今すぐ税金を払うくらいならiDeCoに入れるべきです。'],
+        ['【実践戦略】', '売上の一部を経費感覚でiDeCoに回し、掛金を月3万〜6.8万円まで引き上げてください。']
+      ],
+      rx: { text: '⚡ 処方箋: 上限の月6.8万円に引き上げ', fn: () => window.setIdecoPreset('monthly', 68000) }
+    },
+    {
+      id: 'self_zero_tax_trap',
+      priority: 71,
+      match: (p) => p.currentJob === 'self' && p.income <= 150,
+      title: '📉 赤字申告の罠・所得控除が空振りする個人事業主',
+      level: 'ZERO TAX DANGER',
+      statusBadge: '⚠️ 控除不発',
+      tags: ['#所得ゼロ申告', '#節税効果不発', '#新NISA優先'],
+      carte: (p) => [
+        ['【税務診断】', '経費計上や控除により課税所得がほぼゼロの場合、iDeCoの「所得控除」による節税恩恵が発動しません。'],
+        ['【資金拘束リスク】', '税金が安くならないのに60歳までお金が引き出せないのは、資金繰りリスクを抱える自営業にとって命取りになり得ます。'],
+        ['【実践戦略】', '利益がしっかり出て税金が発生するまでは、いつでも現金化できる「新NISA」を最優先で使いましょう。']
+      ]
+    },
+    {
+      id: 'self_elderly_boost',
+      priority: 70,
+      match: (p) => p.currentJob === 'self' && p.horizon <= 10 && p.monthly >= 68000,
+      title: '🚜 50代個人事業主・年81万駆け込み大減税',
+      level: 'FREELANCE RUSH',
+      statusBadge: '⏳ 短期特大控除',
+      tags: ['#50代自営業', '#一気に所得圧縮', '#確定申告即効性'],
+      carte: (p) => [
+        ['【現状分析】', `残り【${p.horizon}年】でも年間81.6万円の破壊力は絶大。毎年【${fmt(p.annualTax)}】の現金を手元に残せます。`],
+        ['【退職金の創出】', '退職金制度のない自営業が、60歳時点で【${fmt(p.total)}】の「自家製退職金」を一気に受け取る見事な出口設計です。'],
+        ['【実践戦略】', '退職所得控除（加入1年につき40万円枠）をフル適用し、無税でごっそり回収しましょう。']
+      ]
+    },
+    {
+      id: 'self_standard',
+      priority: 69,
+      match: (p) => p.currentJob === 'self',
+      title: '🚜 自立自走フリーランス・手堅い年金防壁',
+      level: 'FREELANCE STANDARD',
+      statusBadge: '🌿 堅実年金',
+      tags: ['#自営業iDeCo', '#確定申告節税', '#国民年金上乗せ'],
+      carte: (p) => [
+        ['【現状分析】', `毎月【${fmt(p.monthly)}】を拠出し、通算【${fmt(p.totalTax)}】の税金を合法的に手元に残す堅実プランです。`],
+        ['【生活防衛】', '国民年金の不足分を補い、老後の生活水準を会社員並み以上に引き上げる重要なセーフティネットになります。'],
+        ['【実践戦略】', '業績が良い年は迷わず上限（月6.8万）まで引き上げ、経費感覚で資産を蓄積していきましょう。']
+      ]
+    },
 
-  return { title, level, tags, carteHtml };
-};
+    /* ===================================================
+       【4. 🏢 会社員(企業年金あり / 上限2.0万) 特化枠】(Priority 64〜55)
+       =================================================== */
+    {
+      id: 'emp2_high_income_max',
+      priority: 64,
+      match: (p) => p.currentJob === 'employee2' && p.income >= 900 && p.monthly >= 20000,
+      title: '🏢 大手エリート・企業DC＋個人iDeCoの完全武装',
+      level: 'CORPORATE ELITE',
+      statusBadge: '💎 企業DC併用',
+      tags: ['#年収900万超', '#企業年金あり', '#税率30%オーバー'],
+      carte: (p) => [
+        ['【現状分析】', `会社の企業型DC・企業年金に加え、個人型iDeCo（月2万円）を満額併用。高い実効税率（約30〜43%）から毎年【${fmt(p.annualTax)}】を奪還しています。`],
+        ['【ダブルの強み】', '会社拠出の退職金 ＋ 自分拠出の節税マネーが同時に運用され、老後資金の複利エンジンが二重に回転しています。'],
+        ['【実践戦略】', '新NISA枠も並行して埋めることで、定年時には数千万円〜1億円規模のメガ資産が完成します。']
+      ]
+    },
+    {
+      id: 'emp2_30y_master',
+      priority: 63,
+      match: (p) => p.currentJob === 'employee2' && p.horizon >= 30 && p.monthly >= 20000,
+      title: '🏢 30年勤続の大樹・退職金二重取りマスター',
+      level: 'CORP TITAN',
+      statusBadge: '🛡️ 重厚ディフェンス',
+      tags: ['#30年長期運用', '#退職金二重取り', '#企業年金ハイブリッド'],
+      carte: (p) => [
+        ['【現状分析】', `30年スパンで月2万円をフル投下。受取総額は【${fmt(p.total)}】、節税累計は【${fmt(p.totalTax)}】に達します。`],
+        ['【複利の爆発力】', '月2万という一見控えめな金額でも、30年の歳月と全世界株・S&P500の利回りが合わさることで巨大な塊に化けます。'],
+        ['【実践戦略】', '会社の企業DC側の運用商品も定期預金ではなく、信託報酬の安いインデックス投信にスイッチしておきましょう。']
+      ]
+    },
+    {
+      id: 'emp2_retirement_warn',
+      priority: 62,
+      match: (p) => p.currentJob === 'employee2' && p.total >= 8000000 && p.horizon >= 20,
+      title: '⚠️ 会社の退職金と重複注意・出口控除オーバー予備軍',
+      level: 'TAX OVER WARN',
+      statusBadge: '🚨 出口注意',
+      tags: ['#会社退職金重複', '#退職所得控除の枠争い', '#5年ルール注意'],
+      carte: (p) => [
+        ['【現状分析】', `iDeCoの資産が【${fmt(p.total)}】に成長。ここで気をつけたいのが「会社の退職金との同時受取」です。`],
+        ['【税務の落とし穴】', '同じ年に会社の退職金とiDeCo一時金を受け取ると、退職所得控除の枠を取り合って一部が課税対象になります。'],
+        ['【実践戦略】', 'iDeCoを60歳で先に一時金受取し、会社の退職金を65歳で受け取る（5年空ける）など、受取時期の分散を計画しましょう。']
+      ]
+    },
+    {
+      id: 'emp2_slack_5k',
+      priority: 61,
+      match: (p) => p.currentJob === 'employee2' && p.monthly <= 10000,
+      title: '🏢 会社任せの思考停止・枠余らせサラリーマン',
+      level: 'CORP SLACK',
+      statusBadge: '💡 上限推奨',
+      tags: ['#上限2万', '#月1万未満', '#会社任せ卒業'],
+      carte: (p) => [
+        ['【現状分析】', `月2万円まで使える枠に対し、月【${fmt(p.monthly)}】しか拠出していません。`],
+        ['【もったいない点】', '会社が企業年金を出してくれている恵まれた環境ですが、自分自身の節税枠を余らせるのは手取りを捨てているのと同じです。'],
+        ['【実践戦略】', '上限の月2万円に設定し、年末調整での還付金を最大化させましょう。']
+      ],
+      rx: { text: '⚡ 処方箋: 上限の月2万円に設定', fn: () => window.setIdecoPreset('monthly', 20000) }
+    },
+    {
+      id: 'emp2_standard',
+      priority: 60,
+      match: (p) => p.currentJob === 'employee2',
+      title: '🏢 堅実企業人・手堅い2万円ハイブリッド',
+      level: 'CORP STANDARD',
+      statusBadge: '🌿 堅実運用',
+      tags: ['#企業年金あり', '#月2万上限', '#年末調整還付'],
+      carte: (p) => [
+        ['【現状分析】', `企業年金とiDeCoを組み合わせ、通算【${fmt(p.totalTax)}】の手取りを増やしつつ【${fmt(p.total)}】を形成します。`],
+        ['【制度のメリット】', '給与天引きまたは口座振替で自動的に節税貯金が積み上がる、最も失敗しにくい王道ルートです。'],
+        ['【実践戦略】', '新NISAと併用し、生活防衛資金は確保した上で余剰資金を淡々と積み増していきましょう。']
+      ]
+    },
+
+    /* ===================================================
+       【5. 👔 会社員(企業年金なし / 上限2.3万) 特化枠】(Priority 59〜48)
+       =================================================== */
+    {
+      id: 'emp1_ultra_high_income',
+      priority: 59,
+      match: (p) => p.currentJob === 'employee1' && p.income >= 1200 && p.monthly >= 23000,
+      title: '🔥 税率43%粉砕・国家パトロン卒業エリート',
+      level: 'TAX DESTROYER SSS',
+      statusBadge: '👑 節税無双',
+      tags: ['#年収1200万超', '#所得税率33%超', '#即効手取り奪還'],
+      carte: (p) => [
+        ['【衝撃の節税率】', `所得税33%＋住民税10%＝実効税率約43%！ 拠出した瞬間に【43%の確定リターン】を得ているのと同等です。`],
+        ['【国家への逆襲】', '重税に苦しむ高所得サラリーマンにとって、iDeCoの全額所得控除は数少ない合法的な最強防衛手段です。'],
+        ['【実践戦略】', '月2.3万円は呼吸するように満額埋め立て、新NISAも最速で埋め尽くしてください。']
+      ]
+    },
+    {
+      id: 'emp1_high_income_max',
+      priority: 58,
+      match: (p) => p.currentJob === 'employee1' && p.income >= 750 && p.monthly >= 23000,
+      title: '💼 高所得サラリーマン・年末調整の錬金術師',
+      level: 'TAX SAVER S',
+      statusBadge: '💎 高還付回収',
+      tags: ['#年収750万超', '#実効税率約30%', '#月2.3万フル活用'],
+      carte: (p) => [
+        ['【現状分析】', `実効税率約30%（所得税20%+住民税10%）。毎年【${fmt(p.annualTax)}】が年末調整で指定口座に現金還付されます。`],
+        ['【投資の真理】', '相場が暴落しようが横ばいだろうが、拠出した時点で年30%の利回りが確定しているチート状態です。'],
+        ['【実践戦略】', '還付された約8万円の現金はそのまま新NISAの成長投資枠へスライド投入するのがプロの鉄則です。']
+      ]
+    },
+    {
+      id: 'emp1_young_35y_runner',
+      priority: 57,
+      match: (p) => p.currentJob === 'employee1' && p.horizon >= 35 && p.monthly >= 23000,
+      title: '🏎️ 20代新卒フルスパン・老後億り人予約組',
+      level: 'EARLY RUNNER',
+      statusBadge: '🚀 35年フル加速',
+      tags: ['#20代スタート', '#35年長期複利', '#月2.3万満額'],
+      carte: (p) => [
+        ['【最強の武器：時間】', `運用期間【${p.horizon}年】。投資の世界で最も強力な「時間」を最大限に味方につけた無敵のポジションです。`],
+        ['【複利の爆発】', `元本【${fmt(p.monthly * 12 * p.horizon)}】に対し、運用益【${fmt(p.gains)}】と雪だるまが巨大化。受取総額は【${fmt(p.total)}】に化けます。`],
+        ['【実践戦略】', '日々の相場ニュースは見なくてOK。設定したら60歳まで完全に放置（気絶）して本業に集中しましょう。']
+      ]
+    },
+    {
+      id: 'emp1_modest_saver',
+      priority: 56,
+      match: (p) => p.currentJob === 'employee1' && p.income <= 400 && p.monthly >= 20000,
+      title: '👔 家計防衛ファイター・手取り死守の知性派',
+      level: 'SMART SAVER',
+      statusBadge: '🛡️ 家計防衛',
+      tags: ['#年収400万以下', '#手取り死守', '#堅実月2万超'],
+      carte: (p) => [
+        ['【現状分析】', `決して無理のない年収帯から月【${fmt(p.monthly)}】を捻出。毎年【${fmt(p.annualTax)}】の税金を確実に取り戻しています。`],
+        ['【生活への直結】', '戻ってきた数万円は、年1回の家族旅行や特別費、あるいは新NISAの積立原資として絶大な価値を持ちます。'],
+        ['【実践戦略】', '急な出費で困らないよう、生活費半年分の普通預金を確保した上でこのペースをキープしましょう。']
+      ]
+    },
+    {
+      id: 'emp1_elderly_rush',
+      priority: 55,
+      match: (p) => p.currentJob === 'employee1' && p.horizon <= 10 && p.monthly >= 23000,
+      title: '⏳ 50代ラストスパート・駆け込み還付回収マン',
+      level: 'LAST SPURT',
+      statusBadge: '⏳ 10年決戦',
+      tags: ['#50代会社員', '#10年以下', '#確実な節税回収'],
+      carte: (p) => [
+        ['【現状分析】', `定年まで残り【${p.horizon}年】。月2.3万円を満額拠出することで、通算【${fmt(p.totalTax)}】の税金を確実に奪還します。`],
+        ['【手堅いメリット】', '期間が短いため複利の爆発力は控えめですが、所得控除による「確定利回り」を回収するラストチャンスです。'],
+        ['【実践戦略】', '60歳以降も再雇用で働く場合は、65歳まで拠出期間を延長してさらに節税額を伸ばすのがおすすめです。']
+      ]
+    },
+    {
+      id: 'emp1_slack_under_used',
+      priority: 54,
+      match: (p) => p.currentJob === 'employee1' && p.monthly <= 10000,
+      title: '🤏 枠2.3万あるのにおっかなびっくり・枠余らせ社員',
+      level: 'SLACK EMP',
+      statusBadge: '💡 増額推奨',
+      tags: ['#月1万以下', '#枠2.3万', '#もったいない'],
+      carte: (p) => [
+        ['【現状分析】', `一般会社員の上限（月2.3万円）に対し、月【${fmt(p.monthly)}】しか使っていません。`],
+        ['【もったいない点】', '毎年の所得控除枠を半分以上捨てている状態です。口座管理手数料（年約2,000円〜）の負担割合も高くなります。'],
+        ['【実践戦略】', 'まずは月1.5万〜満額の2.3万円に引き上げ、年末調整での還付金を倍増させましょう。']
+      ],
+      rx: { text: '⚡ 処方箋: 上限の月2.3万円に設定', fn: () => window.setIdecoPreset('monthly', 23000) }
+    },
+    {
+      id: 'emp1_sp500_aggressive',
+      priority: 53,
+      match: (p) => p.currentJob === 'employee1' && p.monthly >= 20000 && p.annualReturn >= 7.0,
+      title: '🚀 積極派サラリーマン・S&P500満額フルスロットル',
+      level: 'GROWTH SAVER',
+      statusBadge: '🚀 積極形成',
+      tags: ['#月2.3万満額', '#年利7%強気', '#複利最大化'],
+      carte: (p) => [
+        ['【現状分析】', `月2.3万円×想定利回り【${p.annualReturn}%】。運用益【${fmt(p.gains)}】と節税【${fmt(p.totalTax)}】をフルに刈り取る積極的ポートフォリオです。`],
+        ['【未来像】', '退職金制度のない中小企業勤務であっても、60歳時点で【${fmt(p.total)}】のメガ退職金を自力で生み出せます。'],
+        ['【実践戦略】', '相場下落時にも絶対に積立を止めない握力を保ち続けましょう。']
+      ]
+    },
+    {
+      id: 'emp1_standard',
+      priority: 50,
+      match: (p) => p.currentJob === 'employee1',
+      title: '👔 王道サラリーマン・黄金バランスiDeCo',
+      level: 'TAX SAVER A',
+      statusBadge: '🌿 黄金バランス',
+      tags: ['#会社員iDeCo', '#年末調整で還付', '#複利の雪だるま'],
+      carte: (p) => [
+        ['【現状分析】', `毎年【${fmt(p.annualTax)}】が年末調整で指定口座に還付されます。通算で【${fmt(p.totalTax)}】の手取りが増加します。`],
+        ['【実質利回り】', '相場が横ばい（利回り0%）であっても、税金還付分だけで年約15〜20%の利回りを得ている計算になります。'],
+        ['【実践戦略】', '60歳まで使わない強制貯金枠としてiDeCoを活用しつつ、日常の突発費用には新NISAを組み合わせる二刀流が最強です。']
+      ]
+    },
+
+    /* ===================================================
+       【6. 🏠 専業主婦・主夫 特化枠】(Priority 47〜40)
+       =================================================== */
+    {
+      id: 'home_sp500_max',
+      priority: 47,
+      match: (p) => p.currentJob === 'homemaker' && p.annualReturn >= 7.0 && p.monthly >= 20000,
+      title: '🎰 専業主婦のへそくり強気ハイレバ運用',
+      level: 'HOUSEWIFE HIGH',
+      statusBadge: '📈 積極へそくり',
+      tags: ['#控除なし', '#年利7%強気', '#新NISA推奨'],
+      carte: (p) => [
+        ['【現状分析】', '所得控除ゼロの条件下で、月2.3万円を満額S&P500等で強気運用。純粋な「運用益非課税」だけを狙いにいくストイック派です。'],
+        ['【率直なアドバイス】', '運用益非課税だけが目的なら、いつでもペナルティなしで引き出せる「新NISA」のほうが100倍使い勝手が良いです。'],
+        ['【実践戦略】', '夫のiDeCo枠を満額使い切った上で、家庭の余剰資金を新NISAに投入していく順序が理想的です。']
+      ]
+    },
+    {
+      id: 'home_young_lock_warn',
+      priority: 46,
+      match: (p) => p.currentJob === 'homemaker' && p.horizon >= 25,
+      title: '🏠 20代〜30代主婦の資金ロック注意報',
+      level: 'LOCK WARNING',
+      statusBadge: '⚠️ 資金凍結注意',
+      tags: ['#20年以上の拘束', '#所得控除なし', '#新NISA優先'],
+      carte: (p) => [
+        ['【ライフプラン警告】', 'これから教育費や住宅購入などでお金が必要になる時期に、60歳まで1円も引き出せない口座にお金を預けるのはリスクです。'],
+        ['【制度の比較】', '新NISAなら途中で売却して教育費に充てることも、翌年に枠を再利用することも可能です。'],
+        ['【実践戦略】', 'iDeCoは一度加入すると原則解約できません。迷っているなら新NISA一本に絞りましょう。']
+      ],
+      rx: { text: '📈 新NISAシミュレーターへ移動', fn: () => { window.location.href = 'index.html'; } }
+    },
+    {
+      id: 'home_elderly_rush',
+      priority: 45,
+      match: (p) => p.currentJob === 'homemaker' && p.horizon <= 10,
+      title: '🏠 50代主婦・定年前のマイペース非課税作り',
+      level: 'HOUSEWIFE RUSH',
+      statusBadge: '🌱 堅実形成',
+      tags: ['#50代主婦', '#残り10年以下', '#老後資金専用'],
+      carte: (p) => [
+        ['【現状分析】', `残り【${p.horizon}年】。控除はありませんが、60歳で受け取る自分名義の退職金として【${fmt(p.total)}】を育てています。`],
+        ['【注意点】', '加入期間が10年未満の場合、受取開始が60歳から遅れる（最長65歳）点にご留意ください。'],
+        ['【実践戦略】', 'リスクを抑えたバランス型投信または新NISAと併用して着実にゴールを目指しましょう。']
+      ]
+    },
+    {
+      id: 'home_standard',
+      priority: 40,
+      match: (p) => p.currentJob === 'homemaker',
+      title: '🏠 マイペース運用・非課税ストイック主婦（夫）',
+      level: 'TAX SAVER B',
+      statusBadge: '🌱 運用益非課税',
+      tags: ['#所得控除なし', '#運用益非課税', '#新NISA優先推奨'],
+      carte: (p) => [
+        ['【現状分析】', 'ご自身の所得税・住民税が発生していない場合、iDeCo最大の強みである「毎年の税金還付」は発生しません。'],
+        ['【実践戦略】', 'いつでも引き出し可能で非課税枠が1,800万円ある「新NISA」を最優先で活用し、資金ロックのない柔軟な資産形成をおすすめします。'],
+        ['【二刀流の条件】', '夫（妻）のiDeCoと新NISA枠をすべて使い切った後の「第3の選択肢」として活用するのがベストです。']
+      ]
+    },
+
+    /* ===================================================
+       【7. 資産規模・通算節税額 汎用ランクフォールバック】(Priority 30〜10)
+       =================================================== */
+    {
+      id: 'rank_tax_god',
+      priority: 30,
+      match: (p) => p.totalTax >= 2000000,
+      title: '🪐 節税メガロドン・通算200万超の脱税級ディフェンス',
+      level: 'TAX GOD',
+      statusBadge: '👑 節税200万突破',
+      tags: ['#通算節税200万超', '#国家から手取り奪還', '#完全無欠'],
+      carte: (p) => [
+        ['【圧倒的実績】', `通算節税額【${fmt(p.totalTax)}】！ 高級車が1台買えるレベルの税金を合法的に手元に残しました。`],
+        ['【資産の要塞】', `60歳受取総額は【${fmt(p.total)}】に達し、老後不安は完全に消滅しています。`],
+        ['【実践戦略】', '受け取り時の退職所得控除枠を綿密に計算し、無税または最小限の課税で逃げ切る出口戦略を固めましょう。']
+      ]
+    },
+    {
+      id: 'rank_asset_huge',
+      priority: 25,
+      match: (p) => p.total >= 30000000,
+      title: '👑 60歳メガリッチ・私設年金3000万超え級',
+      level: 'RETIRE SSS',
+      statusBadge: '💎 3000万到達',
+      tags: ['#60歳3000万', '#年金富豪', '#完全勝利'],
+      carte: (p) => [
+        ['【現状分析】', `iDeCo単体で【${fmt(p.total)}】の資産を形成。公的年金と合わせれば、死ぬまでお金に困らないリタイア生活が確定します。`],
+        ['【出口の設計】', '一度に受け取ると税率が高くなる可能性があるため、「一部一時金＋残り年金受取」の併用分割も検討しましょう。'],
+        ['【実践戦略】', '退職後の人生設計や健康維持、旅行など、有意義な使い道に意識を向け始めましょう。']
+      ]
+    },
+    {
+      id: 'rank_standard_fallback',
+      priority: 10,
+      match: () => true,
+      title: '🛡️ 堅実iDeCoチャレンジャー・手堅い老後防衛',
+      level: 'TAX SAVER A',
+      statusBadge: '🌿 診断完了',
+      tags: ['#iDeCo活用', '#所得控除', '#老後資金準備'],
+      carte: (p) => [
+        ['【現状分析】', `毎月の掛金【${fmt(p.monthly)}】により、毎年【${fmt(p.annualTax)}】の税金を浮かせつつ、60歳で【${fmt(p.total)}】を準備する計画です。`],
+        ['【制度の強み】', '強制的な貯蓄習慣と所得控除による即効性のある手取り増が最大のメリットです。'],
+        ['【実践戦略】', 'スライダーを動かして年収や掛金を変えてみたり、新NISAとのバランスを調整して最適なプランを見つけてください。']
+      ]
+    }
+  ];
+
+  /* ===================================================
+     公開API：診断結果の生成
+     =================================================== */
+  window.generateIdecoDiagnosis = function (params) {
+    const sorted = IDECO_DATABASE.slice().sort((a, b) => b.priority - a.priority);
+    const item = sorted.find(def => def.match(params)) || IDECO_DATABASE[IDECO_DATABASE.length - 1];
+
+    const cartePairs = typeof item.carte === 'function' ? item.carte(params) : [];
+    const carteHtml = cartePairs.map(([head, body]) => `
+      <div class="carte-block">
+        <span class="carte-heading">${head}</span>
+        <span class="carte-text">${body}</span>
+      </div>
+    `).join('');
+
+    let rxButtonHtml = '';
+    if (item.rx && item.rx.text && typeof item.rx.fn === 'function') {
+      const fnName = `__ideco_rx_${item.id}`;
+      window[fnName] = item.rx.fn;
+      rxButtonHtml = `<div class="prescription-btn-wrap"><button class="btn-rx-action" onclick="window['${fnName}']()">${item.rx.text}</button></div>`;
+    }
+
+    return {
+      title: item.title,
+      level: item.level,
+      tags: item.tags || [],
+      carteHtml: carteHtml,
+      rxButtonHtml: rxButtonHtml,
+      statusBadgeText: item.statusBadge || '診断完了'
+    };
+  };
+})();
