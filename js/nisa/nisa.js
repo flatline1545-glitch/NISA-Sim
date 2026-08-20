@@ -1,6 +1,6 @@
 /**
  * 新NISA 資産形成・戦闘力シミュレーター コアエンジン (nisa.js)
- * 資産形成 / 定額・定率取り崩し / 暴落ストレステスト / 3スロット保存 / 画像出力 完全対応版
+ * 資産形成(課税手取り線付き) / 出口取崩(現金放置比較線付き) / 暴落テスト / 3スロット / 画像出力
  */
 
 let currentTab = 'growth'; // 'growth' | 'drawdown'
@@ -192,7 +192,7 @@ function setStress(type, triggerUpdate = true) {
 }
 
 function importFromGrowthResult() {
-    const currentTotalText = document.getElementById('chipPrincipal')?.innerText || '¥0';
+    const currentTotalText = document.getElementById('mainStatHeaderValue')?.innerText || '¥0';
     const numVal = parseInt(currentTotalText.replace(/[^0-9]/g, '')) || 30000000;
     const growthFinalVal = window.__lastGrowthTotal || numVal;
     setPreset('drawStart', Math.round(growthFinalVal));
@@ -324,11 +324,11 @@ function calcGrowthMode() {
 
     let balance = initial;
     let principal = initial;
-    let isCapReached = initial >= NISA_MAX_LIFETIME_CAP;
 
     const labels = ['0年'];
     const dataPrincipal = [initial];
     const dataTotal = [initial];
+    const dataTaxedNet = [initial]; // 課税後手取りの点線
     const tableRows = [];
     latestTableData = [];
 
@@ -341,7 +341,6 @@ function calcGrowthMode() {
         if (isCapEnabled) {
             if (principal + add > NISA_MAX_LIFETIME_CAP) {
                 add = Math.max(0, NISA_MAX_LIFETIME_CAP - principal);
-                isCapReached = true;
             }
         }
         principal += add;
@@ -356,10 +355,12 @@ function calcGrowthMode() {
             const y = m / 12;
             const gains = Math.max(0, balance - principal);
             const taxSavings = gains * TAX_RATE;
+            const taxedNet = balance - taxSavings; // 課税後手取り
 
             labels.push(y + '年目');
             dataPrincipal.push(Math.round(principal));
             dataTotal.push(Math.round(balance));
+            dataTaxedNet.push(Math.round(taxedNet));
 
             latestTableData.push({
                 year: y,
@@ -396,7 +397,6 @@ function calcGrowthMode() {
     document.getElementById('chipGains').innerText = `+${fmtYen(finalGains)}`;
     document.getElementById('chipTax').innerText = `+${fmtYen(finalTaxSavings)}`;
 
-    // テーブルヘッダーと中身
     document.getElementById('tableHeader').innerHTML = `
     <tr>
       <th>年数</th>
@@ -417,7 +417,7 @@ function calcGrowthMode() {
     radarStats = [atk, def, cri, fill, vit];
 
     if (displayView === 'line') {
-        renderNisaLineChart(labels, dataPrincipal, dataTotal);
+        renderNisaTriLineChart(labels, dataPrincipal, dataTotal, dataTaxedNet, '元本合計', '受取資産総額(元本+運用益)', '課税手取り(特定口座比較)');
     } else if (displayView === 'radar') {
         renderNisaRadarChart(['入金火力 (ATK)', '複利耐久 (DEF)', '会心利回り (CRI)', '枠充填度 (FILL)', '資産体力 (VIT)'], radarStats);
     }
@@ -454,14 +454,18 @@ function calcDrawdownMode() {
     const labels = ['0年'];
     const dataTotal = [startAsset];
     const dataWithdrawn = [0];
+    const dataZeroYieldBalance = [startAsset]; // 現金放置(利回り0%)の残高線
     const tableRows = [];
     latestTableData = [];
 
     let annualDrawAccum = 0;
+    let zeroYieldBal = startAsset;
 
     for (let m = 1; m <= totalMonths; m++) {
         let curMonthDraw = (drawdownMode === 'fixed') ? monthlyDraw : (balance * (drawRate / 12));
+        let zeroMonthDraw = (drawdownMode === 'fixed') ? monthlyDraw : (zeroYieldBal * (drawRate / 12));
 
+        // 運用しながら取り崩し
         if (balance <= 0) {
             curMonthDraw = 0;
             if (depletedYear === null) depletedYear = m / 12;
@@ -473,6 +477,11 @@ function calcDrawdownMode() {
             balance = (balance - curMonthDraw) * (1 + monthlyRate);
         }
 
+        // 現金放置(利回り0%)での取り崩し
+        if (zeroYieldBal > 0) {
+            zeroYieldBal = Math.max(0, zeroYieldBal - zeroMonthDraw);
+        }
+
         totalWithdrawn += curMonthDraw;
         annualDrawAccum += curMonthDraw;
 
@@ -481,6 +490,7 @@ function calcDrawdownMode() {
             labels.push(y + '年目');
             dataTotal.push(Math.round(balance));
             dataWithdrawn.push(Math.round(totalWithdrawn));
+            dataZeroYieldBalance.push(Math.round(zeroYieldBal));
 
             latestTableData.push({
                 year: y,
@@ -501,7 +511,6 @@ function calcDrawdownMode() {
         }
     }
 
-    // 純粋現金食いつぶしとの延命比較
     let zeroYieldDeplete = startAsset > 0 && monthlyDraw > 0 ? (startAsset / (monthlyDraw * 12)) : 0;
     let diffYearsText = '--';
     if (depletedYear) {
@@ -530,7 +539,7 @@ function calcDrawdownMode() {
     document.getElementById('tableBody').innerHTML = tableRows.join('');
 
     if (displayView === 'line') {
-        renderNisaLineChart(labels, dataWithdrawn, dataTotal, ['受取累計額', '資産残高']);
+        renderNisaTriLineChart(labels, dataWithdrawn, dataTotal, dataZeroYieldBalance, '受取累計額', '資産残高(運用継続)', '現金放置残高(利回り0%)');
     } else if (displayView === 'radar') {
         const atk = Math.min(100, Math.round((startAsset / 100000000) * 100));
         const def = depletedYear ? Math.min(100, Math.round((depletedYear / 30) * 100)) : 100;
@@ -558,13 +567,11 @@ function animateBpCounter(targetBp) {
     el.innerText = targetBp.toLocaleString();
 }
 
-function renderNisaLineChart(labels, data1, data2, customLegends) {
+/* 3本ライン（青エリア・緑エリア・黄色点線）の汎用描画 */
+function renderNisaTriLineChart(labels, data1, data2, dataDashed, l1, l2, l3) {
     const canvas = document.getElementById('simChart');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-
-    const l1 = customLegends ? customLegends[0] : '元本合計';
-    const l2 = customLegends ? customLegends[1] : '受取資産総額(元本+運用益)';
 
     if (chartInstance && chartInstance.config.type === 'line') {
         chartInstance.data.labels = labels;
@@ -572,6 +579,8 @@ function renderNisaLineChart(labels, data1, data2, customLegends) {
         chartInstance.data.datasets[0].data = data1;
         chartInstance.data.datasets[1].label = l2;
         chartInstance.data.datasets[1].data = data2;
+        chartInstance.data.datasets[2].label = l3;
+        chartInstance.data.datasets[2].data = dataDashed;
         chartInstance.update('none');
         return;
     }
@@ -593,7 +602,7 @@ function renderNisaLineChart(labels, data1, data2, customLegends) {
                     pointStyle: 'circle',
                     pointRadius: 0,
                     pointHoverRadius: 4,
-                    order: 2
+                    order: 3
                 },
                 {
                     label: l2,
@@ -603,6 +612,18 @@ function renderNisaLineChart(labels, data1, data2, customLegends) {
                     borderWidth: 1.8,
                     fill: 0,
                     pointStyle: 'circle',
+                    pointRadius: 0,
+                    pointHoverRadius: 4,
+                    order: 2
+                },
+                {
+                    label: l3,
+                    data: dataDashed,
+                    borderColor: '#fbbf24',
+                    borderWidth: 2,
+                    borderDash: [5, 4],
+                    fill: false,
+                    pointStyle: 'line',
                     pointRadius: 0,
                     pointHoverRadius: 4,
                     order: 1
@@ -617,7 +638,13 @@ function renderNisaLineChart(labels, data1, data2, customLegends) {
             plugins: {
                 legend: {
                     position: 'top',
-                    labels: { color: '#d1d5db', font: { size: 10 }, boxWidth: 14, usePointStyle: true }
+                    labels: {
+                        color: '#d1d5db',
+                        font: { size: 10 },
+                        boxWidth: 14,
+                        usePointStyle: true,
+                        sort: (a, b) => a.datasetIndex - b.datasetIndex
+                    }
                 },
                 tooltip: {
                     backgroundColor: 'rgba(17, 24, 39, 0.95)',
