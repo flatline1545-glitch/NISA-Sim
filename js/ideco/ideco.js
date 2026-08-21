@@ -1,3 +1,8 @@
+/**
+ * iDeCo(イデコ) 節税＆資産形成シミュレーター コアエンジン (ideco.js)
+ * 所得控除・運用益非課税・節税レーダー・専業主婦アラート・高解像度画像出力・スマホUI快適化 完全対応版
+ */
+
 let currentJob = 'employee1';
 let displayView = 'line';
 let chartInstance = null;
@@ -58,6 +63,7 @@ function applyJobPreset(jobKey) {
         maxBtn.setAttribute('onclick', `setIdecoPreset('monthly', ${cfg.max})`);
     }
 
+    // 専業主婦選択時の特別UI制御
     if (jobKey === 'homemaker') {
         if (homemakerAlert) homemakerAlert.style.display = 'block';
         if (numInc) { numInc.value = 0; numInc.disabled = true; }
@@ -274,7 +280,7 @@ function updateAll() {
     if (chipGnEl) chipGnEl.innerText = `+${fmtYen(finalGains)}`;
     if (tblBody) tblBody.innerHTML = tableRows.join('');
 
-    // 📊 【職種別・現実的ボリュームゾーン対応】5大パラメータ計算 (0〜100)
+    // 📊 5大ステータス計算 (0〜100)
     const fillRatio = Math.min(1.0, monthly / jobCfg.max);
 
     let baseTaxScore = 0;
@@ -641,7 +647,7 @@ function exportIdecoChartImage() {
             ctx.fillText(cond1, cardX + 620, cardY + 45);
             ctx.fillText(cond2, cardX + 620, cardY + 75);
 
-            // 4. グラフ描画（アスペクト比を完全に保ったまま中央描画）
+            // 4. グラフ描画（アスペクト比完全維持）
             const graphX = 36, graphY = 215, graphW = outW - 72, graphH = 540;
             ctx.fillStyle = '#0f172a';
             ctx.strokeStyle = '#1e293b';
@@ -653,7 +659,6 @@ function exportIdecoChartImage() {
             const maxDrawW = graphW - 20;
             const maxDrawH = graphH - 20;
 
-            // 縦横比を固定したスケール計算 (contain)
             const scale = Math.min(maxDrawW / srcW, maxDrawH / srcH);
             const drawW = srcW * scale;
             const drawH = srcH * scale;
@@ -674,7 +679,7 @@ function exportIdecoChartImage() {
             a.href = offCanvas.toDataURL('image/png', 1.0);
             a.download = `iDeCo節税シミュレーション_${dateStr}.png`;
             a.click();
-            showToast('📸 歪みのない高解像度レポート画像を保存しました！');
+            showToast('📸 高解像度レポート画像を保存しました！');
 
         } catch (e) {
             console.error(e);
@@ -774,6 +779,34 @@ function exportIdecoCsv() {
     URL.revokeObjectURL(url);
     showToast('📄 iDeCoレポートCSVを出力しました！');
 }
+
+/* 📱 スマホUI快適化：画面タップ・スクロール・タイマーでツールチップを即消去 */
+(function setupIdecoMobileTooltipCloser() {
+    let tooltipTimer = null;
+
+    const dismissIdecoTooltip = () => {
+        if (chartInstance && chartInstance.tooltip) {
+            chartInstance.tooltip.setActiveElements([], { x: 0, y: 0 });
+            chartInstance.update('none');
+        }
+        if (tooltipTimer) clearTimeout(tooltipTimer);
+    };
+
+    // 1. グラフキャンバス以外の画面をタップしたら即消去
+    document.addEventListener('touchstart', (e) => {
+        const canvas = document.getElementById('idecoChart');
+        if (canvas && e.target !== canvas) {
+            dismissIdecoTooltip();
+        } else {
+            // グラフを触った場合は3秒後に自動消去
+            if (tooltipTimer) clearTimeout(tooltipTimer);
+            tooltipTimer = setTimeout(dismissIdecoTooltip, 3000);
+        }
+    }, { passive: true });
+
+    // 2. 画面スクロール時も即消去
+    window.addEventListener('scroll', dismissIdecoTooltip, { passive: true });
+})();
 
 // 確実に実行される安全な初期起動処理
 function initIdecoApp() {
