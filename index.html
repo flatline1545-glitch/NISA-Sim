@@ -59,6 +59,7 @@
                     </button>
                 </div>
 
+                <!-- 資産形成コントロール -->
                 <div id="growthControls">
                     <div class="control-group">
                         <div class="control-label">
@@ -96,15 +97,23 @@
                         </div>
                     </div>
 
+                    <!-- 想定年利回り -->
                     <div class="control-group">
                         <div class="control-label">
-                            <span>想定年利回り</span>
+                            <div class="help-popover-wrapper">
+                                <span>想定年利回り</span>
+                                <button type="button" class="help-btn" onclick="toggleHelpPopover(event, 'popReturn')" aria-label="年利回りの目安">?</button>
+                                <div class="help-popover" id="popReturn">
+                                    <div class="help-popover-title">💡 利回りの目安</div>
+                                    全世界株式（オルカン）は年5.0%、米国株（S&P500）は年7.0%前後が長期の期待値とされています。
+                                    <a href="guide/nisa.html#return" class="help-popover-link">📖 新NISAガイドで詳しく見る →</a>
+                                </div>
+                            </div>
                             <div class="input-box-wrapper">
                                 <input type="number" class="num-input" id="numReturn" value="5.0" min="0" max="30.0" step="0.1" style="width: 55px;" oninput="syncInputs('return', 'num')">
                                 <span class="input-unit-suffix">%</span>
                             </div>
                         </div>
-                        <!-- スライダーは扱いやすい15%上限を維持 -->
                         <input type="range" id="rangeReturn" min="0.1" max="15.0" step="0.1" value="5.0" oninput="syncInputs('return', 'range')">
                         <div class="preset-container">
                             <button class="preset-btn" onclick="setPreset('return', 3.0)">3%</button>
@@ -133,9 +142,18 @@
                         </div>
                     </div>
 
+                    <!-- 暴落テスト -->
                     <div class="control-group">
                         <div class="control-label">
-                            <span>歴史的暴落ストレステスト</span>
+                            <div class="help-popover-wrapper">
+                                <span>歴史的暴落ストレステスト</span>
+                                <button type="button" class="help-btn" onclick="toggleHelpPopover(event, 'popStress')" aria-label="暴落テストとは">?</button>
+                                <div class="help-popover" id="popStress">
+                                    <div class="help-popover-title">💥 暴落テストとは</div>
+                                    リーマンショック（-50%）級の急落が起きた場合、複利とドルコスト平均法で何年で回復できるかを擬似体験できます。
+                                    <a href="guide/nisa.html#stress" class="help-popover-link">📖 暴落時の自爆回避策を見る →</a>
+                                </div>
+                            </div>
                         </div>
                         <div class="preset-container" id="stressButtons">
                             <button class="preset-btn highlight" id="stressBtnNone" onclick="setStress('none')">通常</button>
@@ -148,8 +166,17 @@
                         </div>
                     </div>
 
+                    <!-- 1,800万円上限 -->
                     <div class="toggle-group">
-                        <span style="font-size:calc(var(--font-base)*0.95); font-weight:500;">1,800万円上限で積立ストップ</span>
+                        <div class="help-popover-wrapper">
+                            <span style="font-size:calc(var(--font-base)*0.95); font-weight:500;">1,800万円上限で積立ストップ</span>
+                            <button type="button" class="help-btn" onclick="toggleHelpPopover(event, 'popCap')" aria-label="1800万上限について">?</button>
+                            <div class="help-popover" id="popCap">
+                                <div class="help-popover-title">🛡️ 生涯非課税枠のルール</div>
+                                新NISAは元本1,800万円まで非課税で運用できます。ONにすると1,800万円到達後は自動で積立を停止して複利運用のみ継続します。
+                                <a href="guide/nisa.html#cap" class="help-popover-link">📖 枠の再利用ルールを見る →</a>
+                            </div>
+                        </div>
                         <label class="switch">
                             <input type="checkbox" id="inputCapToggle" checked onchange="saveAndRun()">
                             <span class="slider"></span>
@@ -167,6 +194,7 @@
                     </div>
                 </div>
 
+                <!-- 出口・取り崩しコントロール -->
                 <div id="drawdownControls" style="display: none;">
                     <div class="sub-tab-container">
                         <button class="sub-tab-btn active" id="subTabFixed" onclick="switchDrawdownMode('fixed')">定額取崩 (毎月○万)</button>
@@ -192,10 +220,19 @@
                         </div>
                     </div>
 
+                    <!-- 定額取り崩し（インラインヘルプ付き） -->
                     <div id="drawControlFixed">
                         <div class="control-group">
                             <div class="control-label">
-                                <span>毎月の取り崩し額</span>
+                                <div class="help-popover-wrapper">
+                                    <span>毎月の取り崩し額</span>
+                                    <button type="button" class="help-btn" onclick="toggleHelpPopover(event, 'popDrawMonthly')" aria-label="定額取り崩しについて">?</button>
+                                    <div class="help-popover" id="popDrawMonthly">
+                                        <div class="help-popover-title">💵 定額取り崩しの特徴</div>
+                                        毎月一定額を引き出すため家計管理がシンプルですが、相場下落時に元本が急速に削られるリスクがあります。
+                                        <a href="guide/exit.html#fixed_vs_percent" class="help-popover-link">📖 定額と定率の違いを見る →</a>
+                                    </div>
+                                </div>
                                 <div class="input-box-wrapper">
                                     <span class="input-unit-prefix">¥</span>
                                     <input type="number" class="num-input" id="numDrawMonthly" value="150000" min="0" max="3000000" step="5000" oninput="syncInputs('drawMonthly', 'num')">
@@ -214,10 +251,19 @@
                         </div>
                     </div>
 
+                    <!-- 定率取り崩し（インラインヘルプ付き） -->
                     <div id="drawControlPercent" style="display: none;">
                         <div class="control-group">
                             <div class="control-label">
-                                <span>年間取り崩し率</span>
+                                <div class="help-popover-wrapper">
+                                    <span>年間取り崩し率</span>
+                                    <button type="button" class="help-btn" onclick="toggleHelpPopover(event, 'popDrawRate')" aria-label="4%ルールについて">?</button>
+                                    <div class="help-popover" id="popDrawRate">
+                                        <div class="help-popover-title">👑 4%ルールの目安</div>
+                                        残高に応じた定率で引き出すため資産が枯渇しにくくなります。年4%以内なら30年以上持つ確率が95%超とされています。
+                                        <a href="guide/exit.html#rule4" class="help-popover-link">📖 4%ルールの仕組みを見る →</a>
+                                    </div>
+                                </div>
                                 <div class="input-box-wrapper">
                                     <input type="number" class="num-input" id="numDrawRate" value="4.0" min="0.5" max="25.0" step="0.1" style="width: 55px;" oninput="syncInputs('drawRate', 'num')">
                                     <span class="input-unit-suffix">%</span>
@@ -235,9 +281,18 @@
                         </div>
                     </div>
 
+                    <!-- 想定利回り（インラインヘルプ付き） -->
                     <div class="control-group">
                         <div class="control-label">
-                            <span>取り崩し期間の想定利回り</span>
+                            <div class="help-popover-wrapper">
+                                <span>取り崩し期間の想定利回り</span>
+                                <button type="button" class="help-btn" onclick="toggleHelpPopover(event, 'popDrawReturn')" aria-label="取り崩し期の利回りについて">?</button>
+                                <div class="help-popover" id="popDrawReturn">
+                                    <div class="help-popover-title">📈 運用しながら取り崩す</div>
+                                    全額現金にせず年3〜5%で運用しながら引き出すことで、資産寿命を10〜20年以上延ばすことができます。
+                                    <a href="guide/exit.html#return_rate" class="help-popover-link">📖 延命効果の詳細を見る →</a>
+                                </div>
+                            </div>
                             <div class="input-box-wrapper">
                                 <input type="number" class="num-input" id="numDrawReturn" value="3.0" min="0" max="30.0" step="0.1" style="width: 55px;" oninput="syncInputs('drawReturn', 'num')">
                                 <span class="input-unit-suffix">%</span>
@@ -314,7 +369,6 @@
                     <canvas id="simChart"></canvas>
 
                     <div class="diagnosis-view-content" id="diagnosisViewBox">
-                        <!-- RANKバッジとタグを1行目にまとめ、称号に横幅を100%解放 -->
                         <div class="diag-header-bar">
                             <span class="diag-rank-tag" id="diagLevelTag">RANK</span>
                             <div class="diag-tags-row" id="diagTags"></div>
@@ -363,12 +417,34 @@
         </div>
     </div>
 
-    </div>
-
     <div id="toast">設定を保存しました！</div>
 
     <script src="js/common/nav.js"></script>
     <script src="js/nisa/nisaDiagnosisData.js"></script>
     <script src="js/nisa/nisa.js"></script>
+
+    <!-- インコンテキスト・ヘルプ用開閉スクリプト -->
+    <script>
+        function toggleHelpPopover(e, popId) {
+            e.stopPropagation();
+            const targetPop = document.getElementById(popId);
+            const isShown = targetPop?.classList.contains('show');
+
+            document.querySelectorAll('.help-popover').forEach(el => el.classList.remove('show'));
+            document.querySelectorAll('.help-btn').forEach(el => el.classList.remove('active'));
+
+            if (!isShown && targetPop) {
+                targetPop.classList.add('show');
+                e.currentTarget.classList.add('active');
+            }
+        }
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.help-popover-wrapper')) {
+                document.querySelectorAll('.help-popover').forEach(el => el.classList.remove('show'));
+                document.querySelectorAll('.help-btn').forEach(el => el.classList.remove('active'));
+            }
+        });
+    </script>
 </body>
 </html>

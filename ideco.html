@@ -4,13 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-    <!-- SEO最適化メタタグ -->
     <title>iDeCo(イデコ) 節税＆複利シミュレーター | 所得税・住民税軽減額・受取試算</title>
     <meta name="description" content="年収・職業・掛金を選ぶだけで、毎年の所得税・住民税の節税額と60歳時点の資産総額をリアルタイム計算。掛金の所得控除メリットと運用益非課税のダブル節税効果を無料・登録不要で試算できるiDeCoシミュレーターです。">
     <meta name="keywords" content="iDeCo,イデコ,シミュレーター,節税額,所得控除,新NISA比較,確定拠出年金,老後資金">
     <meta name="robots" content="index, follow">
 
-    <!-- OGP -->
     <meta property="og:type" content="website">
     <meta property="og:title" content="iDeCo(イデコ) 節税＆複利シミュレーター">
     <meta property="og:description" content="年収と職業を選ぶだけで毎年の節税額と資産形成を瞬時に算出！">
@@ -21,18 +19,7 @@
 </head>
 <body>
 
-    <!-- 共通グローバルナビゲーション -->
-    <nav class="global-nav">
-        <div class="nav-inner">
-            <a href="index.html" class="nav-logo">⚡ NISA-Sim</a>
-            <button class="nav-toggle" id="navToggle" aria-label="メニュー開閉">☰</button>
-            <div class="nav-menu" id="navMenu">
-                <a href="index.html" class="nav-item">📈 新NISA</a>
-                <a href="ideco.html" class="nav-item active">🛡️ iDeCo</a>
-                <a href="guide.html" class="nav-item">📚 初心者ガイド</a>
-            </div>
-        </div>
-    </nav>
+    <nav class="global-nav"></nav>
 
     <div class="container">
         <header>
@@ -71,10 +58,18 @@
                     </a>
                 </div>
 
-                <!-- 年収設定 -->
+                <!-- 年収設定（インラインヘルプ付き） -->
                 <div class="control-group">
                     <div class="control-label">
-                        <span>年収（額面）</span>
+                        <div class="help-popover-wrapper">
+                            <span>年収（額面）</span>
+                            <button type="button" class="help-btn" onclick="toggleHelpPopover(event, 'popIncome')" aria-label="年収と節税について">?</button>
+                            <div class="help-popover" id="popIncome">
+                                <div class="help-popover-title">🛡️ 所得控除の仕組み</div>
+                                年収が高い人ほど所得税率が高くなるため、年末調整や確定申告での節税還付額が大きくなります。
+                                <a href="guide/ideco.html#tax_deduction" class="help-popover-link">📖 節税の仕組みを詳しく見る →</a>
+                            </div>
+                        </div>
                         <div class="input-box-wrapper">
                             <span class="input-unit-prefix">¥</span>
                             <input type="number" class="num-input" id="numIncome" value="500" min="0" max="3000" step="10" oninput="syncIdecoInputs('income', 'num')">
@@ -90,10 +85,18 @@
                     </div>
                 </div>
 
-                <!-- 毎月の掛金額 -->
+                <!-- 毎月の掛金額（インラインヘルプ付き） -->
                 <div class="control-group">
                     <div class="control-label">
-                        <span>毎月の掛金額</span>
+                        <div class="help-popover-wrapper">
+                            <span>毎月の掛金額</span>
+                            <button type="button" class="help-btn" onclick="toggleHelpPopover(event, 'popMonthly')" aria-label="掛金上限について">?</button>
+                            <div class="help-popover" id="popMonthly">
+                                <div class="help-popover-title">⚖️ 職種別の上限ルール</div>
+                                会社員(2.3万/2.0万)、公務員(1.2万)、自営業(6.8万)など、加入年金区分により上限が厳格に決まっています。
+                                <a href="guide/ideco.html#job_limits" class="help-popover-link">📖 職業別の上限一覧を見る →</a>
+                            </div>
+                        </div>
                         <div class="input-box-wrapper">
                             <span class="input-unit-prefix">¥</span>
                             <input type="number" class="num-input" id="numMonthly" value="23000" min="5000" max="68000" step="1000" oninput="syncIdecoInputs('monthly', 'num')">
@@ -107,10 +110,18 @@
                     </div>
                 </div>
 
-                <!-- 加入期間（年数） -->
+                <!-- 加入期間（インラインヘルプ付き） -->
                 <div class="control-group">
                     <div class="control-label">
-                        <span>運用期間（60歳まで）</span>
+                        <div class="help-popover-wrapper">
+                            <span>運用期間（60歳まで）</span>
+                            <button type="button" class="help-btn" onclick="toggleHelpPopover(event, 'popHorizon')" aria-label="60歳資金ロックについて">?</button>
+                            <div class="help-popover" id="popHorizon">
+                                <div class="help-popover-title">⚠️ 60歳まで引き出し不可</div>
+                                原則60歳まで途中解約できません。途中で使う予定のない老後専用の余剰資金で設定しましょう。
+                                <a href="guide/ideco.html#lock_risk" class="help-popover-link">📖 資金ロックの注意点を見る →</a>
+                            </div>
+                        </div>
                         <div class="input-box-wrapper">
                             <input type="number" class="num-input" id="numHorizon" value="25" min="1" max="45" step="1" style="width: 45px;" oninput="syncIdecoInputs('horizon', 'num')">
                             <span class="input-unit-suffix">年</span>
@@ -199,11 +210,11 @@
                     <canvas id="idecoChart"></canvas>
 
                     <div class="diagnosis-view-content" id="diagnosisViewBox">
-                        <div class="diag-title-row">
-                            <div class="diag-main-title" id="diagTitle">--</div>
-                            <div class="diag-rank-tag" id="diagLevelTag">iDeCo診断</div>
+                        <div class="diag-header-bar">
+                            <span class="diag-rank-tag" id="diagLevelTag">iDeCo診断</span>
+                            <div class="diag-tags-row" id="diagTags"></div>
                         </div>
-                        <div class="diag-tags-row" id="diagTags"></div>
+                        <div class="diag-main-title" id="diagTitle">--</div>
 
                         <div class="fp-carte-container">
                             <div class="fp-carte-header">
@@ -213,7 +224,6 @@
                             <div id="carteContentArea"></div>
                         </div>
 
-                        <!-- カルテ画面内のアクションボタン -->
                         <div class="carte-action-btn-group">
                             <button class="action-btn x-btn" onclick="shareIdecoOnX()">𝕏 ポスト</button>
                             <button class="action-btn url-btn" onclick="copyIdecoUrl()">🔗 URL共有</button>
@@ -226,7 +236,6 @@
             </div>
         </div>
 
-        <!-- ページ最下部：年次推移の詳細表 ＆ フッターボタン -->
         <div class="bottom-full-section">
             <div class="details-section" id="tableSection">
                 <button class="collapse-btn" onclick="toggleTable()">
@@ -265,5 +274,29 @@
     <script src="js/common/nav.js"></script>
     <script src="js/ideco/idecoDiagnosisData.js"></script>
     <script src="js/ideco/ideco.js"></script>
+
+    <!-- インコンテキスト・ヘルプ開閉スクリプト -->
+    <script>
+        function toggleHelpPopover(e, popId) {
+            e.stopPropagation();
+            const targetPop = document.getElementById(popId);
+            const isShown = targetPop?.classList.contains('show');
+
+            document.querySelectorAll('.help-popover').forEach(el => el.classList.remove('show'));
+            document.querySelectorAll('.help-btn').forEach(el => el.classList.remove('active'));
+
+            if (!isShown && targetPop) {
+                targetPop.classList.add('show');
+                e.currentTarget.classList.add('active');
+            }
+        }
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.help-popover-wrapper')) {
+                document.querySelectorAll('.help-popover').forEach(el => el.classList.remove('show'));
+                document.querySelectorAll('.help-btn').forEach(el => el.classList.remove('active'));
+            }
+        });
+    </script>
 </body>
 </html>
