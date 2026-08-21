@@ -1,6 +1,7 @@
 /**
  * 新NISA 資産形成・戦闘力シミュレーター コアエンジン (nisa.js)
- * 資産形成(課税手取り線付き) / 出口取崩(現金放置残高を赤点線・受取累計デフォルト非表示) / 暴落テスト / 3スロット / 高解像度画像出力
+ * 資産形成(課税手取り線付き) / 出口取崩(現金放置赤点線・受取累計デフォルト非表示)
+ * 暴落テスト / 3スロット保存 / 高解像度画像出力 / スマホUIツールチップ自動消去 完全対応版
  */
 
 let currentTab = 'growth'; // 'growth' | 'drawdown'
@@ -1005,6 +1006,34 @@ function exportCsvReport() {
     URL.revokeObjectURL(url);
     showToast('📄 CSVレポートを出力しました！');
 }
+
+/* 📱 スマホUI快適化：画面タップ・スクロール・タイマーでツールチップを即消去 */
+(function setupMobileTooltipCloser() {
+    let tooltipTimer = null;
+
+    const dismissNisaTooltip = () => {
+        if (chartInstance && chartInstance.tooltip) {
+            chartInstance.tooltip.setActiveElements([], { x: 0, y: 0 });
+            chartInstance.update('none');
+        }
+        if (tooltipTimer) clearTimeout(tooltipTimer);
+    };
+
+    // 1. グラフキャンバス以外の画面をタップしたら即消去
+    document.addEventListener('touchstart', (e) => {
+        const canvas = document.getElementById('simChart');
+        if (canvas && e.target !== canvas) {
+            dismissNisaTooltip();
+        } else {
+            // グラフを触った場合は3秒後に自動消去
+            if (tooltipTimer) clearTimeout(tooltipTimer);
+            tooltipTimer = setTimeout(dismissNisaTooltip, 3000);
+        }
+    }, { passive: true });
+
+    // 2. 画面スクロール時も即消去
+    window.addEventListener('scroll', dismissNisaTooltip, { passive: true });
+})();
 
 function initNisaApp() {
     loadSlotData(1);
