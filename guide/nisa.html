@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>新NISA 失敗しない完全攻略ガイド | NISA-Sim</title>
+    <meta name="description" content="投資未経験・初心者向けに新NISAの仕組みを徹底解説。「想定利回りの選び方」「暴落テストと狼狽売り対策」「1800万円非課税枠と復活ルール」「出口戦略」まで役立つ知識をまとめた完全ガイドです。">
+    <meta name="keywords" content="新NISA,初心者,投資入門,インデックス投資,オルカン,S&P500,利回り,暴落,1800万枠,出口戦略,4%ルール">
+    <meta name="robots" content="index, follow">
+
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .article-container {
+            max-width: 820px;
+            margin: 0 auto;
+            padding: 10px 4px 40px 4px;
+        }
+
+        .article-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 18px 20px;
+            margin-bottom: 16px;
+            line-height: 1.7;
+            scroll-margin-top: 60px;
+            transition: all 0.3s ease;
+        }
+
+            .article-card:target {
+                border-color: #3b82f6;
+                box-shadow: 0 0 16px rgba(59, 130, 246, 0.4);
+            }
+
+        .article-title {
+            font-size: 16.5px;
+            font-weight: 800;
+            color: #60a5fa;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+            .article-title::before {
+                content: "";
+                display: inline-block;
+                width: 4px;
+                height: 16px;
+                background: var(--accent-blue);
+                border-radius: 2px;
+            }
+
+        .article-lead {
+            font-size: 12px;
+            color: #e2e8f0;
+            margin-bottom: 10px;
+        }
+
+        .callout-box {
+            background: rgba(59, 130, 246, 0.1);
+            border-left: 3px solid #3b82f6;
+            padding: 10px 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-size: 11px;
+            color: #cbd5e1;
+        }
+
+            .callout-box.warning {
+                background: rgba(239, 68, 68, 0.1);
+                border-left-color: #ef4444;
+                color: #fecaca;
+            }
+
+            .callout-box.success {
+                background: rgba(16, 185, 129, 0.1);
+                border-left-color: #10b981;
+                color: #a7f3d0;
+            }
+
+            .callout-box.purple {
+                background: rgba(139, 92, 246, 0.1);
+                border-left-color: #8b5cf6;
+                color: #ddd6fe;
+            }
+
+        .sim-btn-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .sim-link-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: #fff;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 800;
+            padding: 8px 16px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
+            transition: all 0.15s;
+        }
+
+            .sim-link-btn:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            }
+
+        .guide-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            margin: 10px 0;
+            text-align: left;
+        }
+
+            .guide-table th, .guide-table td {
+                padding: 8px 10px;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            .guide-table th {
+                background: #182234;
+                color: #93c5fd;
+                font-weight: 800;
+            }
+
+        .guide-waste-box {
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px dashed rgba(59, 130, 246, 0.4);
+            border-radius: 8px;
+            padding: 12px;
+            margin: 12px 0;
+        }
+
+        .guide-waste-title {
+            font-size: 12px;
+            font-weight: 800;
+            color: #93c5fd;
+            margin-bottom: 8px;
+        }
+
+        .guide-waste-btns {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .guide-waste-btn {
+            background: rgba(59, 130, 246, 0.12);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: #cbd5e1;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 5px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+            .guide-waste-btn:hover {
+                background: var(--accent-blue);
+                color: #fff;
+            }
+
+        /* ===================================================
+           CSS インフォグラフィック＆図解コンポーネント
+           =================================================== */
+
+        /* 1. インフレ購買力目減りバー */
+        .inflation-compare-box {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px;
+            margin: 12px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .compare-bar-row {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .compare-label-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .compare-track {
+            height: 10px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .compare-fill {
+            height: 100%;
+            border-radius: 5px;
+        }
+
+        /* 2. 利回り別 リスク・リターン比較カード */
+        .asset-class-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin: 12px 0;
+        }
+
+        .asset-card {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .asset-badge {
+            display: inline-block;
+            font-size: 10px;
+            font-weight: 800;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-bottom: 4px;
+        }
+
+        .asset-return-val {
+            font-size: 14px;
+            font-weight: 900;
+            margin-bottom: 2px;
+        }
+
+        @media (max-width: 600px) {
+            .asset-class-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 3. 暴落時ドルコスト平均法 比較図 */
+        .dca-flow-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin: 12px 0;
+        }
+
+        .dca-card {
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 11px;
+            line-height: 1.5;
+        }
+
+            .dca-card.panic {
+                background: rgba(239, 68, 68, 0.08);
+                border: 1px solid rgba(239, 68, 68, 0.3);
+            }
+
+            .dca-card.smart {
+                background: rgba(16, 185, 129, 0.08);
+                border: 1px solid rgba(16, 185, 129, 0.3);
+            }
+
+        @media (max-width: 600px) {
+            .dca-flow-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 4. 枠復活ステップフロー図 */
+        .reuse-flow {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin: 12px 0;
+        }
+
+        .reuse-step {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 11.5px;
+            font-weight: 700;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="global-nav"></nav>
+
+    <div class="container article-container">
+        <header>
+            <h1>新NISA 完全攻略ガイド</h1>
+            <p>シミュレーターの各項目の意味と、失敗しない資産運用の鉄則を徹底解説</p>
+        </header>
+
+        <!-- 第1章：インフレリスク（購買力目減りバー付き） -->
+        <article class="article-card" id="inflation">
+            <h2 class="article-title">1. 「銀行預金＝絶対安全」という最大の勘違い</h2>
+            <p class="article-lead">
+                「投資は損するから銀行に置いておくのが一番安心」と考えていませんか？<br>
+                実は、今の日本において<b>「何もしないで普通預金に全額置いておくこと」こそが最大のリスク</b>になりつつあります。
+            </p>
+
+            <!-- インフレ購買力目減りバー -->
+            <div class="inflation-compare-box">
+                <div style="font-size:11.5px; font-weight:800; color:#93c5fd;">
+                    📉 物価が年2%上昇した場合の「20年後の100万円の実質購買力」
+                </div>
+
+                <div class="compare-bar-row">
+                    <div class="compare-label-row">
+                        <span style="color:#f87171;">🏦 普通預金（金利0.1%放置）</span>
+                        <span style="color:#f87171;">実質価値 約67万円（約33%消滅）</span>
+                    </div>
+                    <div class="compare-track">
+                        <div class="compare-fill" style="width: 67%; background: #ef4444;"></div>
+                    </div>
+                </div>
+
+                <div class="compare-bar-row">
+                    <div class="compare-label-row">
+                        <span style="color:#34d399;">📈 新NISA運用（全世界株・年5%運用）</span>
+                        <span style="color:#34d399; font-weight:900;">実質価値 約179万円（資産拡大！）</span>
+                    </div>
+                    <div class="compare-track">
+                        <div class="compare-fill" style="width: 100%; background: linear-gradient(90deg, #10b981, #34d399);"></div>
+                    </div>
+                </div>
+            </div>
+
+            <p class="article-lead">
+                日本円の価値が下がるスピードに対抗するためには、世界経済の成長に合わせて増えていく資産（全世界株・S&P500など）を一部持っておくことが必須の防衛策です。
+            </p>
+        </article>
+
+        <!-- 第2章：出費換算（インタラクティブギミック） -->
+        <article class="article-card" id="waste">
+            <h2 class="article-title">2. 日常のムダ遣いをNISAに回したら将来いくらになる？</h2>
+            <p class="article-lead">
+                まとまった大金は不要です。何気なく使っている日常の出費を少し投資に回すだけで、「複利の雪だるま」が威力を発揮します。
+            </p>
+
+            <div class="guide-waste-box">
+                <div class="guide-waste-title">👇 気になる節約項目をタップして計算（30年間・年利5%運用）</div>
+                <div class="guide-waste-btns">
+                    <button type="button" class="guide-waste-btn" onclick="calcGuideWaste('🥤 毎日の自販機・ペットボトル', 4000)">🥤 自販機 (4千円)</button>
+                    <button type="button" class="guide-waste-btn" onclick="calcGuideWaste('🎬 不要なサブスク2社', 2500)">🎬 サブスク (2.5千円)</button>
+                    <button type="button" class="guide-waste-btn" onclick="calcGuideWaste('🍺 飲み会1回我慢', 5000)">🍺 飲み会 (5千円)</button>
+                    <button type="button" class="guide-waste-btn" onclick="calcGuideWaste('📱 格安SIMへ乗換', 8000)">📱 格安SIM (8千円)</button>
+                    <button type="button" class="guide-waste-btn" onclick="calcGuideWaste('🛵 デリバリーの自粛', 10000)">🛵 デリバリー (1万)</button>
+                    <button type="button" class="guide-waste-btn" onclick="calcGuideWaste('☕ 毎日のカフェ代', 15000)">☕ カフェ代 (1.5万)</button>
+                    <button type="button" class="guide-waste-btn" onclick="calcGuideWaste('🚬 禁煙・タバコ代', 18000)">🚬 タバコ代 (1.8万)</button>
+                    <button type="button" class="guide-waste-btn" onclick="calcGuideWaste('🚗 車の維持費削減', 40000)">🚗 マイカー見直し (4万)</button>
+                </div>
+
+                <div id="guideWasteResult" class="callout-box success" style="margin-top: 8px;">
+                    💡 <b>【🍺 飲み会1回我慢（月5千円）】</b> を30年間（年利5.0%）運用すると…<br>
+                    将来 <b style="color: #34d399; font-size: 1.2em;">約 ¥4,161,000</b> に化けます！<br>
+                    <span style="color:#94a3b8;">（投資元本: ¥1,800,000 ➔ 運用利益: +¥2,361,000・元本の2.3倍！）</span>
+                </div>
+                <div id="guideWasteLinkWrap" style="margin-top: 8px;">
+                    <a id="guideSimBtn" href="../index.html?m=5000&r=5&y=30" class="sim-link-btn">⚡ この条件（月5千円）でシミュレーターを開く</a>
+                </div>
+            </div>
+        </article>
+
+        <!-- 第3章：想定利回りの目安（比較カード付き） -->
+        <article class="article-card" id="return">
+            <h2 class="article-title">3. 想定年利回り（リターン）は何%に設定すべき？</h2>
+            <p class="article-lead">
+                シミュレーターの「想定年利回り」は、選ぶファンドによって現実的な水準が異なります。
+            </p>
+
+            <!-- 資産クラス別 比較カード -->
+            <div class="asset-class-grid">
+                <div class="asset-card" style="border-color:#3b82f6;">
+                    <span class="asset-badge" style="background:rgba(59,130,246,0.2); color:#93c5fd;">🌍 全世界株 (オルカン)</span>
+                    <div class="asset-return-val" style="color:#60a5fa;">年 5.0% 前後</div>
+                    <div style="font-size:10px; color:#cbd5e1;">世界中に分散投資。初心者が最も迷わず選べる王道中の王道。</div>
+                </div>
+                <div class="asset-card" style="border-color:#10b981;">
+                    <span class="asset-badge" style="background:rgba(16,185,129,0.2); color:#a7f3d0;">🇺🇸 米国株 (S&P500)</span>
+                    <div class="asset-return-val" style="color:#34d399;">年 7.0% 前後</div>
+                    <div style="font-size:10px; color:#cbd5e1;">過去のリターンは最強クラス。米国1国への集中リスクあり。</div>
+                </div>
+                <div class="asset-card">
+                    <span class="asset-badge" style="background:rgba(255,255,255,0.1); color:#cbd5e1;">🛡️ バランス・債券型</span>
+                    <div class="asset-return-val" style="color:#fbbf24;">年 3.0% 前後</div>
+                    <div style="font-size:10px; color:#cbd5e1;">値動きがマイルド。暴落時のクッションとして機能。</div>
+                </div>
+            </div>
+
+            <div class="callout-box success">
+                💡 <b>シミュレーション時の推奨値</b><br>
+                堅実で実現性の高い計画を立てるなら、全世界株平均である<b>「年5.0%」</b>に設定するのがベストです。
+            </div>
+        </article>
+
+        <!-- 第4章：暴落テストと狼狽売り対策（比較図解付き） -->
+        <article class="article-card" id="stress">
+            <h2 class="article-title">4. 歴史的暴落テストと「狼狽売り」を防ぐ鉄則</h2>
+            <p class="article-lead">
+                相場は数年に一度必ず「大暴落」します。暴落が起きたときの行動次第で、生涯の資産額に決定的な差がつきます。
+            </p>
+
+            <!-- 暴落時の行動比較図 -->
+            <div class="dca-flow-grid">
+                <div class="dca-card panic">
+                    <b style="color:#f87171;">❌ 失敗：怖くなって売却（狼狽売り）</b><br>
+                    暴落の底値で損失を確定して退場。その後の急激なV字回復の波に一切乗れず大損する。
+                </div>
+                <div class="dca-card smart">
+                    <b style="color:#34d399;">⭕ 成功：自動積立を淡々と継続</b><br>
+                    株価が安いときに「大量の口数」をバーゲンセール価格で仕込めるため、回復時に資産が爆発する。
+                </div>
+            </div>
+
+            <div class="callout-box warning">
+                💥 <b>代表的な暴落と下落率の目安</b><br>
+                ・ <b>リーマンショック級（-50%）</b>：回復まで約5年を要した世紀の暴落<br>
+                ・ <b>コロナショック級（-35%）</b>：約2年で急回復した短期V字型暴落
+            </div>
+        </article>
+
+        <!-- 第5章：1,800万円上限と枠復活（ステップフロー図付き） -->
+        <article class="article-card" id="cap">
+            <h2 class="article-title">5. 生涯投資枠1,800万円と「枠の再利用（復活）」ルール</h2>
+            <p class="article-lead">
+                新NISAは一生涯で使える投資元本の上限が<b>「1,800万円（買付金額ベース）」</b>です。
+            </p>
+
+            <!-- 枠復活ステップフロー図 -->
+            <div class="reuse-flow">
+                <div class="reuse-step">
+                    <span>① 1,800万円枠を使い切る</span>
+                    <span style="color:#60a5fa;">生涯上限カンスト</span>
+                </div>
+                <div style="text-align:center; font-size:11px; color:#94a3b8;">▼ 住宅購入や教育費で一部を現金化 ▼</div>
+                <div class="reuse-step">
+                    <span>② 元本500万円分を売却して出金</span>
+                    <span style="color:#fbbf24;">手元に現金回収</span>
+                </div>
+                <div style="text-align:center; font-size:11px; color:#94a3b8;">▼ 翌年1月1日に奇跡の復活！ ▼</div>
+                <div class="reuse-step" style="border-color:#10b981; background:rgba(16,185,129,0.1);">
+                    <span>③ 翌年に「500万円分の非課税枠」が自動復活</span>
+                    <span style="color:#34d399;">再投資が可能！</span>
+                </div>
+            </div>
+
+            <div class="callout-box success">
+                ✨ <b>ライフステージに合わせて何度でも再利用できる</b><br>
+                途中で使っても枠が捨て駒にならず何度でも復活するため、人生の突発的なイベントに柔軟に対応できます。
+            </div>
+
+            <div class="sim-btn-group">
+                <a href="../index.html" class="sim-link-btn">📈 新NISAシミュレーターへ戻る</a>
+                <a href="ideco.html" class="sim-link-btn" style="background: linear-gradient(135deg, #7c3aed, #6d28d9);">🛡️ iDeCoガイドへ</a>
+            </div>
+        </article>
+    </div>
+
+    <script src="../js/common/nav.js"></script>
+
+    <!-- 【インライン完結】出費換算スクリプト -->
+    <script>
+        function calcGuideWaste(itemName, amount) {
+            const years = 30;
+            const rateAnnual = 0.05;
+            const rateMonthly = rateAnnual / 12;
+            const totalMonths = years * 12;
+            const totalFuture = amount * ((Math.pow(1 + rateMonthly, totalMonths) - 1) / rateMonthly);
+            const principal = amount * totalMonths;
+            const profit = totalFuture - principal;
+
+            const fmt = (v) => '¥' + Math.round(v).toLocaleString('ja-JP');
+            const resultBox = document.getElementById('guideWasteResult');
+            const simBtn = document.getElementById('guideSimBtn');
+            if (!resultBox || !simBtn) return;
+
+            resultBox.innerHTML = `
+                      💡 <b>【${itemName}（月${(amount / 10000).toFixed(1).replace('.0', '')}万円）】</b> を30年間（年利5.0%）運用すると…<br>
+                      将来 <b style="color: #34d399; font-size: 1.2em;">約 ${fmt(totalFuture)}</b> に化けます！<br>
+                      <span style="color:#94a3b8;">（投資元本: ${fmt(principal)} ➔ 運用利益: +${fmt(profit)}・元本の${(totalFuture / principal).toFixed(1)}倍！）</span>
+                    `;
+
+            simBtn.href = `../index.html?m=${amount}&r=5&y=30`;
+            simBtn.innerHTML = `⚡ この条件（月${(amount / 10000).toFixed(1).replace('.0', '')}万円）でシミュレーターを開く`;
+        }
+    </script>
+</body>
+</html>

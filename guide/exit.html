@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>新NISA 出口戦略・資産取り崩し完全ガイド | NISA-Sim</title>
+    <meta name="description" content="FIRE・老後生活に向けた新NISAの出口戦略・取り崩し方を徹底解説。「定額 vs 定率取り崩しの違い」「4%ルールの真実」「最大の敵・収益率の順序リスク対策」「キャッシュクッションの作り方」までまとめた完全ガイドです。">
+    <meta name="keywords" content="新NISA,出口戦略,取り崩し,4%ルール,FIRE,サイドFIRE,定額取り崩し,定率取り崩し,順序リスク,DIE WITH ZERO">
+    <meta name="robots" content="index, follow">
+
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="新NISA 出口戦略・資産取り崩し完全ガイド">
+    <meta property="og:description" content="増やした資産をどう使う？ 失敗しない取り崩しルールと資産寿命を伸ばす鉄則を徹底解説。">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <link rel="stylesheet" href="../css/style.css">
+    <!-- ミニグラフ描画用 Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .article-container {
+            max-width: 820px;
+            margin: 0 auto;
+            padding: 10px 4px 40px 4px;
+        }
+
+        .article-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 18px 20px;
+            margin-bottom: 16px;
+            line-height: 1.7;
+            scroll-margin-top: 60px;
+            transition: all 0.3s ease;
+        }
+
+            .article-card:target {
+                border-color: #10b981;
+                box-shadow: 0 0 16px rgba(16, 185, 129, 0.4);
+            }
+
+        .article-title {
+            font-size: 16.5px;
+            font-weight: 800;
+            color: #34d399;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+            .article-title::before {
+                content: "";
+                display: inline-block;
+                width: 4px;
+                height: 16px;
+                background: var(--accent-green);
+                border-radius: 2px;
+            }
+
+        .article-lead {
+            font-size: 12px;
+            color: #e2e8f0;
+            margin-bottom: 10px;
+        }
+
+        .callout-box {
+            background: rgba(59, 130, 246, 0.1);
+            border-left: 3px solid #3b82f6;
+            padding: 10px 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-size: 11px;
+            color: #cbd5e1;
+        }
+
+            .callout-box.warning {
+                background: rgba(239, 68, 68, 0.1);
+                border-left-color: #ef4444;
+                color: #fecaca;
+            }
+
+            .callout-box.success {
+                background: rgba(16, 185, 129, 0.1);
+                border-left-color: #10b981;
+                color: #a7f3d0;
+            }
+
+            .callout-box.purple {
+                background: rgba(139, 92, 246, 0.1);
+                border-left-color: #8b5cf6;
+                color: #ddd6fe;
+            }
+
+        .sim-btn-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .sim-link-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            background: linear-gradient(135deg, #059669, #047857);
+            color: #fff;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 800;
+            padding: 8px 16px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+            transition: all 0.15s;
+        }
+
+            .sim-link-btn.blue {
+                background: linear-gradient(135deg, #2563eb, #1d4ed8);
+                box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
+            }
+
+            .sim-link-btn:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            }
+
+        .guide-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            margin: 10px 0;
+            text-align: left;
+        }
+
+            .guide-table th, .guide-table td {
+                padding: 8px 10px;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            .guide-table th {
+                background: #182234;
+                color: #a7f3d0;
+                font-weight: 800;
+            }
+
+        .guide-chart-wrap {
+            position: relative;
+            height: 220px;
+            width: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 8px;
+            margin: 12px 0 6px 0;
+        }
+
+        /* ===================================================
+           CSS インフォグラフィック＆図解コンポーネント
+           =================================================== */
+
+        /* 1. 4%ルール 循環フロー図 */
+        .flow-diagram-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            margin: 12px 0;
+        }
+
+        .flow-step-box {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 8px;
+            text-align: center;
+            position: relative;
+        }
+
+        .flow-step-icon {
+            font-size: 18px;
+            margin-bottom: 2px;
+        }
+
+        .flow-step-title {
+            font-size: 11px;
+            font-weight: 800;
+            color: #93c5fd;
+            margin-bottom: 2px;
+        }
+
+        .flow-step-val {
+            font-size: 12px;
+            font-weight: 900;
+        }
+
+        @media (max-width: 600px) {
+            .flow-diagram-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* 2. キャッシュクッション 2層シールド図 */
+        .shield-diagram {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin: 12px 0;
+        }
+
+        .shield-layer {
+            padding: 10px 14px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11.5px;
+            font-weight: 700;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .shield-cash {
+            background: rgba(251, 191, 36, 0.12);
+            border: 1.5px dashed #fbbf24;
+            color: #fef08a;
+        }
+
+        .shield-invest {
+            background: rgba(16, 185, 129, 0.12);
+            border: 1.5px solid #10b981;
+            color: #a7f3d0;
+        }
+
+        .shield-arrow-divider {
+            text-align: center;
+            font-size: 11px;
+            font-weight: 800;
+            color: #94a3b8;
+            letter-spacing: -0.3px;
+        }
+
+        /* 3. 資産寿命 比較メーターバー */
+        .lifespan-bars {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin: 12px 0;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px;
+        }
+
+        .lifespan-row {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .lifespan-label-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .lifespan-track {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .lifespan-fill {
+            height: 100%;
+            border-radius: 4px;
+        }
+
+        /* 4. DIE WITH ZERO 人生ステップ図 */
+        .step-timeline {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            margin: 12px 0;
+        }
+
+        .step-card {
+            background: rgba(15, 23, 42, 0.8);
+            border-top: 3px solid #3b82f6;
+            border-radius: 0 0 8px 8px;
+            padding: 8px 10px;
+            font-size: 10.5px;
+            line-height: 1.45;
+        }
+
+            .step-card.green {
+                border-top-color: #10b981;
+            }
+
+            .step-card.purple {
+                border-top-color: #8b5cf6;
+            }
+
+        .step-age {
+            font-weight: 900;
+            color: #93c5fd;
+            font-size: 11px;
+            margin-bottom: 2px;
+        }
+
+        .step-card.green .step-age {
+            color: #34d399;
+        }
+
+        .step-card.purple .step-age {
+            color: #c4b5fd;
+        }
+
+        @media (max-width: 600px) {
+            .step-timeline {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="global-nav"></nav>
+
+    <div class="container article-container">
+        <header>
+            <h1>新NISA 出口戦略・取り崩し完全ガイド</h1>
+            <p>「資産をどう使う？」を徹底解剖！ 資産寿命を伸ばしFIRE・老後を逃げ切る鉄則</p>
+        </header>
+
+        <!-- 第1章：定額 vs 定率取り崩し -->
+        <article class="article-card" id="fixed_vs_percent">
+            <h2 class="article-title">1. 「定額取り崩し」と「定率取り崩し」の決定的な違い</h2>
+            <p class="article-lead">
+                資産を取り崩すフェーズに入ったとき、引き出し方には大きく分けて<b>「定額方式」</b>と<b>「定率方式」</b>の2種類があります。それぞれのメリット・デメリットを理解して使い分けることが不可欠です。
+            </p>
+
+            <table class="guide-table">
+                <thead>
+                    <tr>
+                        <th>方式</th>
+                        <th>特徴・メリット</th>
+                        <th>デメリット・注意点</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><b>定額取り崩し<br>（毎月○万円）</b></td>
+                        <td>毎月の生活費が一定になり、家計管理が極めてシンプル。</td>
+                        <td>相場暴落時も同じ金額を引き出すため、元本が急速に削られ<b>早期枯渇のリスク</b>がある。</td>
+                    </tr>
+                    <tr>
+                        <td><b>定率取り崩し<br>（年間○%）</b></td>
+                        <td>残高に応じて引き出すため<b>理論上資産が枯渇しない</b>。資産寿命が最大化する。</td>
+                        <td>相場が下落すると毎月の受取額も減るため、<b>生活費のコントロールが必要</b>。</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- ビジュアルミニグラフ -->
+            <div class="guide-chart-wrap">
+                <canvas id="exitCompareChart"></canvas>
+            </div>
+            <div style="font-size: 10px; color: #94a3b8; text-align: right; margin-bottom: 8px;">
+                ※開始資産4,000万円・年利3.0%運用での30年間残高シミュレーション
+            </div>
+
+            <div class="callout-box success">
+                💡 <b>プロ推奨のハイブリッド戦略</b><br>
+                「家賃や光熱費などの基礎生活費は年金や定額で賄い、旅行や趣味などのゆとり費は定率（相場追従）で引き出す」という組み合わせが最も精神的ストレスが少なくなります。
+            </div>
+        </article>
+
+        <!-- 第2章：4%ルール（ループフロー図解付き） -->
+        <article class="article-card" id="rule4">
+            <h2 class="article-title">2. FIREの黄金則「4%ルール」の仕組みと前提条件</h2>
+            <p class="article-lead">
+                4%ルールとは、米トリニティ大学の研究（トリニティ・スタディ）によって実証された<b>「年間支出を総資産の4%以内に抑えれば、30年後に資産が残っている確率が95%以上になる」</b>という経験則です。
+            </p>
+
+            <!-- 循環ループフロー図 -->
+            <div class="flow-diagram-grid">
+                <div class="flow-step-box">
+                    <div class="flow-step-icon">💰</div>
+                    <div class="flow-step-title">① 運用リターン</div>
+                    <div class="flow-step-val" style="color:#60a5fa;">年 +7.0%</div>
+                    <div style="font-size:9.5px; color:#94a3b8;">株式・債券の成長</div>
+                </div>
+                <div class="flow-step-box">
+                    <div class="flow-step-icon">📉</div>
+                    <div class="flow-step-title">② 物価上昇</div>
+                    <div class="flow-step-val" style="color:#f87171;">年 -3.0%</div>
+                    <div style="font-size:9.5px; color:#94a3b8;">インフレによる相殺</div>
+                </div>
+                <div class="flow-step-box">
+                    <div class="flow-step-icon">🏖️</div>
+                    <div class="flow-step-title">③ 生活費取崩</div>
+                    <div class="flow-step-val" style="color:#fbbf24;">年 -4.0%</div>
+                    <div style="font-size:9.5px; color:#94a3b8;">年間支出で回収</div>
+                </div>
+                <div class="flow-step-box" style="border-color: #10b981; background: rgba(16, 185, 129, 0.1);">
+                    <div class="flow-step-icon">♾️</div>
+                    <div class="flow-step-title">④ 残高判定</div>
+                    <div class="flow-step-val" style="color:#34d399;">実質 ±0%</div>
+                    <div style="font-size:9.5px; color:#a7f3d0;">元本が永続維持！</div>
+                </div>
+            </div>
+
+            <p class="article-lead">
+                例：年間生活費が300万円の場合 ➔ <b>300万 × 25倍 ＝ 7,500万円</b> の資産があれば、4%ルールによる完全リタイアが視野に入ります。
+            </p>
+        </article>
+
+        <!-- 第3章：収益率の順序リスク（2層シールド構造図付き） -->
+        <article class="article-card" id="sequence_risk">
+            <h2 class="article-title">3. 出口最大の敵「収益率の順序リスク」と現金クッション</h2>
+            <p class="article-lead">
+                リタイア直後に最も警戒しなければならないのが<b>「収益率の順序リスク（Sequence of Returns Risk）」</b>です。引退直後の1〜3年目に大暴落が直撃すると、取り崩しと相まって元本が致命的に破壊されてしまいます。
+            </p>
+
+            <!-- 2層シールド構造図 -->
+            <div class="shield-diagram">
+                <div class="shield-layer shield-cash">
+                    <span>🛡️ 【第1防衛層】生活防衛現金（2〜3年分：500〜1,000万円）</span>
+                    <span style="color:#fbbf24; font-size:10.5px;">暴落時はここから生活費を捻出</span>
+                </div>
+                <div class="shield-arrow-divider">
+                    ▲ 暴落相場では投信の売却を完全停止して回復を待つ ▲
+                </div>
+                <div class="shield-layer shield-invest">
+                    <span>🚀 【第2エンジン】新NISA運用資産（全世界株・S&P500など）</span>
+                    <span style="color:#34d399; font-size:10.5px;">平常時のみ年4%を取り崩す</span>
+                </div>
+            </div>
+
+            <div class="callout-box purple">
+                🛡️ <b>現金クッションがもたらす安心感</b><br>
+                全額投資のままリタイアせず、生活費2〜3年分を普通預金に残しておくだけで、どれだけ歴史的大暴落が起きても投信の投げ売りを完全に防ぐことができます。
+            </div>
+        </article>
+
+        <!-- 第4章：取り崩し期の想定利回り（比較メーターバー付き） -->
+        <article class="article-card" id="return_rate">
+            <h2 class="article-title">4. 「運用しながら取り崩す」だけで資産寿命は何倍にも伸びる</h2>
+            <p class="article-lead">
+                リタイア後に全額を普通預金（現金）に移して取り崩すのは大きな損失です。年3〜5%の運用を継続しながら取り崩すだけで、資産寿命は飛躍的に伸びます。
+            </p>
+
+            <!-- 資産寿命 比較メーターバー -->
+            <div class="lifespan-bars">
+                <div style="font-size:11.5px; font-weight:800; color:#93c5fd; margin-bottom:4px;">
+                    📊 4,000万円から月15万円（年180万）を取り崩した場合の寿命比較
+                </div>
+
+                <div class="lifespan-row">
+                    <div class="lifespan-label-row">
+                        <span style="color:#f87171;">🧊 利回り0%（全額普通預金・現金放置）</span>
+                        <span style="color:#f87171;">約22.2年で枯渇</span>
+                    </div>
+                    <div class="lifespan-track">
+                        <div class="lifespan-fill" style="width: 55%; background: #ef4444;"></div>
+                    </div>
+                </div>
+
+                <div class="lifespan-row">
+                    <div class="lifespan-label-row">
+                        <span style="color:#60a5fa;">⚖️ 利回り3%（安定バランス運用）</span>
+                        <span style="color:#60a5fa;">約33.5年（+11.3年延命）</span>
+                    </div>
+                    <div class="lifespan-track">
+                        <div class="lifespan-fill" style="width: 83%; background: #3b82f6;"></div>
+                    </div>
+                </div>
+
+                <div class="lifespan-row">
+                    <div class="lifespan-label-row">
+                        <span style="color:#34d399;">👑 利回り5%（全世界株・インデックス運用）</span>
+                        <span style="color:#34d399; font-weight:900;">資産永続（減らない）</span>
+                    </div>
+                    <div class="lifespan-track">
+                        <div class="lifespan-fill" style="width: 100%; background: linear-gradient(90deg, #10b981, #34d399);"></div>
+                    </div>
+                </div>
+            </div>
+        </article>
+
+        <!-- 第5章：DIE WITH ZERO（人生ステップ図付き） -->
+        <article class="article-card" id="die_with_zero">
+            <h2 class="article-title">5. 【DIE WITH ZERO】墓場まで大金を持っていかない知恵</h2>
+            <p class="article-lead">
+                「資産を減らすのが怖くて、80代・90代になっても1円も使えず、死ぬ瞬間に人生最高額のお金持ちになってしまう」ケースが非常に多く見られます。
+            </p>
+
+            <!-- 人生フェーズ別ステップ図 -->
+            <div class="step-timeline">
+                <div class="step-card">
+                    <div class="step-age">🌱 20代〜40代（蓄財期）</div>
+                    <b>複利の最大化</b><br>
+                    支出を最適化し、新NISA枠へ全力入金して雪だるまの芯を育てる。
+                </div>
+                <div class="step-card green">
+                    <div class="step-age">🏖️ 50代〜70代（黄金消費期）</div>
+                    <b>経験と思い出に換金</b><br>
+                    健康と体力があるうちに、旅行・趣味・家族への生前贈与で豊かさを享受。
+                </div>
+                <div class="step-card purple">
+                    <div class="step-age">🌌 80代以降（安心承継期）</div>
+                    <b>キャッシュクッション維持</b><br>
+                    医療・介護費を現金で確保し、残りを次世代へスムーズに引き継ぐ。
+                </div>
+            </div>
+
+            <div class="callout-box success">
+                ✨ <b>お金は使ってこそ価値がある</b><br>
+                お金の価値は、年齢とともに使える体力・気力が落ちるにつれて低下します。計画的な取り崩しによって「後悔のない人生」を完成させましょう。
+            </div>
+
+            <div class="sim-btn-group">
+                <a href="../index.html" class="sim-link-btn">📈 出口・取り崩しシミュレーターへ</a>
+                <a href="nisa.html" class="sim-link-btn blue">📚 新NISA資産形成ガイドへ</a>
+            </div>
+        </article>
+    </div>
+
+    <script src="../js/common/nav.js"></script>
+
+    <!-- 【インライン完結】出口比較ミニグラフ描画スクリプト（スマホ自動消去対応） -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('exitCompareChart');
+            if (!canvas || typeof Chart === 'undefined') return;
+
+            const years = 30;
+            const startAsset = 40000000;
+            const annualReturn = 0.03;
+            const monthlyRate = annualReturn / 12;
+
+            const fixedMonthly = 166666;
+            const drawPercent = 0.04;
+
+            let balFixed = startAsset;
+            let balPercent = startAsset;
+
+            const labels = ['0年'];
+            const dataFixed = [startAsset / 10000];
+            const dataPercent = [startAsset / 10000];
+
+            for (let m = 1; m <= years * 12; m++) {
+                balFixed = Math.max(0, balFixed - fixedMonthly) * (1 + monthlyRate);
+                balPercent = Math.max(0, balPercent - (balPercent * (drawPercent / 12))) * (1 + monthlyRate);
+
+                if (m % 12 === 0) {
+                    const y = m / 12;
+                    labels.push(y + '年目');
+                    dataFixed.push(Math.round(balFixed / 10000));
+                    dataPercent.push(Math.round(balPercent / 10000));
+                }
+            }
+
+            const chartInst = new Chart(canvas.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: '定額取崩 (月16.6万・年200万 / 枯渇リスクあり)',
+                            data: dataFixed,
+                            borderColor: '#ef4444',
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            fill: false
+                        },
+                        {
+                            label: '定率取崩 (年4%ルール / 減らずに永続)',
+                            data: dataPercent,
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.18)',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: { color: '#cbd5e1', font: { size: 10.5, weight: 'bold' } }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(17, 24, 39, 0.95)',
+                            callbacks: {
+                                label: (c) => ` ${c.dataset.label.split(' ')[0]}: ${c.raw.toLocaleString()}万円`
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { ticks: { color: '#94a3b8', font: { size: 9.5 } }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                        y: {
+                            ticks: {
+                                color: '#94a3b8',
+                                font: { size: 9.5 },
+                                callback: (v) => v + '万'
+                            },
+                            grid: { color: 'rgba(255,255,255,0.05)' }
+                        }
+                    }
+                }
+            });
+
+            // 📱 スマホUI快適化：画面タップ・スクロール・タイマーでツールチップを即消去
+            let tooltipTimer = null;
+            const dismissTooltip = () => {
+                if (chartInst && chartInst.tooltip) {
+                    chartInst.tooltip.setActiveElements([], { x: 0, y: 0 });
+                    chartInst.update('none');
+                }
+                if (tooltipTimer) clearTimeout(tooltipTimer);
+            };
+
+            document.addEventListener('touchstart', (e) => {
+                if (e.target !== canvas) {
+                    dismissTooltip();
+                } else {
+                    if (tooltipTimer) clearTimeout(tooltipTimer);
+                    tooltipTimer = setTimeout(dismissTooltip, 3000);
+                }
+            }, { passive: true });
+
+            window.addEventListener('scroll', dismissTooltip, { passive: true });
+        });
+    </script>
+</body>
+</html>
