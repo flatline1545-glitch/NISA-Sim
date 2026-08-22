@@ -1,7 +1,7 @@
 /**
  * マイカーローン 4大方式直接比較＆危険度シミュレーター コアエンジン (car.js)
  * 銀行 / ディーラー / 残クレ / リース 4大方式直接比較
- * 返済負担率(DTI) / 各方式審査通過予想判定 / 残債カーブ / 運命のエンディングカード / 新NISA機会損失試算 / 高解像度画像出力 完全対応版
+ * 返済負担率(DTI) / 各方式審査通過予想判定 / 動的残債カーブ / 運命のエンディングカード / 新NISA機会損失試算 / 高解像度画像出力 完全対応版
  */
 
 let currentMethod = 'residual'; // 'bank' | 'dealer' | 'residual' | 'lease'
@@ -189,10 +189,13 @@ function switchCarDisplay(view) {
 
 function toggleTable() {
     const wrapper = document.getElementById('tableWrapper');
-    const icon = document.getElementById('collapseIcon');
-    if (!wrapper || !icon) return;
+    const btn = document.querySelector('.collapse-btn');
+    if (!wrapper || !btn) return;
     wrapper.classList.toggle('open');
-    icon.innerText = wrapper.classList.contains('open') ? '▲' : '▼';
+    const isOpen = wrapper.classList.contains('open');
+    btn.innerHTML = isOpen
+        ? '<span id="collapseIcon">▲</span> 4大支払い方式の比較詳細表を閉じる'
+        : '<span id="collapseIcon">▼</span> 4大支払い方式の比較詳細表を見る';
 }
 
 // メイン計算エンジン
@@ -543,7 +546,7 @@ function renderCarStackedBarChart(carPrice, interests, extras, totals) {
     });
 }
 
-// 📈 返済残債カーブ（最終回アクション連動版）
+// 📈 返済残債カーブ（最終回アクション・動的年数連動版）
 function renderCarDebtCurveChart(totalMonths, carPrice, downPayment, bankRate, dealerRate, resLoanRate, residualValue, resAction) {
     const canvas = document.getElementById('carChart');
     if (!canvas) return;
@@ -626,9 +629,10 @@ function renderCarDebtCurveChart(totalMonths, carPrice, downPayment, bankRate, d
         }
     }
 
-    const resLabel = (resAction === 'buyout') ? '残クレ (5年目に一括買取・完済)' :
-        (resAction === 'return') ? '残クレ (5年目に車両返却・資産ゼロ)' :
-            '残クレ (再ローン発動・8年目まで借金延長)';
+    const resYears = totalMonths / 12;
+    const resLabel = (resAction === 'buyout') ? `残クレ (${resYears}年目に一括買取・完済)` :
+        (resAction === 'return') ? `残クレ (${resYears}年目に車両返却・資産ゼロ)` :
+            `残クレ (再ローン発動・${resYears + 3}年目まで借金延長)`;
 
     if (chartInstance && chartInstance.config.type === 'line') {
         chartInstance.data.labels = labels;
@@ -869,7 +873,7 @@ function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
     ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
     ctx.lineTo(x + radius, y + height);
     ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-    ctx.lineTo(x + radius, y + height);
+    ctx.lineTo(x, y + radius);
     ctx.quadraticCurveTo(x, y, x + radius, y);
     ctx.closePath();
     if (fill) ctx.fill();
