@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>マイカーローン・残クレ失敗しない完全攻略ガイド | NISA-Sim</title>
+    <meta name="description" content="車の購入前に知っておくべきローンの罠と節約術を徹底解説。「銀行 vs ディーラー金利の差」「残クレの据置利息のカラクリ」「返済負担率（DTI）の審査基準」「7年フルローンの危険性」まで網羅した完全ガイドです。">
+    <meta name="keywords" content="マイカーローン,残クレ,残価設定ローン,カーリース,ディーラーローン,金利比較,返済負担率,自動車ローン,頭金">
+    <meta name="robots" content="index, follow">
+
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="マイカーローン・残クレ失敗しない完全攻略ガイド">
+    <meta property="og:description" content="月々の安さに騙されるな！ 4大支払い方式の損得と金利の罠を徹底解剖。">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <link rel="stylesheet" href="../css/style.css">
+    <!-- ミニグラフ描画用 Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .article-container {
+            max-width: 820px;
+            margin: 0 auto;
+            padding: 10px 4px 40px 4px;
+        }
+
+        .article-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 18px 20px;
+            margin-bottom: 16px;
+            line-height: 1.7;
+            scroll-margin-top: 60px;
+            transition: all 0.3s ease;
+        }
+
+            .article-card:target {
+                border-color: #3b82f6;
+                box-shadow: 0 0 16px rgba(59, 130, 246, 0.4);
+            }
+
+        .article-title {
+            font-size: 16.5px;
+            font-weight: 800;
+            color: #60a5fa;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+            .article-title::before {
+                content: "";
+                display: inline-block;
+                width: 4px;
+                height: 16px;
+                background: var(--accent-blue);
+                border-radius: 2px;
+            }
+
+        .article-lead {
+            font-size: 12px;
+            color: #e2e8f0;
+            margin-bottom: 10px;
+        }
+
+        .callout-box {
+            background: rgba(59, 130, 246, 0.1);
+            border-left: 3px solid #3b82f6;
+            padding: 10px 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-size: 11px;
+            color: #cbd5e1;
+        }
+
+            .callout-box.warning {
+                background: rgba(239, 68, 68, 0.1);
+                border-left-color: #ef4444;
+                color: #fecaca;
+            }
+
+            .callout-box.success {
+                background: rgba(16, 185, 129, 0.1);
+                border-left-color: #10b981;
+                color: #a7f3d0;
+            }
+
+            .callout-box.purple {
+                background: rgba(139, 92, 246, 0.1);
+                border-left-color: #8b5cf6;
+                color: #ddd6fe;
+            }
+
+        .sim-btn-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .sim-link-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: #fff;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 800;
+            padding: 8px 16px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
+            transition: all 0.15s;
+        }
+
+            .sim-link-btn.green {
+                background: linear-gradient(135deg, #059669, #047857);
+                box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+            }
+
+            .sim-link-btn:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            }
+
+        .guide-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            margin: 10px 0;
+            text-align: left;
+        }
+
+            .guide-table th, .guide-table td {
+                padding: 8px 10px;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            .guide-table th {
+                background: #182234;
+                color: #93c5fd;
+                font-weight: 800;
+            }
+
+        .guide-chart-wrap {
+            position: relative;
+            height: 220px;
+            width: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 8px;
+            margin: 12px 0 6px 0;
+        }
+
+        /* 1. 方式別 比較カードグリッド */
+        .method-compare-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin: 12px 0;
+        }
+
+        .method-card {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px;
+        }
+
+        .method-header {
+            font-size: 12px;
+            font-weight: 800;
+            margin-bottom: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .method-rate-badge {
+            font-size: 10px;
+            font-weight: 900;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        @media (max-width: 600px) {
+            .method-compare-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 2. 残クレの据置利息カラクリ図 */
+        .residual-block-diagram {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin: 12px 0;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px;
+        }
+
+        .res-block {
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .res-block.split {
+            background: rgba(59, 130, 246, 0.15);
+            border: 1.5px solid #3b82f6;
+            color: #93c5fd;
+        }
+
+        .res-block.residual {
+            background: rgba(245, 158, 11, 0.15);
+            border: 1.5px dashed #f59e0b;
+            color: #fcd34d;
+        }
+
+        /* 3. 返済負担率（DTI）メーター */
+        .dti-level-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin: 10px 0;
+        }
+
+        .dti-level-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            padding: 6px 10px;
+            border-radius: 6px;
+            background: rgba(15, 23, 42, 0.7);
+        }
+
+        .dti-badge {
+            font-size: 10px;
+            font-weight: 800;
+            padding: 2px 7px;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="global-nav"></nav>
+
+    <div class="container article-container">
+        <header>
+            <h1>マイカーローン・残クレ 完全攻略ガイド</h1>
+            <p>ディーラー営業マンが教えてくれない「金利の罠」と「総支払額の真実」を徹底解説</p>
+        </header>
+
+        <!-- 第1章：車両価格と年収の適正予算（#price_guide） -->
+        <article class="article-card" id="price_guide">
+            <h2 class="article-title">1. 車両価格の適正目安「年収の半分ルール」</h2>
+            <p class="article-lead">
+                車を購入する際、最も安全とされる予算の目安は<b>「車両総額を額面年収の50%以内に抑える」</b>ことです。<br>
+                車は購入後も「ガソリン代」「自動車税」「任意保険」「車検費用」「駐車場代」など、年間30万〜50万円ほどの維持費が継続して発生します。
+            </p>
+
+            <table class="guide-table">
+                <thead>
+                    <tr>
+                        <th>額面年収</th>
+                        <th>適正車両予算 (年収の50%)</th>
+                        <th>おすすめの車種カテゴリー</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><b>300万円</b></td>
+                        <td>約 150万円 前後</td>
+                        <td>軽自動車、高年式・良質中古車</td>
+                    </tr>
+                    <tr>
+                        <td><b>450万円</b></td>
+                        <td>約 200〜250万円</td>
+                        <td>大衆コンパクト（ヤリス・アクア・ノート等）</td>
+                    </tr>
+                    <tr>
+                        <td><b>600万円</b></td>
+                        <td>約 300万円 前後</td>
+                        <td>ミドルサイズSUV、ミニバン（シエンタ・フリード等）</td>
+                    </tr>
+                    <tr>
+                        <td><b>800万円〜</b></td>
+                        <td>約 400〜500万円</td>
+                        <td>人気大型SUV、ハイクラスミニバン（ハリアー・ヴォクシー等）</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="callout-box warning">
+                ⚠️ <b>年収以上の高級車を買うリスク</b><br>
+                年収400万円で500万円超の高級車を残クレ等で購入すると、毎月のローン＋維持費だけで手取り月収の35%以上が吹き飛び、貯金や資産形成（新NISAなど）が完全にストップします。
+            </div>
+        </article>
+
+        <!-- 第2章：頭金の重要性とオーバーローン対策（#down_payment） -->
+        <article class="article-card" id="down_payment">
+            <h2 class="article-title">2. 頭金はなぜ「20%以上」入れるべきなのか？</h2>
+            <p class="article-lead">
+                「頭金0円・フルローン」は手元の現金を使わずに買えるため魅力的に見えますが、<b>車の価値が下がるスピードにローンの返済が追いつかない「オーバーローン（残債割れ）」</b>を引き起こす最大の原因になります。
+            </p>
+
+            <div class="method-compare-grid">
+                <div class="method-card" style="border-color:#ef4444;">
+                    <div class="method-header" style="color:#f87171;">
+                        <span>❌ 頭金0円 (フルローン)</span>
+                        <span class="method-rate-badge" style="background:rgba(239,68,68,0.2); color:#fecaca;">高リスク</span>
+                    </div>
+                    <div style="font-size:10.5px; color:#cbd5e1; line-height:1.5;">
+                        ・車が納車された瞬間に「中古車」となり価値が約20%下落。<br>
+                        ・3年目に事故で廃車になっても、保険金よりローン残債が多く多額の借金が残る。
+                    </div>
+                </div>
+
+                <div class="method-card" style="border-color:#10b981;">
+                    <div class="method-header" style="color:#34d399;">
+                        <span>⭕ 頭金20%〜30%投入</span>
+                        <span class="method-rate-badge" style="background:rgba(16,185,129,0.2); color:#a7f3d0;">推奨</span>
+                    </div>
+                    <div style="font-size:10.5px; color:#cbd5e1; line-height:1.5;">
+                        ・常に「車の買取相場 ＞ ローン残債」をキープできる。<br>
+                        ・万が一急な事情で車を手放すことになっても、売却益でローンを即完済できる。
+                    </div>
+                </div>
+            </div>
+
+            <div class="callout-box success">
+                💡 <b>下取り車も立派な頭金</b><br>
+                現在乗っている車がある場合は、ディーラー下取りだけでなく買取専門店の相見積もりを取ることで、頭金を10万〜30万円上乗せできるケースが多くあります。
+            </div>
+        </article>
+
+        <!-- 第3章：7年ローンの罠と返済期間（#period_trap） -->
+        <article class="article-card" id="period_trap">
+            <h2 class="article-title">3. 「月々を安く見せる7年ローン」に潜む利息の罠</h2>
+            <p class="article-lead">
+                ディーラーで勧められる「7年（84回）ローン」は、毎月の支払額が下がる反面、<b>支払う利息の総額が3年・5年ローンに比べて数倍に跳ね上がります。</b>
+            </p>
+
+            <!-- 期間別利息比較ミニグラフ -->
+            <div class="guide-chart-wrap">
+                <canvas id="periodCompareChart"></canvas>
+            </div>
+            <div style="font-size: 10px; color: #94a3b8; text-align: right; margin-bottom: 8px;">
+                ※借入額300万円・ディーラー金利6.0%での期間別「総支払利息」比較
+            </div>
+
+            <div class="callout-box warning">
+                💥 <b>7年ローンが危険な決定打</b><br>
+                7年目にもなると車の故障や車検代（消耗品交換）の出費が増え始めます。「高額な修理代を払いながら、まだ毎月ローンの引き落としが続く」という泥沼に陥るため、<b>返済期間は最長でも5年（60回）以内</b>に設定するのが鉄則です。
+            </div>
+        </article>
+
+        <!-- 第4章：返済負担率（DTI）と審査基準（#dti_rule） -->
+        <article class="article-card" id="dti_rule">
+            <h2 class="article-title">4. ローン審査の合否を分ける「返済負担率（DTI）」</h2>
+            <p class="article-lead">
+                返済負担率（DTI: Debt to Income）とは、<b>「年間のすべての借金返済額が、額面年収の何%を占めているか」</b>を表す指標です。金融機関の審査で最も重視されます。
+            </p>
+
+            <div class="dti-level-list">
+                <div class="dti-level-item">
+                    <span class="dti-badge" style="background:#10b981; color:#0a0d14;">〜 15% (安全圏)</span>
+                    <span style="color:#a7f3d0;"><b>審査通過確度：高</b>（生活への圧迫感がなく、貯蓄や投資も両立可能）</span>
+                </div>
+                <div class="dti-level-item">
+                    <span class="dti-badge" style="background:#fbbf24; color:#0a0d14;">15% 〜 22% (注意域)</span>
+                    <span style="color:#fcd34d;"><b>審査通過確度：中</b>（住宅ローンやクレカ利用枠があると合算審査で引っかかるリスクあり）</span>
+                </div>
+                <div class="dti-level-item">
+                    <span class="dti-badge" style="background:#ef4444; color:#fff;">25%超 (危険域)</span>
+                    <span style="color:#fca5a5;"><b>審査通過確度：低</b>（銀行ローンの審査落ちは濃厚。家計破綻の可能性大）</span>
+                </div>
+            </div>
+
+            <div class="callout-box purple">
+                🛡️ <b>他社の借入もすべて合算される</b><br>
+                スマートフォンの端末分割代金、クレジットカードのリボ払い、奨学金、住宅ローンなどもすべて「借金」として合算計算されます。車を買う前に不要なカード枠や少額の分割払いを完済しておくと審査が格段に通りやすくなります。
+            </div>
+        </article>
+
+        <!-- 第5章：残クレの真実と据置利息のカラクリ -->
+        <article class="article-card" id="residual_trap">
+            <h2 class="article-title">5. 残クレ（残価設定型）最大の落とし穴「据置利息」</h2>
+            <p class="article-lead">
+                残クレは「数年後の残価（例: 100万円）を据え置いて、残りの金額だけを分割払いする」仕組みです。月々の支払額は安くなりますが、<b>「据え置いた100万円に対しても毎月金利が満額かかり続けている」</b>という重大なカラクリが存在します。
+            </p>
+
+            <!-- 据置利息の構造図 -->
+            <div class="residual-block-diagram">
+                <div style="font-size:11.5px; font-weight:800; color:#93c5fd; margin-bottom:4px;">
+                    📊 車両価格300万円（頭金なし・5年・残価100万）の場合の利息構造
+                </div>
+                <div class="res-block split">
+                    <span>① 分割返済部分（200万円）</span>
+                    <span style="color:#60a5fa;">毎月元金を減らしながら利息を支払う</span>
+                </div>
+                <div class="res-block residual">
+                    <span>② 据置残価部分（100万円）</span>
+                    <span style="color:#fbbf24;">5年間まったく元金が減らないまま、100万円分の金利を毎月取られ続ける！</span>
+                </div>
+            </div>
+
+            <p class="article-lead">
+                結果として、同じ金利であっても<b>通常ローンより残クレのほうが支払う利息の総額が大幅に高く</b>なります。
+            </p>
+
+            <div class="callout-box success">
+                ✨ <b>残クレを使っていい唯一のパターン</b><br>
+                「アルファードやランドクルーザーなど、リセールバリューが異常に高い人気車種を3年ごとに新車へ乗り継ぐ」目的であれば、高残価率の恩恵をフルに活かせます。5年以上乗るつもりなら迷わず<b>「銀行マイカーローン」</b>を選ぶのが正解です。
+            </div>
+
+            <div class="sim-btn-group">
+                <a href="../car.html" class="sim-link-btn">🚗 マイカーローン直接比較シミュレーターへ</a>
+                <a href="../index.html" class="sim-link-btn green">📈 新NISA資産形成シミュレーターへ</a>
+            </div>
+        </article>
+    </div>
+
+    <script src="../js/common/nav.js"></script>
+
+    <!-- 【インライン完結】期間別利息比較ミニグラフ描画スクリプト（スマホ自動消去対応） -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('periodCompareChart');
+            if (!canvas || typeof Chart === 'undefined') return;
+
+            // 借入300万・年利6.0%での3年・5年・7年支払利息計算
+            const p = 3000000;
+            const r = 0.06 / 12;
+
+            function getInterest(years) {
+                const n = years * 12;
+                const pmt = (p * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+                return Math.round((pmt * n - p) / 10000);
+            }
+
+            const int3 = getInterest(3); // 約28.5万
+            const int5 = getInterest(5); // 約48.0万
+            const int7 = getInterest(7); // 約68.5万
+
+            const chartInst = new Chart(canvas.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: ['3年 (36回払い)', '5年 (60回払い)', '7年 (84回払い)'],
+                    datasets: [
+                        {
+                            label: '支払う利息の総額 (万円)',
+                            data: [int3, int5, int7],
+                            backgroundColor: ['#3b82f6', '#f59e0b', '#ef4444'],
+                            borderRadius: 6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(17, 24, 39, 0.95)',
+                            callbacks: {
+                                label: (c) => ` 利息合計: 約 ${c.raw} 万円`
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { ticks: { color: '#cbd5e1', font: { size: 10.5, weight: 'bold' } }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                        y: {
+                            ticks: {
+                                color: '#94a3b8',
+                                font: { size: 9.5 },
+                                callback: (v) => v + '万'
+                            },
+                            grid: { color: 'rgba(255,255,255,0.05)' }
+                        }
+                    }
+                }
+            });
+
+            // 📱 スマホUI快適化：ツールチップ即消去
+            let tooltipTimer = null;
+            const dismissTooltip = () => {
+                if (chartInst && chartInst.tooltip) {
+                    chartInst.tooltip.setActiveElements([], { x: 0, y: 0 });
+                    chartInst.update('none');
+                }
+                if (tooltipTimer) clearTimeout(tooltipTimer);
+            };
+
+            document.addEventListener('touchstart', (e) => {
+                if (e.target !== canvas) {
+                    dismissTooltip();
+                } else {
+                    if (tooltipTimer) clearTimeout(tooltipTimer);
+                    tooltipTimer = setTimeout(dismissTooltip, 3000);
+                }
+            }, { passive: true });
+
+            window.addEventListener('scroll', dismissTooltip, { passive: true });
+        });
+    </script>
+</body>
+</html>

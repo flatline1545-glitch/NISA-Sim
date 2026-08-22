@@ -1,7 +1,8 @@
 (function () {
     const NAV_ITEMS = [
         { name: '📈 新NISA', path: 'index.html' },
-        { name: '🛡️ iDeCo', path: 'ideco.html' }
+        { name: '🛡️ iDeCo', path: 'ideco.html' },
+        { name: '🚗 マイカー', path: 'car.html' }
     ];
 
     function initNav() {
