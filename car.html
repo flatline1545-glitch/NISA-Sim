@@ -36,7 +36,7 @@
             <button class="scenario-btn" id="scType_luxury" onclick="applyCarTypePreset('luxury')">🏎️ 高級輸入車 (800万)</button>
         </div>
 
-        <!-- 検討中の支払い方式フォーカスバー -->
+        <!-- 検討中の支払い方式フォーカスバー（ラベル削除で横幅最適化） -->
         <div class="top-bar">
             <div class="save-slots" style="width: 100%; justify-content: space-between; overflow-x: auto;">
                 <button class="slot-btn" id="scMethod_bank" onclick="applyMethodPreset('bank')">👔 銀行ローン</button>
@@ -106,7 +106,7 @@
                     </div>
                 </div>
 
-                <!-- 返済期間（年数） -->
+                <!-- 返済期間（年数：現実的な3年〜8年に設定） -->
                 <div class="control-group">
                     <div class="control-label">
                         <div class="help-popover-wrapper">
@@ -119,11 +119,11 @@
                             </div>
                         </div>
                         <div class="input-box-wrapper">
-                            <input type="number" class="num-input" id="numHorizon" value="5" min="1" max="10" step="1" style="width: 45px;" oninput="syncCarInputs('horizon', 'num')">
+                            <input type="number" class="num-input" id="numHorizon" value="5" min="3" max="8" step="1" style="width: 45px;" oninput="syncCarInputs('horizon', 'num')">
                             <span class="input-unit-suffix">年</span>
                         </div>
                     </div>
-                    <input type="range" id="rangeHorizon" min="1" max="8" step="1" value="5" oninput="syncCarInputs('horizon', 'range')">
+                    <input type="range" id="rangeHorizon" min="3" max="8" step="1" value="5" oninput="syncCarInputs('horizon', 'range')">
                     <div class="preset-container">
                         <button class="preset-btn" onclick="setPreset('horizon', 3)">3年(36回)</button>
                         <button class="preset-btn highlight" onclick="setPreset('horizon', 5)">5年(60回)</button>
