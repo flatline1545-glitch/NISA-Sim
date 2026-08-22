@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>マイカーローン 4大方式直接比較シミュレーター | 残クレの罠・利息差額・返済負担率＆審査判定</title>
+    <meta name="description" content="銀行ローン・ディーラーローン・残価設定ローン（残クレ）・カーリースの4大支払方式を1画面で直接比較。月々の支払額の安さに隠れた据置利息の罠や返済負担率（DTI）の審査通過度、新NISA機会損失まで無料・登録不要で試算できます。">
+    <meta name="keywords" content="マイカーローン,残クレ,残価設定ローン,カーリース,ディーラーローン,金利比較,返済負担率,ローン審査,自動車ローン,シミュレーター">
+    <meta name="robots" content="index, follow">
+
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="マイカーローン 4大方式直接比較シミュレーター">
+    <meta property="og:description" content="銀行ローン・ディーラー・残クレ・リースを一括比較！月々の安さに隠れた利息の罠と審査通過度を判定">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+    <nav class="global-nav"></nav>
+
+    <div class="container">
+        <header>
+            <h1>マイカーローン 4大方式直接比較シミュレーター</h1>
+            <p>銀行・ディーラー・残クレ・リースの総支払額・支払利息・審査難易度を可視化</p>
+        </header>
+
+        <!-- 車種タイプ 一発プリセットバー -->
+        <div class="scenario-banner">
+            <span class="scenario-label">⚡ 車種目安:</span>
+            <button class="scenario-btn active" id="scType_compact" onclick="applyCarTypePreset('compact')">🚗 大衆コンパクト (250万)</button>
+            <button class="scenario-btn" id="scType_kei" onclick="applyCarTypePreset('kei')">🚙 軽自動車 (200万)</button>
+            <button class="scenario-btn" id="scType_minivan" onclick="applyCarTypePreset('minivan')">🚐 ミニバン・人気SUV (450万)</button>
+            <button class="scenario-btn" id="scType_luxury" onclick="applyCarTypePreset('luxury')">🏎️ 高級輸入車 (800万)</button>
+        </div>
+
+        <!-- 検討中の支払い方式フォーカスバー -->
+        <div class="top-bar">
+            <div class="save-slots" style="width: 100%; justify-content: space-between; overflow-x: auto;">
+                <button class="slot-btn" id="scMethod_bank" onclick="applyMethodPreset('bank')">👔 銀行ローン</button>
+                <button class="slot-btn" id="scMethod_dealer" onclick="applyMethodPreset('dealer')">🏢 ディーラー</button>
+                <button class="slot-btn active" id="scMethod_residual" onclick="applyMethodPreset('residual')">🎯 残クレ</button>
+                <button class="slot-btn" id="scMethod_lease" onclick="applyMethodPreset('lease')">📦 カーリース</button>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <!-- 左側：設定コントロールパネル -->
+            <div class="panel panel-controls">
+                <div class="panel-title">
+                    <div class="panel-title-left">ローン試算条件設定</div>
+                </div>
+
+                <!-- 車両本体・総額 -->
+                <div class="control-group">
+                    <div class="control-label">
+                        <div class="help-popover-wrapper">
+                            <span>車両総額（購入価格）</span>
+                            <button type="button" class="help-btn" onclick="toggleHelpPopover(event, 'popPrice')" aria-label="車両総額について">?</button>
+                            <div class="help-popover" id="popPrice">
+                                <div class="help-popover-title">🚗 車両総額とは</div>
+                                車両本体価格にオプションや諸費用（登録諸費用など）を含めた購入総額です。
+                                <a href="guide/car.html#price_guide" class="help-popover-link">📖 予算の決め方を詳しく見る →</a>
+                            </div>
+                        </div>
+                        <div class="input-box-wrapper">
+                            <span class="input-unit-prefix">¥</span>
+                            <input type="number" class="num-input" id="numPrice" value="3000000" min="500000" max="20000000" step="50000" oninput="syncCarInputs('price', 'num')">
+                        </div>
+                    </div>
+                    <input type="range" id="rangePrice" min="500000" max="10000000" step="50000" value="3000000" oninput="syncCarInputs('price', 'range')">
+                    <div class="preset-container">
+                        <button class="preset-btn" onclick="setPreset('price', 1500000)">150万(軽)</button>
+                        <button class="preset-btn" onclick="setPreset('price', 2500000)">250万</button>
+                        <button class="preset-btn highlight" onclick="setPreset('price', 3500000)">350万</button>
+                        <button class="preset-btn" onclick="setPreset('price', 5000000)">500万</button>
+                        <button class="preset-btn danger" onclick="setPreset('price', 8000000)">800万</button>
+                    </div>
+                </div>
+
+                <!-- 頭金・下取り額 -->
+                <div class="control-group">
+                    <div class="control-label">
+                        <div class="help-popover-wrapper">
+                            <span>頭金・下取り額</span>
+                            <button type="button" class="help-btn" onclick="toggleHelpPopover(event, 'popDown')" aria-label="頭金について">?</button>
+                            <div class="help-popover" id="popDown">
+                                <div class="help-popover-title">🛡️ 頭金の重要性</div>
+                                頭金を多く入れるほど借入額が減り、利息総額を劇的に圧縮できます。
+                                <a href="guide/car.html#down_payment" class="help-popover-link">📖 頭金の目安を見る →</a>
+                            </div>
+                        </div>
+                        <div class="input-box-wrapper">
+                            <span class="input-unit-prefix">¥</span>
+                            <input type="number" class="num-input" id="numDown" value="500000" min="0" max="10000000" step="50000" oninput="syncCarInputs('down', 'num')">
+                        </div>
+                    </div>
+                    <input type="range" id="rangeDown" min="0" max="5000000" step="50000" value="500000" oninput="syncCarInputs('down', 'range')">
+                    <div class="preset-container">
+                        <button class="preset-btn danger" onclick="setPreset('down', 0)">0円(フル)</button>
+                        <button class="preset-btn" onclick="setPreset('down', 300000)">30万</button>
+                        <button class="preset-btn highlight" onclick="setPreset('down', 500000)">50万</button>
+                        <button class="preset-btn" onclick="setPreset('down', 1000000)">100万</button>
+                    </div>
+                </div>
+
+                <!-- 返済期間（年数） -->
+                <div class="control-group">
+                    <div class="control-label">
+                        <div class="help-popover-wrapper">
+                            <span>返済期間（年数）</span>
+                            <button type="button" class="help-btn" onclick="toggleHelpPopover(event, 'popHorizon')" aria-label="返済期間について">?</button>
+                            <div class="help-popover" id="popHorizon">
+                                <div class="help-popover-title">⏳ 期間とオーバーローン</div>
+                                期間が長いほど月々は安くなりますが利息が激増します。5年以内が推奨です。
+                                <a href="guide/car.html#period_trap" class="help-popover-link">📖 7年ローンの罠を見る →</a>
+                            </div>
+                        </div>
+                        <div class="input-box-wrapper">
+                            <input type="number" class="num-input" id="numHorizon" value="5" min="1" max="10" step="1" style="width: 45px;" oninput="syncCarInputs('horizon', 'num')">
+                            <span class="input-unit-suffix">年</span>
+                        </div>
+                    </div>
+                    <input type="range" id="rangeHorizon" min="1" max="8" step="1" value="5" oninput="syncCarInputs('horizon', 'range')">
+                    <div class="preset-container">
+                        <button class="preset-btn" onclick="setPreset('horizon', 3)">3年(36回)</button>
+                        <button class="preset-btn highlight" onclick="setPreset('horizon', 5)">5年(60回)</button>
+                        <button class="preset-btn danger" onclick="setPreset('horizon', 7)">7年(84回)</button>
+                    </div>
+                </div>
+
+                <!-- 額面年収 -->
+                <div class="control-group">
+                    <div class="control-label">
+                        <div class="help-popover-wrapper">
+                            <span>本人の年収（額面）</span>
+                            <button type="button" class="help-btn" onclick="toggleHelpPopover(event, 'popIncome')" aria-label="年収と返済負担率について">?</button>
+                            <div class="help-popover" id="popIncome">
+                                <div class="help-popover-title">⚖️ 返済負担率（DTI）</div>
+                                年間返済額が年収の20〜25%を超えるとローン審査通過が厳しくなります。
+                                <a href="guide/car.html#dti_rule" class="help-popover-link">📖 審査の安全基準を見る →</a>
+                            </div>
+                        </div>
+                        <div class="input-box-wrapper">
+                            <span class="input-unit-prefix">¥</span>
+                            <input type="number" class="num-input" id="numIncome" value="450" min="100" max="3000" step="10" oninput="syncCarInputs('income', 'num')">
+                            <span class="input-unit-suffix">万円</span>
+                        </div>
+                    </div>
+                    <input type="range" id="rangeIncome" min="200" max="1200" step="50" value="450" oninput="syncCarInputs('income', 'range')">
+                    <div class="preset-container">
+                        <button class="preset-btn" onclick="setPreset('income', 350)">350万</button>
+                        <button class="preset-btn highlight" onclick="setPreset('income', 450)">450万</button>
+                        <button class="preset-btn" onclick="setPreset('income', 600)">600万</button>
+                        <button class="preset-btn" onclick="setPreset('income', 800)">800万</button>
+                    </div>
+                </div>
+
+                <!-- 残クレ選択時の最終回アクション切り替え -->
+                <div id="residualActionWrapper" class="annual-alert-box info" style="display: block; margin-top: 8px; margin-bottom: 8px;">
+                    <div class="alert-header">
+                        <span>🎯 残クレ「運命の最終回」選択</span>
+                    </div>
+                    <div style="font-size: 11px; margin: 4px 0 6px 0; color: #cbd5e1;">
+                        満期時に据え置いた残価をどう精算するか選んでください:
+                    </div>
+                    <div class="preset-container" style="gap: 4px;">
+                        <button class="preset-btn" id="resActBtn_return" onclick="setResidualAction('return')">🚗 返却 (乗換)</button>
+                        <button class="preset-btn highlight" id="resActBtn_buyout" onclick="setResidualAction('buyout')">💰 一括買取</button>
+                        <button class="preset-btn danger" id="resActBtn_reloan" onclick="setResidualAction('reloan')">🔄 再ローン(危険)</button>
+                    </div>
+
+                    <!-- 🎬 運命のエンディングカード -->
+                    <div id="residualEndingCard" style="margin-top: 8px; padding: 8px 10px; border-radius: 6px; font-size: 11px; line-height: 1.45;"></div>
+                </div>
+
+                <!-- 金利・残価率 詳細設定（折りたたみ可能） -->
+                <details style="margin-top: 10px; background: rgba(0,0,0,0.2); border-radius: 6px; padding: 6px 8px; border: 1px solid var(--border-color);">
+                    <summary style="font-size: 11px; font-weight: 700; color: #93c5fd; cursor: pointer;">
+                        ⚙️ 金利・残価率の微調整設定を開く
+                    </summary>
+                    <div style="margin-top: 8px;">
+                        <div class="control-group">
+                            <div class="control-label">
+                                <span>銀行ローン金利 (年)</span>
+                                <div class="input-box-wrapper">
+                                    <input type="number" class="num-input" id="numBankRate" value="2.0" min="0.5" max="10.0" step="0.1" style="width: 50px;" oninput="syncCarInputs('bankRate', 'num')">
+                                    <span class="input-unit-suffix">%</span>
+                                </div>
+                            </div>
+                            <input type="range" id="rangeBankRate" min="0.5" max="5.0" step="0.1" value="2.0" oninput="syncCarInputs('bankRate', 'range')">
+                        </div>
+
+                        <div class="control-group">
+                            <div class="control-label">
+                                <span>ディーラーローン金利 (年)</span>
+                                <div class="input-box-wrapper">
+                                    <input type="number" class="num-input" id="numDealerRate" value="6.0" min="1.0" max="15.0" step="0.1" style="width: 50px;" oninput="syncCarInputs('dealerRate', 'num')">
+                                    <span class="input-unit-suffix">%</span>
+                                </div>
+                            </div>
+                            <input type="range" id="rangeDealerRate" min="2.0" max="10.0" step="0.1" value="6.0" oninput="syncCarInputs('dealerRate', 'range')">
+                        </div>
+
+                        <div class="control-group">
+                            <div class="control-label">
+                                <span>残クレ残価率 (%)</span>
+                                <div class="input-box-wrapper">
+                                    <input type="number" class="num-input" id="numResRate" value="35.0" min="5.0" max="75.0" step="1.0" style="width: 50px;" oninput="syncCarInputs('resRate', 'num')">
+                                    <span class="input-unit-suffix">%</span>
+                                </div>
+                            </div>
+                            <input type="range" id="rangeResRate" min="10.0" max="70.0" step="1.0" value="35.0" oninput="syncCarInputs('resRate', 'range')">
+                        </div>
+
+                        <div class="control-group">
+                            <div class="control-label">
+                                <span>残クレ金利 (年)</span>
+                                <div class="input-box-wrapper">
+                                    <input type="number" class="num-input" id="numResLoanRate" value="4.5" min="0.5" max="10.0" step="0.1" style="width: 50px;" oninput="syncCarInputs('resLoanRate', 'num')">
+                                    <span class="input-unit-suffix">%</span>
+                                </div>
+                            </div>
+                            <input type="range" id="rangeResLoanRate" min="1.0" max="8.0" step="0.1" value="4.5" oninput="syncCarInputs('resLoanRate', 'range')">
+                        </div>
+                    </div>
+                </details>
+            </div>
+
+            <!-- 右側：結果表示パネル（固定エリア） -->
+            <div class="panel panel-results">
+                <div class="compact-header-card">
+                    <div class="header-stat-box">
+                        <div class="header-stat-label">毎月の支払額（目安）</div>
+                        <div class="header-stat-val primary" id="mainMonthlyValue">¥0</div>
+                    </div>
+                    <div class="header-stat-box" style="text-align: right;">
+                        <div class="header-stat-label" style="justify-content: flex-end;">最終 総支払額</div>
+                        <div class="header-stat-val" id="mainTotalValue">¥0</div>
+                    </div>
+                </div>
+
+                <div class="sub-stats-row">
+                    <div class="sub-stat-chip">
+                        <div class="chip-label">返済負担率 ＆ 審査</div>
+                        <div class="chip-val" id="chipDti">0%</div>
+                    </div>
+                    <div class="sub-stat-chip">
+                        <div class="chip-label">銀行ローン比較</div>
+                        <div class="chip-val danger" id="chipDiffBank">0円</div>
+                    </div>
+                    <div class="sub-stat-chip">
+                        <div class="chip-label">最終回据置残価</div>
+                        <div class="chip-val principal" id="chipResidualVal">¥0</div>
+                    </div>
+                </div>
+
+                <!-- 返済負担率インジケーターゲージ（審査状況テキスト入り） -->
+                <div style="background: var(--bg-input); border-radius: 6px; padding: 5px 8px; margin-bottom: 6px; border: 1px solid var(--border-color);">
+                    <div style="height: 5px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; margin-bottom: 3px;">
+                        <div id="dtiGaugeBar" style="height: 100%; width: 25%; background: #10b981; transition: all 0.3s;"></div>
+                    </div>
+                    <div id="dtiGaugeText" style="font-size: 10px; color: #cbd5e1; line-height: 1.3;"></div>
+                </div>
+
+                <div class="view-switcher-bar">
+                    <button class="view-tab-btn" id="btnViewBar" onclick="switchCarDisplay('bar')">
+                        📊 方式別 総額比較
+                    </button>
+                    <button class="view-tab-btn active" id="btnViewLine" onclick="switchCarDisplay('line')">
+                        📈 返済残債カーブ
+                    </button>
+                    <button class="view-tab-btn gold" id="btnViewDiag" onclick="switchCarDisplay('diag')">
+                        🎯 ローン診断カルテ
+                    </button>
+                </div>
+
+                <div class="unified-display-box">
+                    <canvas id="carChart"></canvas>
+
+                    <div class="diagnosis-view-content" id="diagnosisViewBox">
+                        <div class="diag-header-bar">
+                            <span class="diag-rank-tag" id="diagLevelTag">ローン診断</span>
+                            <div class="diag-tags-row" id="diagTags"></div>
+                        </div>
+                        <div class="diag-main-title" id="diagTitle">--</div>
+
+                        <div class="fp-carte-container">
+                            <div class="fp-carte-header">
+                                <span>📋 FPによるマイカーローンカルテ</span>
+                                <span id="fpStatusBadge">診断完了</span>
+                            </div>
+                            <div id="carteContentArea"></div>
+                        </div>
+
+                        <div class="carte-action-btn-group">
+                            <button class="action-btn x-btn" onclick="shareCarOnX()">𝕏 ポスト</button>
+                            <button class="action-btn url-btn" onclick="copyCarUrl()">🔗 URL共有</button>
+                            <button class="action-btn img-btn" onclick="exportCarChartImage()">📸 画像保存</button>
+                            <button class="action-btn csv-btn" onclick="exportCarCsv()">📄 CSV出力</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div> <!-- .panel-results の閉じタグ -->
+        </div> <!-- .main-grid の閉じタグ -->
+        <!-- 💡 新NISA機会損失カードをグリッド外へ配置（結果パネルを大幅スリム化） -->
+        <div id="nisaLossBox" class="annual-alert-box success" style="display: block; margin-top: 10px;"></div>
+
+        <div class="bottom-full-section">
+            <div class="details-section" id="tableSection">
+                <button class="collapse-btn" onclick="toggleTable()">
+                    <span id="collapseIcon">▼</span> 4大支払い方式の比較詳細表を見る
+                </button>
+                <div class="table-wrapper" id="tableWrapper">
+                    <table id="dataTable">
+                        <thead>
+                            <tr>
+                                <th>支払方式</th>
+                                <th>毎月支払額</th>
+                                <th>支払利息</th>
+                                <th>総支払額</th>
+                                <th>審査予想</th>
+                                <th>特徴・備考</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="bottom-action-btn-group">
+                <button class="action-btn x-btn" onclick="shareCarOnX()">𝕏 ポスト</button>
+                <button class="action-btn url-btn" onclick="copyCarUrl()">🔗 URL共有</button>
+                <button class="action-btn img-btn" onclick="exportCarChartImage()">📸 画像保存</button>
+                <button class="action-btn csv-btn" onclick="exportCarCsv()">📄 CSV出力</button>
+                <a href="index.html" class="action-btn img-btn" style="text-decoration:none;">📈 新NISAシミュレーターへ</a>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="toast">設定を保存しました！</div>
+
+    <script src="js/common/nav.js"></script>
+    <script src="js/car/carDiagnosisData.js"></script>
+    <script src="js/car/car.js"></script>
+
+    <!-- インコンテキスト・ヘルプ開閉スクリプト -->
+    <script>
+        function toggleHelpPopover(e, popId) {
+            e.stopPropagation();
+            const targetPop = document.getElementById(popId);
+            const isShown = targetPop?.classList.contains('show');
+
+            document.querySelectorAll('.help-popover').forEach(el => el.classList.remove('show'));
+            document.querySelectorAll('.help-btn').forEach(el => el.classList.remove('active'));
+
+            if (!isShown && targetPop) {
+                targetPop.classList.add('show');
+                e.currentTarget.classList.add('active');
+            }
+        }
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.help-popover-wrapper')) {
+                document.querySelectorAll('.help-popover').forEach(el => el.classList.remove('show'));
+                document.querySelectorAll('.help-btn').forEach(el => el.classList.remove('active'));
+            }
+        });
+    </script>
+</body>
+</html>
