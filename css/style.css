@@ -1269,3 +1269,57 @@ tr:nth-child(even) {
         transform: translateY(0);
     }
 }
+
+/* ===================================================
+   ガイドページ スマホ表示最適化（崩れ防止）
+   =================================================== */
+
+/* 1. 上部ナビ被りの解消 */
+.article-container {
+    padding-top: 20px !important;
+    padding-bottom: 60px !important;
+}
+
+    .article-container header {
+        margin-bottom: 20px;
+    }
+
+/* 2. 見出しの装飾バーが2行になっても潰れないよう固定 */
+.article-title {
+    align-items: flex-start;
+}
+
+    .article-title::before {
+        flex-shrink: 0;
+        margin-top: 4px;
+    }
+
+/* 3. 比較バーのテキスト崩れ防止（スマホでは上下2段に分割） */
+.compare-label-row,
+.lifespan-label-row,
+.job-label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 11px;
+    font-weight: 700;
+    gap: 6px;
+}
+
+@media (max-width: 480px) {
+    .compare-label-row,
+    .lifespan-label-row,
+    .job-label-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+        margin-bottom: 3px;
+    }
+
+        .compare-label-row span:last-child,
+        .lifespan-label-row span:last-child,
+        .job-label-row span:last-child {
+            align-self: flex-end;
+            font-size: 11.5px;
+        }
+}
